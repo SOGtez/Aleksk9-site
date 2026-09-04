@@ -19,8 +19,7 @@
       tiktok:    '#',
       instagram: '#',
       discord:   '#',
-      x:         '#',
-      emman:     '#'
+      x:         '#'
     };
   </script>
 
@@ -272,6 +271,7 @@
       align-items: center;
       gap: 24px;
       max-width: 760px;
+      margin-inline: auto;
     }
 
     /* Avatar placeholder — swap the <img> src or drop an <img> inside .avatar */
@@ -536,10 +536,7 @@
     }
     .footer a { color: var(--fg); transition: color .2s var(--ease); }
     .footer a:hover { color: var(--accent); }
-    @media (min-width: 620px) {
-      .footer .container { flex-direction: row; justify-content: space-between; }
-    }
-
+    
     /* ============================================================
        SCROLL REVEAL
        ============================================================ */
@@ -712,7 +709,6 @@
   <footer class="footer">
     <div class="container">
       <p>© <span data-year>2026</span> AleksK9</p>
-      <p>Site by <a href="#" data-link="emman">Emman</a></p>
     </div>
   </footer>
 

@@ -11,8 +11,7 @@
   <script>
     const LINKS = {
       twitch:  'https://twitch.tv/aleksk9_',
-      discord: '#',
-      emman:   '#'
+      discord: '#'
     };
   </script>
 
@@ -124,7 +123,7 @@
       font-weight: 900; font-size: clamp(220px, 40vw, 520px); letter-spacing: -0.08em; line-height: 1;
       color: rgba(255,255,255,.03); pointer-events: none; user-select: none;
     }
-    .inner { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 720px; }
+    .inner { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 720px; margin-inline: auto; }
     .eyebrow {
       display: inline-flex; align-items: center; gap: 10px;
       font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
@@ -148,8 +147,7 @@
     .footer .container { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
     .footer a { color: var(--fg); transition: color .2s var(--ease); }
     .footer a:hover { color: var(--accent); }
-    @media (min-width: 620px) { .footer .container { flex-direction: row; justify-content: space-between; } }
-
+    
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
       .reveal { opacity: 1; transform: none; }
@@ -199,7 +197,6 @@
   <footer class="footer">
     <div class="container">
       <p>© <span data-year>2026</span> AleksK9</p>
-      <p>Site by <a href="#" data-link="emman">Emman</a></p>
     </div>
   </footer>
 

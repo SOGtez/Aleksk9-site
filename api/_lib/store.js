@@ -18,9 +18,16 @@ function redis() {
 
 export async function getState() {
   const s = await redis().get(KEY_STATE);
-  /* No state yet, or state from the old 2-team shape → start from the current defaults. */
-  if (!s || !Array.isArray(s.teams)) return structuredClone(DEFAULT_STATE);
-  return s;
+  /* Config (name, teams, pool, maps, rules…) always comes from defaults.js so edits in code go live
+     on deploy. Only what people do on the site (picks, matches, stats) is read from the database. */
+  const state = structuredClone(DEFAULT_STATE);
+  if (s && Array.isArray(s.teams)) {
+    state.picks = Array.isArray(s.picks) ? s.picks : [];
+    state.matches = Array.isArray(s.matches) ? s.matches : [];
+    state.stats = s.stats && typeof s.stats === 'object' ? s.stats : {};
+    state.updatedAt = s.updatedAt || 0;
+  }
+  return state;
 }
 export async function setState(state) {
   state.updatedAt = Date.now();

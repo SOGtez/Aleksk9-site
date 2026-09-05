@@ -2,7 +2,7 @@
    Team ids and player ids must be unique, lowercase, no spaces. Captains are not in the pool.
    Teams are listed in ROUND 1 draft order (worst to best); the order flips every round. */
 export const DEFAULT_STATE = {
-  name: '17th Roller Tourney',
+  name: 'R6 5v5 Tournament',
   hosts: ['AleksK9', 'NV30'],
   format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
   rules: [

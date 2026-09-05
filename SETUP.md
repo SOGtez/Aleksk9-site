@@ -51,5 +51,5 @@ Deployments → latest → **Redeploy**, so the new variables are picked up.
 | `POST /api/matches` `{index, score, status}` | helper, admin | update a map |
 | `POST /api/stats` `{player, kills, deaths, assists}` or `{bulk}` | helper, admin | update player stats |
 | `GET/POST /api/admin/roles` `{login, role}` | admin | manage who is captain / helper / admin |
-| `POST /api/admin/reset` `{config}` | admin | load a new tournament (teams, pool, maps) |
+| `POST /api/admin/reset` | admin | clear picks, matches, stats (config lives in `api/_lib/defaults.js`) |
 | `GET /api/live` | anyone | is the Twitch channel live (cached 60s) |

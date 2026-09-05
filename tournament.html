@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>R6 Siege Tournament — AleksK9</title>
-  <meta name="description" content="AleksK9's Rainbow Six Siege community tournament. Brackets, rules, and sign-ups coming soon.">
+  <meta name="description" content="AleksK9's Rainbow Six Siege community tournament. Live draft board, series score, and player stats.">
   <meta name="theme-color" content="#0a0a0a">
 
   <!-- LINKS — keep in sync with index.html -->
@@ -17,7 +17,7 @@
 
   <meta property="og:type" content="website">
   <meta property="og:title" content="R6 Siege Tournament — AleksK9">
-  <meta property="og:description" content="Coming soon. Brackets, rules, and sign-ups.">
+  <meta property="og:description" content="Live draft board, series score, and player stats.">
   <meta property="og:url" content="https://aleksk9.com/tournament">
   <meta property="og:image" content="/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -26,23 +26,28 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root {
       --bg: #0a0a0a;
       --bg-elev: #111111;
+      --bg-elev-2: #171717;
       --fg: #ffffff;
       --fg-muted: rgba(255, 255, 255, 0.64);
+      --fg-dim: rgba(255, 255, 255, 0.40);
       --line: rgba(255, 255, 255, 0.10);
+      --line-strong: rgba(255, 255, 255, 0.18);
       --accent: #E10600;
       --accent-hover: #ff1a12;
+      --accent-soft: rgba(225, 6, 0, 0.12);
       --live: #FF2A2A;
+      --radius: 14px;
       --nav-h: 68px;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
     *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
       margin: 0;
       min-height: 100svh;
@@ -58,11 +63,14 @@
     }
     a { color: inherit; text-decoration: none; }
     svg { display: block; }
-    h1, h2 { margin: 0; line-height: 1.05; letter-spacing: -0.03em; font-weight: 900; }
+    h1, h2, h3 { margin: 0; line-height: 1.05; letter-spacing: -0.03em; font-weight: 900; }
     p { margin: 0; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    select, input { font: inherit; }
     .container { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: 20px; }
     @media (min-width: 720px) { .container { padding-inline: 32px; } }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
     /* Buttons */
     .btn {
@@ -71,14 +79,17 @@
       font-weight: 600; font-size: 16px; letter-spacing: -0.01em;
       border: 1px solid transparent;
       transition: transform .25s var(--ease), background-color .25s var(--ease),
-                  border-color .25s var(--ease), box-shadow .25s var(--ease);
+                  border-color .25s var(--ease), box-shadow .25s var(--ease), opacity .2s;
     }
     .btn:hover { transform: translateY(-2px); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
     .btn svg { width: 18px; height: 18px; }
     .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 28px -10px rgba(225,6,0,.6); }
     .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 14px 34px -10px rgba(225,6,0,.75); }
     .btn-ghost { background: transparent; color: var(--fg); border-color: rgba(255,255,255,.18); }
     .btn-ghost:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+    .btn-sm { min-height: 36px; padding: 0 16px; font-size: 13px; gap: 6px; }
+    .btn-sm svg { width: 14px; height: 14px; }
 
     /* Nav (same as index.html) */
     .nav {
@@ -109,47 +120,332 @@
     .nav-links .nav-cta::after { display: none; }
     @media (max-width: 420px) { .nav-links a { padding: 8px 9px; font-size: 13px; } }
 
-    /* Page */
-    main { flex: 1; display: grid; place-items: center; position: relative; isolation: isolate; padding: 80px 0; text-align: center; overflow: hidden; }
-    main::before {
-      content: ""; position: absolute; z-index: -1; left: 50%; top: 50%;
+    /* ============================================================
+       PREVIEW BAR — remove once the real backend is wired up
+       ============================================================ */
+    .preview-bar {
+      background: var(--accent-soft);
+      border-bottom: 1px solid rgba(225,6,0,.35);
+      font-size: 13px;
+      color: var(--fg-muted);
+    }
+    .preview-bar .container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; min-height: 44px; padding-block: 8px; }
+    .preview-bar strong { color: var(--fg); font-weight: 700; }
+    .preview-bar label { display: inline-flex; align-items: center; gap: 8px; }
+    .preview-bar select {
+      background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--line-strong);
+      border-radius: 8px; padding: 5px 30px 5px 10px; font-size: 13px; font-weight: 600;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 9px center; background-size: 12px;
+    }
+
+    /* ============================================================
+       PAGE HERO
+       ============================================================ */
+    .t-hero { position: relative; isolation: isolate; padding: 64px 0 36px; overflow: hidden; }
+    .t-hero::before {
+      content: ""; position: absolute; z-index: -1; left: 50%; top: 20%;
       width: min(80vw, 720px); aspect-ratio: 1; transform: translate(-50%, -50%);
-      background: radial-gradient(circle, rgba(225,6,0,.30) 0%, rgba(225,6,0,.12) 32%, transparent 68%);
+      background: radial-gradient(circle, rgba(225,6,0,.26) 0%, rgba(225,6,0,.10) 32%, transparent 68%);
       filter: blur(40px); pointer-events: none;
     }
-    main::after {
-      content: "R6"; position: absolute; z-index: -2; left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
-      font-weight: 900; font-size: clamp(220px, 40vw, 520px); letter-spacing: -0.08em; line-height: 1;
+    .t-hero::after {
+      content: "R6"; position: absolute; z-index: -2; right: -0.05em; top: -0.2em;
+      font-weight: 900; font-size: clamp(200px, 30vw, 420px); letter-spacing: -0.08em; line-height: 1;
       color: rgba(255,255,255,.03); pointer-events: none; user-select: none;
     }
-    .inner { display: flex; flex-direction: column; align-items: center; gap: 22px; max-width: 720px; margin-inline: auto; }
+    .t-hero .container { display: grid; gap: 22px; }
+    @media (min-width: 820px) {
+      .t-hero .container { grid-template-columns: 1fr auto; align-items: end; }
+    }
     .eyebrow {
       display: inline-flex; align-items: center; gap: 10px;
       font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
     }
-    .eyebrow::before, .eyebrow::after { content: ""; width: 18px; height: 2px; background: var(--accent); }
-    h1 { font-size: clamp(44px, 9vw, 96px); letter-spacing: -0.05em; line-height: .95; }
-    h1 span { color: var(--accent); }
-    .sub { font-size: clamp(17px, 2.4vw, 22px); color: var(--fg-muted); font-weight: 500; max-width: 46ch; }
-    .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 6px; }
-    @media (max-width: 460px) { .actions { flex-direction: column; width: 100%; } .actions .btn { width: 100%; } }
+    .eyebrow::before { content: ""; width: 18px; height: 2px; background: var(--accent); }
+    .t-hero h1 { font-size: clamp(40px, 7vw, 76px); letter-spacing: -0.05em; line-height: .95; margin-top: 12px; }
+    .t-hero h1 span { color: var(--accent); }
+    .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 18px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+      border: 1px solid var(--line-strong); color: var(--fg-muted); white-space: nowrap;
+    }
+    .pill-status { color: var(--fg); border-color: transparent; background: var(--bg-elev-2); }
+    .pill-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg-dim); }
+    .pill-status[data-status="draft"] .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: blink 1.4s ease-in-out infinite; }
+    .pill-status[data-status="live"] .dot { background: var(--live); box-shadow: 0 0 10px var(--live); animation: blink 1.4s ease-in-out infinite; }
+    .pill-status[data-status="complete"] .dot { background: #fff; }
+    @keyframes blink { 50% { opacity: .35; } }
 
+    .auth { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+    @media (min-width: 820px) { .auth { align-items: flex-end; } }
+    .auth-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 8px 8px 8px 8px; border-radius: 999px;
+      background: var(--bg-elev); border: 1px solid var(--line-strong); font-size: 14px;
+    }
+    .auth-chip .avatar { width: 30px; height: 30px; font-size: 12px; }
+    .auth-chip b { font-weight: 700; }
+    .auth-chip .role { color: var(--fg-muted); font-size: 12px; }
+    .auth-chip button { color: var(--fg-muted); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .auth-chip button:hover { color: var(--fg); background: rgba(255,255,255,.06); }
+    .auth-hint { font-size: 12px; color: var(--fg-dim); }
+
+    /* ============================================================
+       SUB NAV
+       ============================================================ */
+    .subnav {
+      position: sticky; top: var(--nav-h); z-index: 40;
+      background: rgba(10,10,10,.85);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    }
+    .subnav .container { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .subnav .container::-webkit-scrollbar { display: none; }
+    .subnav a {
+      flex: 0 0 auto; padding: 14px 14px; font-size: 14px; font-weight: 600; color: var(--fg-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .2s var(--ease), border-color .2s var(--ease);
+    }
+    .subnav a:hover, .subnav a.is-active { color: var(--fg); border-bottom-color: var(--accent); }
+
+    /* ============================================================
+       SECTIONS
+       ============================================================ */
+    section.block { padding: 56px 0; scroll-margin-top: calc(var(--nav-h) + 56px); }
+    section.block + section.block { border-top: 1px solid var(--line); }
+    .section-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 24px; }
+    .section-head h2 { font-size: clamp(26px, 4vw, 36px); }
+    .section-head .sub { color: var(--fg-muted); font-size: 15px; }
+    .section-head .sub b { color: var(--fg); font-weight: 700; }
+    .section-head .sub .clock { color: var(--accent); font-weight: 700; }
+
+    .card {
+      background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius);
+      box-shadow: 0 20px 50px -30px rgba(0,0,0,.9);
+    }
+
+    /* Avatars */
+    .avatar {
+      width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%;
+      display: grid; place-items: center;
+      background: linear-gradient(160deg, #1f1f1f, #0d0d0d);
+      border: 1px solid rgba(255,255,255,.12);
+      font-weight: 800; font-size: 14px; letter-spacing: -0.04em; color: var(--fg); user-select: none;
+    }
+    .avatar.team-a { border-color: rgba(225,6,0,.6); box-shadow: 0 0 0 3px rgba(225,6,0,.12); }
+    .avatar.team-b { border-color: rgba(255,255,255,.5); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
+
+    /* ============================================================
+       DRAFT BOARD
+       ============================================================ */
+    .draft-layout { display: grid; gap: 20px; }
+    @media (min-width: 900px) { .draft-layout { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); align-items: start; } }
+
+    .board { overflow: hidden; }
+    .board-head { display: grid; grid-template-columns: 56px 1fr 1fr; border-bottom: 1px solid var(--line); }
+    .board-head > div { padding: 16px 14px; }
+    .board-head .team {
+      display: flex; align-items: center; gap: 12px; min-width: 0;
+      border-left: 1px solid var(--line);
+    }
+    .team-name { font-weight: 800; font-size: 15px; letter-spacing: -0.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-cap { font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-a .team-name { color: var(--accent); }
+
+    .board-row { display: grid; grid-template-columns: 56px 1fr 1fr; border-bottom: 1px solid var(--line); }
+    .board-row:last-child { border-bottom: 0; }
+    .round-label {
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim);
+      background: rgba(255,255,255,.02);
+    }
+    .round-label b { font-size: 18px; color: var(--fg); letter-spacing: -0.03em; }
+    .round-label .dir { font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--fg-dim); }
+    .cell {
+      position: relative; min-height: 76px; padding: 12px 14px;
+      display: flex; align-items: center; gap: 12px;
+      border-left: 1px solid var(--line);
+      transition: background-color .25s var(--ease);
+    }
+    .cell.is-empty { color: var(--fg-dim); }
+    .cell.is-empty::before {
+      content: ""; position: absolute; inset: 8px; border: 1px dashed rgba(255,255,255,.10); border-radius: 10px;
+    }
+    .cell .pick-no { position: absolute; top: 8px; right: 12px; font-size: 11px; font-weight: 700; color: var(--fg-dim); letter-spacing: .04em; }
+    .cell .name { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; line-height: 1.2; }
+    .cell .mains { font-size: 12px; color: var(--fg-muted); }
+    .cell.is-clock { background: var(--accent-soft); }
+    .cell.is-clock::before { border-color: rgba(225,6,0,.6); animation: clockpulse 1.6s var(--ease) infinite; }
+    .cell.is-clock .clock-text { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
+    .cell.is-clock .clock-sub { font-size: 12px; color: var(--fg-muted); }
+    .cell.is-new { animation: cellin .5s var(--ease); }
+    @keyframes clockpulse { 50% { border-color: rgba(225,6,0,.2); } }
+    @keyframes cellin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+    /* Snake order strip */
+    .snake { margin-top: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 6px; }
+    .snake .lbl { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-dim); margin-right: 8px; }
+    .snake .rnd { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+    .snake .slot {
+      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+      font-size: 11px; font-weight: 800; color: var(--fg-dim); border: 1px solid var(--line);
+    }
+    .snake .slot.a { color: var(--accent); border-color: rgba(225,6,0,.4); }
+    .snake .slot.b { color: var(--fg); border-color: rgba(255,255,255,.3); }
+    .snake .slot.done.a { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .snake .slot.done.b { background: #fff; color: #000; border-color: #fff; }
+    .snake .slot.now { box-shadow: 0 0 0 3px rgba(225,6,0,.25); animation: blink 1.4s ease-in-out infinite; }
+    .snake .arrow { color: var(--fg-dim); font-size: 12px; }
+    .snake .flip { font-size: 11px; color: var(--fg-dim); margin-left: auto; }
+
+    /* Player pool */
+    .pool { overflow: hidden; }
+    .pool-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+    .pool-head h3 { font-size: 15px; letter-spacing: -0.01em; }
+    .pool-head .count { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
+    .pool-list { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; }
+    .pool-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+      border-bottom: 1px solid var(--line); transition: background-color .2s var(--ease);
+    }
+    .pool-item:last-child { border-bottom: 0; }
+    .pool-item:hover { background: rgba(255,255,255,.02); }
+    .pool-item .who { min-width: 0; flex: 1; }
+    .pool-item .name { font-weight: 700; font-size: 14px; }
+    .pool-item .mains { font-size: 12px; color: var(--fg-muted); }
+    .pool-item.is-taken { opacity: .45; }
+    .pool-item.is-taken .name { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.4); }
+    .pool-item .taken-by { font-size: 12px; font-weight: 600; color: var(--fg-muted); white-space: nowrap; }
+    .pool-item .btn-draft { background: var(--accent); color: #fff; }
+    .pool-item .btn-draft:hover { background: var(--accent-hover); }
+
+    .pool-foot { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; font-size: 12px; color: var(--fg-muted); }
+    .link-btn { color: var(--fg-muted); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .link-btn:hover { color: var(--fg); }
+
+    /* ============================================================
+       MATCHES
+       ============================================================ */
+    .scoreboard {
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
+      padding: 28px 20px; text-align: center;
+      background:
+        radial-gradient(700px 240px at 50% 0%, rgba(225,6,0,.16), transparent 70%),
+        var(--bg-elev);
+    }
+    .scoreboard .side { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+    .scoreboard .side .avatar { width: 56px; height: 56px; font-size: 18px; }
+    .scoreboard .side .tn { font-weight: 800; font-size: clamp(15px, 2.4vw, 20px); letter-spacing: -0.02em; }
+    .scoreboard .side.team-a .tn { color: var(--accent); }
+    .scoreboard .side .cap { font-size: 12px; color: var(--fg-muted); }
+    .scoreboard .score { display: flex; align-items: center; gap: 14px; font-weight: 900; font-size: clamp(48px, 9vw, 84px); letter-spacing: -0.06em; line-height: 1; }
+    .scoreboard .score .sep { color: var(--fg-dim); font-weight: 400; }
+    .scoreboard .series { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--fg-muted); }
+    .scoreboard .series.win { color: var(--fg); }
+    .scoreboard .side.winner .tn::after { content: " ✓"; color: var(--accent); }
+
+    .match-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+    .match {
+      display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 14px;
+      padding: 14px 18px;
+    }
+    .match .mnum { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--bg-elev-2); border: 1px solid var(--line); font-weight: 800; font-size: 13px; color: var(--fg-muted); }
+    .match .info { min-width: 0; }
+    .match .map { font-weight: 700; font-size: 15px; }
+    .match .when { font-size: 12px; color: var(--fg-muted); }
+    .match .ms { font-weight: 900; font-size: 22px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+    .match .ms .a { color: var(--accent); }
+    .match .ms .sep { color: var(--fg-dim); font-weight: 400; font-size: 16px; }
+    .match .ms.tbd { color: var(--fg-dim); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+    .match .status { justify-self: end; }
+    .pill-live { color: var(--live); border-color: rgba(255,42,42,.4); }
+    .pill-live .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); animation: blink 1.2s ease-in-out infinite; }
+    .pill-final { color: var(--fg); }
+    .pill-upcoming { color: var(--fg-dim); }
+    .match .tools { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); }
+    .match .tools label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-muted); }
+    .match .tools input, .match .tools select {
+      width: 64px; padding: 6px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg);
+      border: 1px solid var(--line-strong); font-size: 13px; font-weight: 700; text-align: center;
+    }
+    .match .tools select { width: auto; text-align: left; }
+    .match .edit { justify-self: end; }
+    @media (max-width: 560px) {
+      .match { grid-template-columns: auto 1fr auto; }
+      .match .status { grid-column: 2 / -1; justify-self: start; }
+      .match .edit { grid-column: 1 / -1; justify-self: start; }
+    }
+
+    /* ============================================================
+       STATS
+       ============================================================ */
+    .filters { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip {
+      padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--fg-muted);
+      border: 1px solid var(--line-strong); transition: all .2s var(--ease);
+    }
+    .chip:hover { color: var(--fg); }
+    .chip.is-on { background: #fff; color: #000; border-color: #fff; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 560px; }
+    thead th {
+      text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim);
+      padding: 14px 16px; border-bottom: 1px solid var(--line); white-space: nowrap;
+    }
+    thead th.num, tbody td.num { text-align: right; }
+    thead th button { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; }
+    thead th button:hover, thead th.is-sorted button { color: var(--fg); }
+    thead th.is-sorted button::after { content: "↓"; color: var(--accent); }
+    thead th.is-sorted.asc button::after { content: "↑"; }
+    tbody td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover td { background: rgba(255,255,255,.02); }
+    td.rank { color: var(--fg-dim); font-weight: 700; width: 48px; }
+    td.player { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+    td.player .avatar { width: 32px; height: 32px; font-size: 11px; }
+    td.player .cap-tag { font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--line-strong); color: var(--fg-muted); }
+    td .team-tag { font-size: 12px; font-weight: 600; color: var(--fg-muted); }
+    td .team-tag.team-a { color: var(--accent); }
+    td.kd { font-weight: 800; }
+    tr.top td.kd { color: var(--accent); }
+    .empty-note { padding: 32px 20px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+
+    /* ============================================================
+       RULES
+       ============================================================ */
+    .rules { display: grid; gap: 14px; }
+    @media (min-width: 720px) { .rules { grid-template-columns: repeat(3, 1fr); } }
+    .rule { padding: 22px; }
+    .rule .n { font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
+    .rule h3 { font-size: 17px; margin: 8px 0 8px; letter-spacing: -0.02em; }
+    .rule p { font-size: 14px; color: var(--fg-muted); }
+
+    /* Toast */
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100;
+      background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px;
+      opacity: 0; pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease);
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,.9);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* Reveal */
     .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
     .reveal.is-visible { opacity: 1; transform: none; }
     .reveal[data-delay="1"] { transition-delay: .08s; }
     .reveal[data-delay="2"] { transition-delay: .16s; }
-    .reveal[data-delay="3"] { transition-delay: .24s; }
     .no-js .reveal { opacity: 1; transform: none; }
 
-    /* Footer (same as index.html) */
-    .footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: 14px; color: var(--fg-muted); }
+    /* Footer */
+    .footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: 14px; color: var(--fg-muted); margin-top: auto; }
     .footer .container { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
     .footer a { color: var(--fg); transition: color .2s var(--ease); }
     .footer a:hover { color: var(--accent); }
-    
+
     @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
       .reveal { opacity: 1; transform: none; }
     }
   </style>
@@ -171,27 +467,135 @@
     </div>
   </header>
 
-  <main id="main" aria-labelledby="page-title">
+  <!-- PREVIEW BAR: sample data + role switcher. Delete once Twitch login and the API exist. -->
+  <div class="preview-bar" role="region" aria-label="Preview controls">
     <div class="container">
-      <div class="inner">
-        <span class="eyebrow reveal">R6 Siege Tournament</span>
-        <h1 id="page-title" class="reveal" data-delay="1">Coming <span>Soon</span></h1>
-        <p class="sub reveal" data-delay="2">
-          Brackets, rules, prize info, and sign-ups are on the way.
-          Follow the stream so you don't miss the announcement.
-        </p>
-        <div class="actions reveal" data-delay="3">
-          <a class="btn btn-primary" href="#" data-link="twitch" target="_blank" rel="noopener">
-            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
-            Watch on Twitch
-          </a>
-          <a class="btn btn-ghost" href="/">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-            Back Home
-          </a>
+      <span><strong>Preview</strong> · sample data, nothing is saved</span>
+      <label>Stage
+        <select id="stage-select">
+          <option value="draft">Draft in progress</option>
+          <option value="live">Series live</option>
+          <option value="complete">Series complete</option>
+        </select>
+      </label>
+      <label>View as
+        <select id="role-select">
+          <option value="viewer">Viewer (logged out)</option>
+          <option value="captain-a">Captain · Team A</option>
+          <option value="captain-b">Captain · Team B</option>
+          <option value="helper">Helper</option>
+          <option value="admin">Admin</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <main id="main">
+
+    <!-- HERO -->
+    <section class="t-hero" aria-labelledby="page-title">
+      <div class="container">
+        <div class="reveal">
+          <span class="eyebrow">Community Event</span>
+          <h1 id="page-title">R6 Siege <span>Tournament</span></h1>
+          <div class="meta-row">
+            <span class="pill pill-status" id="status-pill" data-status="draft"><span class="dot"></span><span id="status-text">Draft in progress</span></span>
+            <span class="pill">5v5</span>
+            <span class="pill">Best of 3</span>
+            <span class="pill">2 teams</span>
+            <span class="pill">Snake draft</span>
+          </div>
+        </div>
+        <div class="auth reveal" data-delay="1" id="auth"></div>
+      </div>
+    </section>
+
+    <!-- SUB NAV -->
+    <nav class="subnav" aria-label="Tournament sections">
+      <div class="container">
+        <a href="#draft" class="is-active">Draft Board</a>
+        <a href="#matches">Matches</a>
+        <a href="#stats">Player Stats</a>
+        <a href="#rules">Rules</a>
+      </div>
+    </nav>
+
+    <!-- DRAFT -->
+    <section class="block" id="draft" aria-labelledby="draft-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="draft-title">Draft Board</h2>
+          <p class="sub" id="draft-sub"></p>
+        </div>
+        <div class="draft-layout">
+          <div>
+            <div class="card board" id="board" aria-live="polite"></div>
+            <div class="card snake" id="snake" aria-label="Pick order"></div>
+          </div>
+          <aside class="card pool" aria-labelledby="pool-title">
+            <div class="pool-head">
+              <h3 id="pool-title">Player Pool</h3>
+              <span class="count" id="pool-count"></span>
+            </div>
+            <ul class="pool-list" id="pool"></ul>
+            <div class="pool-foot" id="pool-foot"></div>
+          </aside>
         </div>
       </div>
-    </div>
+    </section>
+
+    <!-- MATCHES -->
+    <section class="block" id="matches" aria-labelledby="matches-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="matches-title">Matches</h2>
+          <p class="sub" id="matches-sub"></p>
+        </div>
+        <div class="card scoreboard" id="scoreboard"></div>
+        <ul class="match-list" id="match-list"></ul>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="block" id="stats" aria-labelledby="stats-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="stats-title">Player Stats</h2>
+          <div class="filters" id="stat-filters">
+            <button class="chip is-on" data-team="all">All</button>
+            <button class="chip" data-team="a">Team A</button>
+            <button class="chip" data-team="b">Team B</button>
+          </div>
+        </div>
+        <div class="card table-wrap" id="stats-table"></div>
+      </div>
+    </section>
+
+    <!-- RULES -->
+    <section class="block" id="rules" aria-labelledby="rules-title">
+      <div class="container">
+        <div class="section-head">
+          <h2 id="rules-title">How it works</h2>
+        </div>
+        <div class="rules">
+          <div class="card rule">
+            <div class="n">01</div>
+            <h3>Two captains, snake draft</h3>
+            <p>Captains log in with Twitch and pick from the player pool on this page. Round 1 goes A then B. Round 2 flips to B then A, and it keeps alternating until both rosters are full.</p>
+          </div>
+          <div class="card rule">
+            <div class="n">02</div>
+            <h3>Best of three</h3>
+            <p>5v5 Rainbow Six Siege, first team to win two maps takes the series. Scores update here as the maps are played.</p>
+          </div>
+          <div class="card rule">
+            <div class="n">03</div>
+            <h3>Stats after every map</h3>
+            <p>Kills, deaths, and assists are entered from the in-game scoreboard after each map and roll up into the leaderboard above.</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -200,7 +604,12 @@
     </div>
   </footer>
 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
   <script>
+    /* ------------------------------------------------------------
+       Shared bits (same as index.html)
+       ------------------------------------------------------------ */
     document.querySelectorAll('[data-link]').forEach(function (a) {
       var url = LINKS[a.dataset.link];
       if (!url) return;
@@ -210,9 +619,450 @@
     var y = document.querySelector('[data-year]');
     if (y) y.textContent = new Date().getFullYear();
 
+    /* ------------------------------------------------------------
+       SAMPLE DATA
+       In the real version this comes from /api/tournament and
+       changes are written back via /api/draft, /api/matches, etc.
+       ------------------------------------------------------------ */
+    var TEAMS = {
+      a: { id: 'a', name: 'Team Vexo', captain: 'Vexo' },
+      b: { id: 'b', name: 'Team Nyx',  captain: 'Nyx'  }
+    };
+    var ROUNDS = 4; /* captains play, so 4 picks each fills a 5-stack */
+
+    var POOL = [
+      { id: 'slayde',    name: 'Slayde',    mains: 'Ash · Jäger'      },
+      { id: 'kova',      name: 'Kova',      mains: 'Thatcher · Smoke' },
+      { id: 'brixx',     name: 'Brixx',     mains: 'Sledge · Mute'    },
+      { id: 'mono',      name: 'Mono',      mains: 'Iana · Valk'      },
+      { id: 'tallow',    name: 'Tallow',    mains: 'Zofia · Kaid'     },
+      { id: 'juno',      name: 'Juno',      mains: 'Hibana · Mira'    },
+      { id: 'reyz',      name: 'Reyz',      mains: 'Buck · Bandit'    },
+      { id: 'ghostline', name: 'Ghostline', mains: 'Thermite · Doc'   }
+    ];
+
+    /* Full draft, in pick order. The stage decides how many are applied. */
+    var FULL_PICKS = [
+      { team: 'a', player: 'slayde'    },   /* R1 */
+      { team: 'b', player: 'kova'      },
+      { team: 'b', player: 'brixx'     },   /* R2 (flipped) */
+      { team: 'a', player: 'mono'      },
+      { team: 'a', player: 'tallow'    },   /* R3 */
+      { team: 'b', player: 'juno'      },
+      { team: 'b', player: 'ghostline' },   /* R4 (flipped) */
+      { team: 'a', player: 'reyz'      }
+    ];
+
+    var MAPS = ['Clubhouse', 'Oregon', 'Kafe Dostoyevsky'];
+
+    var STAGES = {
+      draft: {
+        picks: 5,
+        matches: [
+          { status: 'upcoming', score: [0, 0] },
+          { status: 'upcoming', score: [0, 0] },
+          { status: 'upcoming', score: [0, 0] }
+        ],
+        stats: null
+      },
+      live: {
+        picks: 8,
+        matches: [
+          { status: 'final',    score: [7, 5] },
+          { status: 'live',     score: [4, 3] },
+          { status: 'upcoming', score: [0, 0] }
+        ],
+        stats: {
+          vexo: [16, 11, 5], slayde: [14, 12, 3], mono: [11, 13, 6], tallow: [9, 12, 8], reyz: [12, 10, 4],
+          nyx:  [13, 12, 4], kova:   [15, 12, 2], brixx: [10, 13, 5], juno: [7, 14, 6], ghostline: [8, 13, 7]
+        }
+      },
+      complete: {
+        picks: 8,
+        matches: [
+          { status: 'final', score: [7, 5] },
+          { status: 'final', score: [6, 8] },
+          { status: 'final', score: [7, 3] }
+        ],
+        stats: {
+          vexo: [27, 17, 8], slayde: [22, 19, 6], mono: [18, 20, 9], tallow: [15, 19, 12], reyz: [21, 16, 7],
+          nyx:  [20, 21, 7], kova:   [24, 20, 4], brixx: [16, 22, 8], juno: [12, 23, 10], ghostline: [14, 21, 11]
+        }
+      }
+    };
+
+    /* ------------------------------------------------------------
+       STATE
+       ------------------------------------------------------------ */
+    var stage = 'draft';
+    var role  = 'viewer';
+    var state = null;
+    var sortKey = 'kd', sortAsc = false, teamFilter = 'all';
+    var editingMatch = -1;
+
+    function loadStage(s) {
+      stage = s;
+      var src = STAGES[s];
+      state = {
+        picks: FULL_PICKS.slice(0, src.picks),
+        matches: src.matches.map(function (m, i) { return { map: MAPS[i], status: m.status, score: m.score.slice() }; }),
+        stats: src.stats ? JSON.parse(JSON.stringify(src.stats)) : {}
+      };
+      editingMatch = -1;
+    }
+
+    /* ------------------------------------------------------------
+       HELPERS
+       ------------------------------------------------------------ */
+    function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function initials(n) { return n.slice(0, 2).toUpperCase(); }
+    function player(id) { for (var i = 0; i < POOL.length; i++) if (POOL[i].id === id) return POOL[i]; return null; }
+    function pickOrder(round) { return round % 2 === 1 ? ['a', 'b'] : ['b', 'a']; }
+    function totalPicks() { return ROUNDS * 2; }
+    function draftDone() { return state.picks.length >= totalPicks(); }
+    function nextSlot() {
+      if (draftDone()) return null;
+      var n = state.picks.length;
+      var round = Math.floor(n / 2) + 1;
+      var team = pickOrder(round)[n % 2];
+      return { round: round, team: team, pickNo: n + 1 };
+    }
+    function pickAt(round, team) {
+      var n = (round - 1) * 2 + pickOrder(round).indexOf(team);
+      return state.picks[n] ? { pick: state.picks[n], pickNo: n + 1 } : null;
+    }
+    function takenBy(pid) { for (var i = 0; i < state.picks.length; i++) if (state.picks[i].player === pid) return state.picks[i].team; return null; }
+    function myTeam() { return role === 'captain-a' ? 'a' : role === 'captain-b' ? 'b' : null; }
+    function canDraftNow() {
+      var slot = nextSlot();
+      if (!slot) return false;
+      if (role === 'admin') return true;
+      return myTeam() === slot.team;
+    }
+    function canEditResults() { return role === 'helper' || role === 'admin'; }
+    function seriesScore() {
+      var s = [0, 0];
+      state.matches.forEach(function (m) { if (m.status === 'final') { if (m.score[0] > m.score[1]) s[0]++; else if (m.score[1] > m.score[0]) s[1]++; } });
+      return s;
+    }
+    function seriesWinner() { var s = seriesScore(); return s[0] >= 2 ? 'a' : s[1] >= 2 ? 'b' : null; }
+    function overallStatus() {
+      if (!draftDone()) return 'draft';
+      if (seriesWinner()) return 'complete';
+      return 'live';
+    }
+    function roster(team) {
+      var list = [{ id: TEAMS[team].captain.toLowerCase(), name: TEAMS[team].captain, captain: true }];
+      state.picks.forEach(function (p) { if (p.team === team) { var pl = player(p.player); list.push({ id: pl.id, name: pl.name }); } });
+      return list;
+    }
+    var toastTimer;
+    function toast(msg) {
+      var t = document.getElementById('toast');
+      t.textContent = msg; t.classList.add('show');
+      clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+    }
+
+    /* ------------------------------------------------------------
+       RENDER: hero + auth
+       ------------------------------------------------------------ */
+    var TWITCH_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>';
+
+    function renderHero() {
+      var st = overallStatus();
+      var pill = document.getElementById('status-pill');
+      pill.dataset.status = st;
+      document.getElementById('status-text').textContent =
+        st === 'draft' ? 'Draft in progress' : st === 'live' ? 'Series live' : 'Series complete';
+
+      var auth = document.getElementById('auth');
+      if (role === 'viewer') {
+        auth.innerHTML =
+          '<button class="btn btn-ghost" id="login-btn">' + TWITCH_ICON + 'Log in with Twitch</button>' +
+          '<span class="auth-hint">Captains and helpers log in to make changes. Everyone else can just watch.</span>';
+        document.getElementById('login-btn').onclick = function () {
+          toast('Preview: pick a role in the bar above to simulate a login');
+          document.getElementById('role-select').focus();
+        };
+      } else {
+        var who = role === 'captain-a' ? TEAMS.a.captain : role === 'captain-b' ? TEAMS.b.captain : role === 'helper' ? 'mod_sarah' : 'aleksk9_';
+        var label = role === 'captain-a' ? 'Captain · ' + TEAMS.a.name : role === 'captain-b' ? 'Captain · ' + TEAMS.b.name : role === 'helper' ? 'Helper' : 'Admin';
+        var cls = role === 'captain-a' ? 'team-a' : role === 'captain-b' ? 'team-b' : '';
+        auth.innerHTML =
+          '<span class="auth-chip"><span class="avatar ' + cls + '">' + esc(initials(who)) + '</span>' +
+          '<span><b>' + esc(who) + '</b><br><span class="role">' + esc(label) + '</span></span>' +
+          '<button id="logout-btn">Log out</button></span>';
+        document.getElementById('logout-btn').onclick = function () { setRole('viewer'); };
+      }
+    }
+
+    /* ------------------------------------------------------------
+       RENDER: draft board
+       ------------------------------------------------------------ */
+    function teamHead(t) {
+      var tm = TEAMS[t];
+      return '<div class="team team-' + t + '"><span class="avatar team-' + t + '">' + esc(initials(tm.captain)) + '</span>' +
+        '<span><div class="team-name">' + esc(tm.name) + '</div><div class="team-cap">Captain · ' + esc(tm.captain) + '</div></span></div>';
+    }
+
+    function renderBoard(newPickNo) {
+      var slot = nextSlot();
+      var html = '<div class="board-head"><div></div>' + teamHead('a') + teamHead('b') + '</div>';
+      for (var r = 1; r <= ROUNDS; r++) {
+        var order = pickOrder(r);
+        html += '<div class="board-row"><div class="round-label"><span>Rnd</span><b>' + r + '</b><span class="dir">' + (order[0] === 'a' ? 'A → B' : 'B → A') + '</span></div>';
+        ['a', 'b'].forEach(function (t) {
+          var got = pickAt(r, t);
+          if (got) {
+            var pl = player(got.pick.player);
+            html += '<div class="cell' + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pick-no">#' + got.pickNo + '</span>' +
+              '<span class="avatar team-' + t + '">' + esc(initials(pl.name)) + '</span>' +
+              '<span><div class="name">' + esc(pl.name) + '</div><div class="mains">' + esc(pl.mains) + '</div></span></div>';
+          } else if (slot && slot.round === r && slot.team === t) {
+            html += '<div class="cell is-clock"><span class="pick-no">#' + slot.pickNo + '</span>' +
+              '<span><div class="clock-text">On the clock</div><div class="clock-sub">' + esc(TEAMS[t].captain) + ' is picking' + (canDraftNow() ? ' · choose from the pool' : '') + '</div></span></div>';
+          } else {
+            html += '<div class="cell is-empty"><span class="pick-no">#' + ((r - 1) * 2 + order.indexOf(t) + 1) + '</span><span style="padding-left:6px">—</span></div>';
+          }
+        });
+        html += '</div>';
+      }
+      document.getElementById('board').innerHTML = html;
+
+      var sub = document.getElementById('draft-sub');
+      if (slot) {
+        sub.innerHTML = 'Round <b>' + slot.round + '</b> · Pick <b>' + slot.pickNo + ' of ' + totalPicks() + '</b> · <span class="clock">' + esc(TEAMS[slot.team].captain) + ' is on the clock</span>';
+      } else {
+        sub.innerHTML = '<b>Draft complete.</b> Rosters are locked.';
+      }
+    }
+
+    function renderSnake() {
+      var slot = nextSlot();
+      var html = '<span class="lbl">Pick order</span>';
+      for (var r = 1; r <= ROUNDS; r++) {
+        var order = pickOrder(r);
+        html += '<span class="rnd">';
+        order.forEach(function (t, i) {
+          var no = (r - 1) * 2 + i + 1;
+          var cls = 'slot ' + t + (no <= state.picks.length ? ' done' : '') + (slot && slot.pickNo === no ? ' now' : '');
+          html += '<span class="' + cls + '" title="Pick ' + no + ' · ' + esc(TEAMS[t].captain) + '">' + esc(TEAMS[t].captain[0]) + '</span>';
+        });
+        html += '</span>';
+        if (r < ROUNDS) html += '<span class="arrow">→</span>';
+      }
+      html += '<span class="flip">Order flips every round</span>';
+      document.getElementById('snake').innerHTML = html;
+    }
+
+    function renderPool() {
+      var slot = nextSlot();
+      var can = canDraftNow();
+      var open = 0;
+      var html = '';
+      POOL.forEach(function (p) {
+        var t = takenBy(p.id);
+        if (!t) open++;
+        html += '<li class="pool-item' + (t ? ' is-taken' : '') + '">' +
+          '<span class="avatar' + (t ? ' team-' + t : '') + '">' + esc(initials(p.name)) + '</span>' +
+          '<span class="who"><div class="name">' + esc(p.name) + '</div><div class="mains">' + esc(p.mains) + '</div></span>';
+        if (t) html += '<span class="taken-by">' + esc(TEAMS[t].name) + '</span>';
+        else if (can) html += '<button class="btn btn-sm btn-draft" data-draft="' + p.id + '">Draft</button>';
+        html += '</li>';
+      });
+      document.getElementById('pool').innerHTML = html;
+      document.getElementById('pool-count').textContent = open + ' available';
+
+      var foot = '';
+      if (!slot) foot = '<span>All picks are in.</span>';
+      else if (can) foot = '<span>Your pick, <b>' + esc(TEAMS[slot.team].captain) + '</b>. Tap Draft next to a player.</span>';
+      else if (myTeam()) foot = '<span>Waiting on <b>' + esc(TEAMS[slot.team].captain) + '</b> to pick.</span>';
+      else foot = '<span>Only captains can draft. Log in with Twitch if that is you.</span>';
+      if (role === 'admin') {
+        foot += '<span>' + (state.picks.length ? '<button class="link-btn" id="undo-btn">Undo last pick</button> · ' : '') + '<button class="link-btn" id="reset-btn">Reset draft</button></span>';
+      }
+      document.getElementById('pool-foot').innerHTML = foot;
+
+      document.querySelectorAll('[data-draft]').forEach(function (b) { b.onclick = function () { draftPlayer(b.dataset.draft); }; });
+      var u = document.getElementById('undo-btn'); if (u) u.onclick = undoPick;
+      var rs = document.getElementById('reset-btn'); if (rs) rs.onclick = resetDraft;
+    }
+
+    function draftPlayer(pid) {
+      var slot = nextSlot();
+      if (!slot || !canDraftNow() || takenBy(pid)) return;
+      state.picks.push({ team: slot.team, player: pid });
+      var pl = player(pid);
+      toast(TEAMS[slot.team].captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
+      renderAll(slot.pickNo);
+    }
+    function undoPick() { state.picks.pop(); toast('Last pick undone'); renderAll(); }
+    function resetDraft() { state.picks = []; toast('Draft reset'); renderAll(); }
+
+    /* ------------------------------------------------------------
+       RENDER: matches
+       ------------------------------------------------------------ */
+    function renderMatches() {
+      var s = seriesScore();
+      var w = seriesWinner();
+      var live = state.matches.some(function (m) { return m.status === 'live'; });
+      var sb =
+        '<div class="side team-a' + (w === 'a' ? ' winner' : '') + '"><span class="avatar team-a">' + esc(initials(TEAMS.a.captain)) + '</span><span class="tn">' + esc(TEAMS.a.name) + '</span><span class="cap">Captain · ' + esc(TEAMS.a.captain) + '</span></div>' +
+        '<div class="score"><span>' + s[0] + '</span><span class="sep">–</span><span>' + s[1] + '</span></div>' +
+        '<div class="side team-b' + (w === 'b' ? ' winner' : '') + '"><span class="avatar team-b">' + esc(initials(TEAMS.b.captain)) + '</span><span class="tn">' + esc(TEAMS.b.name) + '</span><span class="cap">Captain · ' + esc(TEAMS.b.captain) + '</span></div>';
+      sb += '<div class="series' + (w ? ' win' : '') + '">' +
+        (w ? esc(TEAMS[w].name) + ' wins the series ' + s[0] + '–' + s[1]
+           : !draftDone() ? 'Series starts after the draft'
+           : live ? 'Best of 3 · in progress'
+           : 'Best of 3 · first to 2 maps') + '</div>';
+      document.getElementById('scoreboard').innerHTML = sb;
+
+      document.getElementById('matches-sub').innerHTML = canEditResults()
+        ? 'You can <b>update scores</b> after each map.'
+        : 'Scores are updated after every map.';
+
+      var html = '';
+      state.matches.forEach(function (m, i) {
+        var status = m.status;
+        var pill = status === 'live' ? '<span class="pill pill-live"><span class="dot"></span>Live</span>'
+                 : status === 'final' ? '<span class="pill pill-final">Final</span>'
+                 : '<span class="pill pill-upcoming">Upcoming</span>';
+        var score = status === 'upcoming'
+          ? '<span class="ms tbd">TBD</span>'
+          : '<span class="ms"><span class="a">' + m.score[0] + '</span><span class="sep">–</span><span>' + m.score[1] + '</span></span>';
+        var when = status === 'final' ? (m.score[0] > m.score[1] ? TEAMS.a.name : TEAMS.b.name) + ' took the map'
+                 : status === 'live' ? 'Round ' + (m.score[0] + m.score[1] + 1) + ' underway'
+                 : 'Map ' + (i + 1) + ' of 3';
+        html += '<li class="card match"><span class="mnum">M' + (i + 1) + '</span>' +
+          '<span class="info"><div class="map">' + esc(m.map) + '</div><div class="when">' + esc(when) + '</div></span>' +
+          score + '<span class="status">' + pill + '</span>';
+        if (canEditResults()) {
+          if (editingMatch === i) {
+            html += '<div class="tools">' +
+              '<label>' + esc(TEAMS.a.name) + ' <input type="number" min="0" max="9" id="sa-' + i + '" value="' + m.score[0] + '"></label>' +
+              '<label>' + esc(TEAMS.b.name) + ' <input type="number" min="0" max="9" id="sb-' + i + '" value="' + m.score[1] + '"></label>' +
+              '<label>Status <select id="ss-' + i + '">' +
+                ['upcoming', 'live', 'final'].map(function (o) { return '<option value="' + o + '"' + (o === status ? ' selected' : '') + '>' + o[0].toUpperCase() + o.slice(1) + '</option>'; }).join('') +
+              '</select></label>' +
+              '<button class="btn btn-sm btn-primary" data-save="' + i + '">Save</button>' +
+              '<button class="link-btn" data-cancel="' + i + '">Cancel</button></div>';
+          } else {
+            html += '<button class="btn btn-sm btn-ghost edit" data-edit="' + i + '">Update score</button>';
+          }
+        }
+        html += '</li>';
+      });
+      document.getElementById('match-list').innerHTML = html;
+
+      document.querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { editingMatch = +b.dataset.edit; renderMatches(); }; });
+      document.querySelectorAll('[data-cancel]').forEach(function (b) { b.onclick = function () { editingMatch = -1; renderMatches(); }; });
+      document.querySelectorAll('[data-save]').forEach(function (b) {
+        b.onclick = function () {
+          var i = +b.dataset.save;
+          var m = state.matches[i];
+          m.score = [+document.getElementById('sa-' + i).value || 0, +document.getElementById('sb-' + i).value || 0];
+          m.status = document.getElementById('ss-' + i).value;
+          editingMatch = -1;
+          toast('Map ' + (i + 1) + ' updated');
+          renderAll();
+        };
+      });
+    }
+
+    /* ------------------------------------------------------------
+       RENDER: stats
+       ------------------------------------------------------------ */
+    function statRows() {
+      var rows = [];
+      ['a', 'b'].forEach(function (t) {
+        roster(t).forEach(function (p) {
+          var s = state.stats[p.id] || [0, 0, 0];
+          rows.push({ id: p.id, name: p.name, team: t, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
+        });
+      });
+      return rows;
+    }
+
+    function renderStats() {
+      var rows = statRows().filter(function (r) { return teamFilter === 'all' || r.team === teamFilter; });
+      var hasStats = Object.keys(state.stats).length > 0;
+      var wrap = document.getElementById('stats-table');
+
+      if (!draftDone()) { wrap.innerHTML = '<div class="empty-note">Player stats appear once the draft is complete and the first map is played.</div>'; return; }
+      if (!hasStats) { wrap.innerHTML = '<div class="empty-note">Rosters are set. Stats will show up after the first map.</div>'; return; }
+
+      rows.sort(function (x, y) { var d = x[sortKey] < y[sortKey] ? -1 : x[sortKey] > y[sortKey] ? 1 : 0; return sortAsc ? d : -d; });
+      var topKd = Math.max.apply(null, rows.map(function (r) { return r.kd; }));
+
+      function th(key, label, num) {
+        return '<th class="' + (num ? 'num ' : '') + (sortKey === key ? 'is-sorted' + (sortAsc ? ' asc' : '') : '') + '"><button data-sort="' + key + '">' + label + '</button></th>';
+      }
+      var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('team', 'Team') + th('k', 'K', 1) + th('d', 'D', 1) + th('a', 'A', 1) + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
+      rows.forEach(function (r, i) {
+        html += '<tr' + (r.kd === topKd ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td>' +
+          '<td class="player"><span class="avatar team-' + r.team + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
+          '<td><span class="team-tag team-' + r.team + '">' + esc(TEAMS[r.team].name) + '</span></td>' +
+          '<td class="num">' + r.k + '</td><td class="num">' + r.d + '</td><td class="num">' + r.a + '</td>' +
+          '<td class="num kd">' + r.kd.toFixed(2) + '</td></tr>';
+      });
+      html += '</tbody></table>';
+      wrap.innerHTML = html;
+      document.querySelectorAll('[data-sort]').forEach(function (b) {
+        b.onclick = function () {
+          var k = b.dataset.sort;
+          if (sortKey === k) sortAsc = !sortAsc; else { sortKey = k; sortAsc = (k === 'name' || k === 'team'); }
+          renderStats();
+        };
+      });
+    }
+
+    document.querySelectorAll('#stat-filters .chip').forEach(function (c) {
+      c.onclick = function () {
+        teamFilter = c.dataset.team;
+        document.querySelectorAll('#stat-filters .chip').forEach(function (x) { x.classList.toggle('is-on', x === c); });
+        renderStats();
+      };
+    });
+
+    /* ------------------------------------------------------------
+       WIRING
+       ------------------------------------------------------------ */
+    function renderAll(newPickNo) {
+      renderHero();
+      renderBoard(newPickNo);
+      renderSnake();
+      renderPool();
+      renderMatches();
+      renderStats();
+    }
+    function setRole(r) {
+      role = r;
+      document.getElementById('role-select').value = r;
+      editingMatch = -1;
+      renderAll();
+    }
+
+    document.getElementById('stage-select').onchange = function (e) { loadStage(e.target.value); renderAll(); };
+    document.getElementById('role-select').onchange = function (e) { setRole(e.target.value); };
+
+    loadStage('draft');
+    renderAll();
+
+    /* Sub-nav active state */
+    var subLinks = Array.prototype.slice.call(document.querySelectorAll('.subnav a'));
+    var blocks = subLinks.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+    function updateSubnav() {
+      var top = window.scrollY + (window.innerHeight || 800) * 0.45;
+      var idx = 0;
+      blocks.forEach(function (b, i) { if (b.offsetTop <= top) idx = i; });
+      subLinks.forEach(function (a, i) { a.classList.toggle('is-active', i === idx); });
+    }
+    window.addEventListener('scroll', updateSubnav, { passive: true });
+    updateSubnav();
+
+    /* Reveal */
     var reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
     var vh = window.innerHeight || document.documentElement.clientHeight;
-    /* Anything already on screen reveals immediately; the rest waits for scroll. */
     var pending = reveals.filter(function (el) {
       var r = el.getBoundingClientRect();
       if (r.top < vh * 0.92 && r.bottom > 0) { el.classList.add('is-visible'); return false; }
@@ -220,9 +1070,7 @@
     });
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); }
-        });
+        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); } });
       }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
       pending.forEach(function (el) { io.observe(el); });
     } else {

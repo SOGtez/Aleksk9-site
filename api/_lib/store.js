@@ -7,8 +7,11 @@ const KEY_ROLES = 't:roles';
 let client;
 function redis() {
   if (!client) {
-    if (!process.env.KV_REST_API_URL) throw new Error('KV_REST_API_URL is not set (add Upstash Redis in Vercel → Storage)');
-    client = new Redis({ url: process.env.KV_REST_API_URL, token: process.env.KV_REST_API_TOKEN });
+    /* Vercel's Upstash integration uses KV_REST_API_*; Upstash's own console uses UPSTASH_REDIS_REST_*. Accept either. */
+    const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+    const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+    if (!url || !token) throw new Error('Redis env vars missing (add Upstash Redis in Vercel → Storage and redeploy)');
+    client = new Redis({ url, token });
   }
   return client;
 }

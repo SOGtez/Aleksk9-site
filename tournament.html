@@ -129,28 +129,29 @@
       font-size: 13px;
       color: var(--fg-muted);
     }
-    .preview-bar .container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; min-height: 44px; padding-block: 8px; }
+    .preview-bar .container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; min-height: 48px; padding-block: 8px; }
     .preview-bar strong { color: var(--fg); font-weight: 700; }
-    .preview-bar label { display: inline-flex; align-items: center; gap: 8px; }
-    .preview-bar select {
-      background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--line-strong);
-      border-radius: 8px; padding: 5px 30px 5px 10px; font-size: 13px; font-weight: 600;
-      appearance: none; -webkit-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 9px center; background-size: 12px;
+    .pv-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+    .pv-title { font-weight: 600; margin-right: 4px; }
+    .pv-btn {
+      padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--fg-muted);
+      border: 1px solid var(--line-strong); background: rgba(0,0,0,.25); transition: all .2s var(--ease);
     }
+    .pv-btn:hover { color: var(--fg); border-color: rgba(255,255,255,.4); }
+    .pv-btn.is-on { background: #fff; color: #000; border-color: #fff; }
 
     /* ============================================================
        PAGE HERO
        ============================================================ */
-    .t-hero { position: relative; isolation: isolate; padding: 64px 0 36px; overflow: hidden; }
-    .t-hero::before {
+    .t-hero { position: relative; isolation: isolate; z-index: 45; padding: 64px 0 36px; }
+    .t-hero .bg { position: absolute; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
+    .t-hero .bg::before {
       content: ""; position: absolute; z-index: -1; left: 50%; top: 20%;
       width: min(80vw, 720px); aspect-ratio: 1; transform: translate(-50%, -50%);
       background: radial-gradient(circle, rgba(225,6,0,.26) 0%, rgba(225,6,0,.10) 32%, transparent 68%);
       filter: blur(40px); pointer-events: none;
     }
-    .t-hero::after {
+    .t-hero .bg::after {
       content: "R6"; position: absolute; z-index: -2; right: -0.05em; top: -0.2em;
       font-weight: 900; font-size: clamp(200px, 30vw, 420px); letter-spacing: -0.08em; line-height: 1;
       color: rgba(255,255,255,.03); pointer-events: none; user-select: none;
@@ -179,8 +180,22 @@
     .pill-status[data-status="complete"] .dot { background: #fff; }
     @keyframes blink { 50% { opacity: .35; } }
 
-    .auth { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .auth { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
     @media (min-width: 820px) { .auth { align-items: flex-end; } }
+    .login-menu {
+      position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 280px;
+      background: var(--bg-elev-2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 8px;
+      box-shadow: 0 24px 60px -20px rgba(0,0,0,.9);
+      animation: cellin .25s var(--ease);
+    }
+    @media (min-width: 820px) { .login-menu { left: auto; right: 0; } }
+    .login-menu .lm-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); padding: 8px 10px 6px; }
+    .login-menu button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 10px; border-radius: 10px; transition: background-color .15s var(--ease); }
+    .login-menu button:hover { background: rgba(255,255,255,.06); }
+    .login-menu .avatar { width: 34px; height: 34px; font-size: 12px; }
+    .login-menu b { display: block; font-size: 14px; }
+    .login-menu small { display: block; font-size: 12px; color: var(--fg-muted); }
+    .t-hero .lede { margin-top: 14px; font-size: clamp(16px, 2vw, 18px); color: var(--fg-muted); max-width: 52ch; }
     .auth-chip {
       display: inline-flex; align-items: center; gap: 10px;
       padding: 8px 8px 8px 8px; border-radius: 999px;
@@ -240,6 +255,17 @@
     /* ============================================================
        DRAFT BOARD
        ============================================================ */
+    /* Turn banner */
+    .turn { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 18px 20px; margin-bottom: 20px; }
+    .turn .avatar { width: 48px; height: 48px; font-size: 16px; }
+    .turn .tx { flex: 1; min-width: 200px; }
+    .turn .tx b { display: block; font-size: 18px; letter-spacing: -0.02em; font-weight: 800; line-height: 1.2; }
+    .turn .tx span { font-size: 14px; color: var(--fg-muted); }
+    .turn.is-you { border-color: rgba(225,6,0,.6); background: linear-gradient(90deg, rgba(225,6,0,.16), var(--bg-elev) 60%); animation: turnpulse 2s var(--ease) infinite; }
+    .turn.is-you .tx b { color: var(--accent); }
+    .turn.is-done { border-color: rgba(255,255,255,.2); }
+    @keyframes turnpulse { 50% { border-color: rgba(225,6,0,.25); } }
+
     .draft-layout { display: grid; gap: 20px; }
     @media (min-width: 900px) { .draft-layout { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); align-items: start; } }
 
@@ -262,7 +288,7 @@
       background: rgba(255,255,255,.02);
     }
     .round-label b { font-size: 18px; color: var(--fg); letter-spacing: -0.03em; }
-    .round-label .dir { font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--fg-dim); }
+    .round-label .dir { font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--fg-dim); white-space: nowrap; }
     .cell {
       position: relative; min-height: 76px; padding: 12px 14px;
       display: flex; align-items: center; gap: 12px;
@@ -287,11 +313,13 @@
     /* Snake order strip */
     .snake { margin-top: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 6px; }
     .snake .lbl { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-dim); margin-right: 8px; }
-    .snake .rnd { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+    .snake .rnd { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
+    .snake .rl { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--fg-dim); margin-right: 4px; }
     .snake .slot {
-      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
-      font-size: 11px; font-weight: 800; color: var(--fg-dim); border: 1px solid var(--line);
+      height: 28px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px;
+      font-size: 12px; font-weight: 700; color: var(--fg-dim); border: 1px solid var(--line); white-space: nowrap;
     }
+    .snake .slot i { font-style: normal; font-size: 10px; opacity: .7; }
     .snake .slot.a { color: var(--accent); border-color: rgba(225,6,0,.4); }
     .snake .slot.b { color: var(--fg); border-color: rgba(255,255,255,.3); }
     .snake .slot.done.a { background: var(--accent); color: #fff; border-color: var(--accent); }
@@ -305,6 +333,10 @@
     .pool-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); }
     .pool-head h3 { font-size: 15px; letter-spacing: -0.01em; }
     .pool-head .count { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
+    .pool-head.is-turn { background: var(--accent-soft); border-bottom-color: rgba(225,6,0,.4); }
+    .pool-head.is-turn h3 { color: var(--accent); }
+    .pool-item .confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-size: 13px; font-weight: 600; }
+    .pool-item.is-confirming { background: var(--accent-soft); }
     .pool-list { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; }
     .pool-item {
       display: flex; align-items: center; gap: 12px; padding: 12px 18px;
@@ -467,26 +499,16 @@
     </div>
   </header>
 
-  <!-- PREVIEW BAR: sample data + role switcher. Delete once Twitch login and the API exist. -->
-  <div class="preview-bar" role="region" aria-label="Preview controls">
+  <!-- DEMO BAR: sample data + stage switcher. Delete once Twitch login and the API exist. -->
+  <div class="preview-bar" role="region" aria-label="Demo controls">
     <div class="container">
-      <span><strong>Preview</strong> · sample data, nothing is saved</span>
-      <label>Stage
-        <select id="stage-select">
-          <option value="draft">Draft in progress</option>
-          <option value="live">Series live</option>
-          <option value="complete">Series complete</option>
-        </select>
-      </label>
-      <label>View as
-        <select id="role-select">
-          <option value="viewer">Viewer (logged out)</option>
-          <option value="captain-a">Captain · Team A</option>
-          <option value="captain-b">Captain · Team B</option>
-          <option value="helper">Helper</option>
-          <option value="admin">Admin</option>
-        </select>
-      </label>
+      <span><strong>Demo</strong> · sample data, nothing you do here is saved</span>
+      <span class="pv-group" role="group" aria-label="Jump to a point in the tournament">
+        <span class="pv-title">Show me:</span>
+        <button class="pv-btn is-on" data-stage="draft">The draft</button>
+        <button class="pv-btn" data-stage="live">Mid-series</button>
+        <button class="pv-btn" data-stage="complete">Final result</button>
+      </span>
     </div>
   </div>
 
@@ -494,10 +516,12 @@
 
     <!-- HERO -->
     <section class="t-hero" aria-labelledby="page-title">
+      <div class="bg" aria-hidden="true"></div>
       <div class="container">
         <div class="reveal">
           <span class="eyebrow">Community Event</span>
           <h1 id="page-title">R6 Siege <span>Tournament</span></h1>
+          <p class="lede">Two captains draft their squads live on this page, then settle it in a best of three. Scores and player stats update here as the maps are played.</p>
           <div class="meta-row">
             <span class="pill pill-status" id="status-pill" data-status="draft"><span class="dot"></span><span id="status-text">Draft in progress</span></span>
             <span class="pill">5v5</span>
@@ -527,9 +551,10 @@
           <h2 id="draft-title">Draft Board</h2>
           <p class="sub" id="draft-sub"></p>
         </div>
+        <div class="card turn" id="turn" aria-live="polite"></div>
         <div class="draft-layout">
           <div>
-            <div class="card board" id="board" aria-live="polite"></div>
+            <div class="card board" id="board"></div>
             <div class="card snake" id="snake" aria-label="Pick order"></div>
           </div>
           <aside class="card pool" aria-labelledby="pool-title">
@@ -562,9 +587,9 @@
         <div class="section-head">
           <h2 id="stats-title">Player Stats</h2>
           <div class="filters" id="stat-filters">
-            <button class="chip is-on" data-team="all">All</button>
-            <button class="chip" data-team="a">Team A</button>
-            <button class="chip" data-team="b">Team B</button>
+            <button class="chip is-on" data-team="all">Both teams</button>
+            <button class="chip" data-team="a" data-team-name></button>
+            <button class="chip" data-team="b" data-team-name></button>
           </div>
         </div>
         <div class="card table-wrap" id="stats-table"></div>
@@ -699,6 +724,8 @@
     var state = null;
     var sortKey = 'kd', sortAsc = false, teamFilter = 'all';
     var editingMatch = -1;
+    var confirming = null;   /* player id awaiting draft confirmation */
+    var loginOpen = false;
 
     function loadStage(s) {
       stage = s;
@@ -709,6 +736,7 @@
         stats: src.stats ? JSON.parse(JSON.stringify(src.stats)) : {}
       };
       editingMatch = -1;
+      confirming = null;
     }
 
     /* ------------------------------------------------------------
@@ -778,12 +806,17 @@
       var auth = document.getElementById('auth');
       if (role === 'viewer') {
         auth.innerHTML =
-          '<button class="btn btn-ghost" id="login-btn">' + TWITCH_ICON + 'Log in with Twitch</button>' +
-          '<span class="auth-hint">Captains and helpers log in to make changes. Everyone else can just watch.</span>';
-        document.getElementById('login-btn').onclick = function () {
-          toast('Preview: pick a role in the bar above to simulate a login');
-          document.getElementById('role-select').focus();
-        };
+          '<button class="btn btn-ghost" id="login-btn" aria-haspopup="true" aria-expanded="' + loginOpen + '">' + TWITCH_ICON + 'Log in with Twitch</button>' +
+          '<span class="auth-hint">Just watching? No login needed. Captains and helpers log in to make changes.</span>' +
+          (loginOpen ?
+            '<div class="login-menu" id="login-menu"><div class="lm-title">Demo · continue as</div>' +
+            '<button data-login="captain-a"><span class="avatar team-a">' + esc(initials(TEAMS.a.captain)) + '</span><span><b>' + esc(TEAMS.a.captain) + '</b><small>Captain · ' + esc(TEAMS.a.name) + '</small></span></button>' +
+            '<button data-login="captain-b"><span class="avatar team-b">' + esc(initials(TEAMS.b.captain)) + '</span><span><b>' + esc(TEAMS.b.captain) + '</b><small>Captain · ' + esc(TEAMS.b.name) + '</small></span></button>' +
+            '<button data-login="helper"><span class="avatar">MS</span><span><b>mod_sarah</b><small>Helper · enters scores</small></span></button>' +
+            '<button data-login="admin"><span class="avatar">AL</span><span><b>aleksk9_</b><small>Admin · full control</small></span></button>' +
+            '</div>' : '');
+        document.getElementById('login-btn').onclick = function (e) { e.stopPropagation(); loginOpen = !loginOpen; renderHero(); };
+        document.querySelectorAll('[data-login]').forEach(function (b) { b.onclick = function () { loginOpen = false; setRole(b.dataset.login); toast('Logged in as ' + b.querySelector('b').textContent + ' (demo)'); }; });
       } else {
         var who = role === 'captain-a' ? TEAMS.a.captain : role === 'captain-b' ? TEAMS.b.captain : role === 'helper' ? 'mod_sarah' : 'aleksk9_';
         var label = role === 'captain-a' ? 'Captain · ' + TEAMS.a.name : role === 'captain-b' ? 'Captain · ' + TEAMS.b.name : role === 'helper' ? 'Helper' : 'Admin';
@@ -810,7 +843,7 @@
       var html = '<div class="board-head"><div></div>' + teamHead('a') + teamHead('b') + '</div>';
       for (var r = 1; r <= ROUNDS; r++) {
         var order = pickOrder(r);
-        html += '<div class="board-row"><div class="round-label"><span>Rnd</span><b>' + r + '</b><span class="dir">' + (order[0] === 'a' ? 'A → B' : 'B → A') + '</span></div>';
+        html += '<div class="board-row"><div class="round-label"><span>Rnd</span><b>' + r + '</b><span class="dir">' + esc(TEAMS[order[0]].captain) + ' 1st</span></div>';
         ['a', 'b'].forEach(function (t) {
           var got = pickAt(r, t);
           if (got) {
@@ -820,7 +853,7 @@
               '<span><div class="name">' + esc(pl.name) + '</div><div class="mains">' + esc(pl.mains) + '</div></span></div>';
           } else if (slot && slot.round === r && slot.team === t) {
             html += '<div class="cell is-clock"><span class="pick-no">#' + slot.pickNo + '</span>' +
-              '<span><div class="clock-text">On the clock</div><div class="clock-sub">' + esc(TEAMS[t].captain) + ' is picking' + (canDraftNow() ? ' · choose from the pool' : '') + '</div></span></div>';
+              '<span><div class="clock-text">On the clock</div><div class="clock-sub">' + (canDraftNow() ? 'Your pick · tap Draft in the pool' : esc(TEAMS[t].captain) + ' is picking') + '</div></span></div>';
           } else {
             html += '<div class="cell is-empty"><span class="pick-no">#' + ((r - 1) * 2 + order.indexOf(t) + 1) + '</span><span style="padding-left:6px">—</span></div>';
           }
@@ -837,16 +870,46 @@
       }
     }
 
+    function renderTurn() {
+      var slot = nextSlot();
+      var el = document.getElementById('turn');
+      el.className = 'card turn';
+      var html = '';
+      if (!slot) {
+        el.classList.add('is-done');
+        html = '<span class="avatar">✓</span><span class="tx"><b>Draft complete</b><span>Both rosters are locked. Scroll down for the matches.</span></span>';
+      } else if (canDraftNow()) {
+        el.classList.add('is-you');
+        html = '<span class="avatar team-' + slot.team + '">' + esc(initials(TEAMS[slot.team].captain)) + '</span>' +
+          '<span class="tx"><b>Your pick, ' + esc(TEAMS[slot.team].captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + totalPicks() + '. Tap <b style="display:inline;font-size:inherit;color:inherit">Draft</b> next to a player in the pool, then confirm.</span></span>' +
+          '<button class="btn btn-primary btn-sm" id="goto-pool">Choose a player</button>';
+      } else if (myTeam()) {
+        html = '<span class="avatar team-' + slot.team + '">' + esc(initials(TEAMS[slot.team].captain)) + '</span>' +
+          '<span class="tx"><b>Waiting on ' + esc(TEAMS[slot.team].captain) + '</b><span>Pick ' + slot.pickNo + ' of ' + totalPicks() + '. You are up next. The page updates on its own.</span></span>';
+      } else {
+        html = '<span class="avatar team-' + slot.team + '">' + esc(initials(TEAMS[slot.team].captain)) + '</span>' +
+          '<span class="tx"><b>' + esc(TEAMS[slot.team].captain) + ' is on the clock</b><span>Pick ' + slot.pickNo + ' of ' + totalPicks() + '. Captains take turns, and the order flips every round.</span></span>';
+      }
+      el.innerHTML = html;
+      var go = document.getElementById('goto-pool');
+      if (go) go.onclick = function () {
+        var pool = document.getElementById('pool');
+        pool.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var first = pool.querySelector('[data-draft]');
+        if (first) setTimeout(function () { first.focus(); }, 500);
+      };
+    }
+
     function renderSnake() {
       var slot = nextSlot();
       var html = '<span class="lbl">Pick order</span>';
       for (var r = 1; r <= ROUNDS; r++) {
         var order = pickOrder(r);
-        html += '<span class="rnd">';
+        html += '<span class="rnd"><span class="rl">R' + r + '</span>';
         order.forEach(function (t, i) {
           var no = (r - 1) * 2 + i + 1;
           var cls = 'slot ' + t + (no <= state.picks.length ? ' done' : '') + (slot && slot.pickNo === no ? ' now' : '');
-          html += '<span class="' + cls + '" title="Pick ' + no + ' · ' + esc(TEAMS[t].captain) + '">' + esc(TEAMS[t].captain[0]) + '</span>';
+          html += '<span class="' + cls + '" title="Pick ' + no + '"><i>' + no + '</i>' + esc(TEAMS[t].captain) + '</span>';
         });
         html += '</span>';
         if (r < ROUNDS) html += '<span class="arrow">→</span>';
@@ -867,11 +930,16 @@
           '<span class="avatar' + (t ? ' team-' + t : '') + '">' + esc(initials(p.name)) + '</span>' +
           '<span class="who"><div class="name">' + esc(p.name) + '</div><div class="mains">' + esc(p.mains) + '</div></span>';
         if (t) html += '<span class="taken-by">' + esc(TEAMS[t].name) + '</span>';
+        else if (can && confirming === p.id) html += '<span class="confirm">Draft ' + esc(p.name) + '?<button class="btn btn-sm btn-draft" data-confirm="' + p.id + '">Yes, draft</button><button class="link-btn" data-cancel-draft>Cancel</button></span>';
         else if (can) html += '<button class="btn btn-sm btn-draft" data-draft="' + p.id + '">Draft</button>';
         html += '</li>';
       });
       document.getElementById('pool').innerHTML = html;
+      if (confirming) { var ci = document.querySelector('[data-confirm="' + confirming + '"]'); if (ci) ci.closest('.pool-item').classList.add('is-confirming'); }
       document.getElementById('pool-count').textContent = open + ' available';
+      var head = document.querySelector('.pool-head');
+      head.classList.toggle('is-turn', can);
+      document.getElementById('pool-title').textContent = can ? 'Your turn · tap Draft' : 'Player Pool';
 
       var foot = '';
       if (!slot) foot = '<span>All picks are in.</span>';
@@ -883,7 +951,9 @@
       }
       document.getElementById('pool-foot').innerHTML = foot;
 
-      document.querySelectorAll('[data-draft]').forEach(function (b) { b.onclick = function () { draftPlayer(b.dataset.draft); }; });
+      document.querySelectorAll('[data-draft]').forEach(function (b) { b.onclick = function () { confirming = b.dataset.draft; renderPool(); }; });
+      document.querySelectorAll('[data-confirm]').forEach(function (b) { b.onclick = function () { draftPlayer(b.dataset.confirm); }; });
+      document.querySelectorAll('[data-cancel-draft]').forEach(function (b) { b.onclick = function () { confirming = null; renderPool(); }; });
       var u = document.getElementById('undo-btn'); if (u) u.onclick = undoPick;
       var rs = document.getElementById('reset-btn'); if (rs) rs.onclick = resetDraft;
     }
@@ -892,6 +962,7 @@
       var slot = nextSlot();
       if (!slot || !canDraftNow() || takenBy(pid)) return;
       state.picks.push({ team: slot.team, player: pid });
+      confirming = null;
       var pl = player(pid);
       toast(TEAMS[slot.team].captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
       renderAll(slot.pickNo);
@@ -997,7 +1068,7 @@
       function th(key, label, num) {
         return '<th class="' + (num ? 'num ' : '') + (sortKey === key ? 'is-sorted' + (sortAsc ? ' asc' : '') : '') + '"><button data-sort="' + key + '">' + label + '</button></th>';
       }
-      var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('team', 'Team') + th('k', 'K', 1) + th('d', 'D', 1) + th('a', 'A', 1) + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
+      var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('team', 'Team') + th('k', 'Kills', 1) + th('d', 'Deaths', 1) + th('a', 'Assists', 1) + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
       rows.forEach(function (r, i) {
         html += '<tr' + (r.kd === topKd ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td>' +
           '<td class="player"><span class="avatar team-' + r.team + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
@@ -1029,6 +1100,7 @@
        ------------------------------------------------------------ */
     function renderAll(newPickNo) {
       renderHero();
+      renderTurn();
       renderBoard(newPickNo);
       renderSnake();
       renderPool();
@@ -1037,13 +1109,23 @@
     }
     function setRole(r) {
       role = r;
-      document.getElementById('role-select').value = r;
       editingMatch = -1;
+      confirming = null;
       renderAll();
     }
 
-    document.getElementById('stage-select').onchange = function (e) { loadStage(e.target.value); renderAll(); };
-    document.getElementById('role-select').onchange = function (e) { setRole(e.target.value); };
+    document.querySelectorAll('[data-stage]').forEach(function (b) {
+      b.onclick = function () {
+        document.querySelectorAll('[data-stage]').forEach(function (x) { x.classList.toggle('is-on', x === b); });
+        loadStage(b.dataset.stage);
+        renderAll();
+        toast(b.dataset.stage === 'draft' ? 'Showing the draft' : b.dataset.stage === 'live' ? 'Showing the series in progress' : 'Showing the final result');
+      };
+    });
+    document.addEventListener('click', function (e) {
+      if (loginOpen && !e.target.closest('#login-menu') && !e.target.closest('#login-btn')) { loginOpen = false; renderHero(); }
+    });
+    document.querySelectorAll('[data-team-name]').forEach(function (c) { c.textContent = TEAMS[c.dataset.team].name; });
 
     loadStage('draft');
     renderAll();

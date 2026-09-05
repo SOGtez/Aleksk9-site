@@ -625,10 +625,10 @@
          ============================================================== -->
     <section class="live-wrap" aria-label="Stream status">
       <div class="container" style="display:flex;justify-content:center">
-        <a id="live-card" class="live-card reveal" data-state="live" href="#" data-link="twitch" target="_blank" rel="noopener">
+        <a id="live-card" class="live-card reveal" data-state="loading" href="#" data-link="twitch" target="_blank" rel="noopener">
           <span class="live-dot" aria-hidden="true"></span>
           <span class="live-text">
-            <span class="live-label" data-live-label>Live on Twitch</span>
+            <span class="live-label" data-live-label>Checking stream…</span>
             <span class="live-meta" data-live-meta>twitch.tv/aleksk9_</span>
           </span>
           <span class="live-cta" aria-hidden="true">Watch</span>
@@ -764,6 +764,16 @@
       if (meta) card.querySelector('[data-live-meta]').textContent = meta;
     }
     window.setLiveState = setLiveState;
+
+    /* Ask the site's own /api/live (cached Twitch lookup). Falls back to plain link when unavailable. */
+    if (location.protocol !== 'file:') {
+      fetch('/api/live', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.live) setLiveState('live', d.title ? d.title : 'twitch.tv/aleksk9_');
+        else setLiveState('offline', 'twitch.tv/aleksk9_ · follow to get notified');
+      }).catch(function () { setLiveState('offline', 'twitch.tv/aleksk9_'); });
+    } else {
+      setLiveState('offline', 'twitch.tv/aleksk9_');
+    }
   </script>
 </body>
 </html>

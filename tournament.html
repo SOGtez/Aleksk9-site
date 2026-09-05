@@ -454,6 +454,28 @@
     .rule h3 { font-size: 17px; margin: 8px 0 8px; letter-spacing: -0.02em; }
     .rule p { font-size: 14px; color: var(--fg-muted); }
 
+    /* Stats editor */
+    .stats-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    td input.stat { width: 64px; padding: 6px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--line-strong); font-size: 14px; font-weight: 700; text-align: right; }
+
+    /* Admin */
+    .admin-grid { display: grid; gap: 14px; }
+    @media (min-width: 820px) { .admin-grid { grid-template-columns: 1fr 1fr; align-items: start; } }
+    .admin-card { padding: 22px; }
+    .admin-card h3 { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .admin-card p { font-size: 14px; color: var(--fg-muted); margin-bottom: 14px; }
+    .role-form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .role-form input, .role-form select {
+      flex: 1 1 140px; min-width: 0; padding: 9px 12px; border-radius: 10px; background: var(--bg-elev-2); color: var(--fg);
+      border: 1px solid var(--line-strong); font-size: 14px;
+    }
+    .role-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+    .role-list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .role-list li b { font-weight: 700; }
+    .role-list li .rl { color: var(--fg-muted); font-size: 13px; flex: 1; }
+    .role-list li .lock { font-size: 11px; color: var(--fg-dim); }
+    .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+
     /* Toast */
     .toast {
       position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100;
@@ -500,7 +522,7 @@
   </header>
 
   <!-- DEMO BAR: sample data + stage switcher. Delete once Twitch login and the API exist. -->
-  <div class="preview-bar" role="region" aria-label="Demo controls">
+  <div class="preview-bar" role="region" aria-label="Demo controls" hidden>
     <div class="container">
       <span><strong>Demo</strong> · sample data, nothing you do here is saved</span>
       <span class="pv-group" role="group" aria-label="Jump to a point in the tournament">
@@ -586,6 +608,7 @@
       <div class="container">
         <div class="section-head">
           <h2 id="stats-title">Player Stats</h2>
+          <div class="stats-tools" id="stats-tools"></div>
           <div class="filters" id="stat-filters">
             <button class="chip is-on" data-team="all">Both teams</button>
             <button class="chip" data-team="a" data-team-name></button>
@@ -593,6 +616,38 @@
           </div>
         </div>
         <div class="card table-wrap" id="stats-table"></div>
+      </div>
+    </section>
+
+    <!-- ADMIN (only rendered for admins) -->
+    <section class="block" id="admin" aria-labelledby="admin-title" hidden>
+      <div class="container">
+        <div class="section-head">
+          <h2 id="admin-title">Admin</h2>
+          <p class="sub">Only admins see this section.</p>
+        </div>
+        <div class="admin-grid">
+          <div class="card admin-card">
+            <h3>Who can do what</h3>
+            <p>Add people by their Twitch username. Captains can draft for their team, helpers can enter scores and stats, admins can do everything.</p>
+            <form class="role-form" id="role-form">
+              <input type="text" id="role-login" placeholder="twitch username" autocomplete="off" required>
+              <select id="role-role">
+                <option value="captain-a">Captain · Team A</option>
+                <option value="captain-b">Captain · Team B</option>
+                <option value="helper">Helper</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button class="btn btn-sm btn-primary" type="submit">Add</button>
+            </form>
+            <ul class="role-list" id="role-list"></ul>
+          </div>
+          <div class="card admin-card">
+            <h3>Reset everything</h3>
+            <p>Reloads the teams, player pool, and maps from the site's config and clears all picks, scores, and stats. Use this before a new tournament. Undo and reset for just the draft are under the player pool.</p>
+            <div id="reset-all-wrap"><button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button></div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -726,6 +781,42 @@
     var editingMatch = -1;
     var confirming = null;   /* player id awaiting draft confirmation */
     var loginOpen = false;
+    var statsEditing = false;
+
+    /* Live mode: talk to /api/*. Demo mode (?demo=1 or API unreachable): sample data above. */
+    var LIVE = false;
+    var ME = null;           /* { login, name, avatar } from /api/me */
+    var lastUpdated = 0;
+
+    function api(path, body) {
+      var opts = body
+        ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' }
+        : { cache: 'no-store', credentials: 'same-origin' };
+      return fetch(path, opts).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) throw new Error(j.error || ('Request failed (' + r.status + ')'));
+          return j;
+        });
+      });
+    }
+    function applyServer(d) {
+      TEAMS = d.teams; ROUNDS = d.rounds; POOL = d.pool;
+      state = { picks: d.picks || [], matches: d.matches || [], stats: d.stats || {} };
+      lastUpdated = d.updatedAt || 0;
+      document.querySelectorAll('[data-team-name]').forEach(function (c) { c.textContent = TEAMS[c.dataset.team].name; });
+    }
+    function busy() { return confirming || editingMatch >= 0 || statsEditing; }
+    function refresh(force) {
+      if (!LIVE) return Promise.resolve();
+      return api('/api/tournament').then(function (d) {
+        if (!force && (d.updatedAt === lastUpdated || busy())) return;
+        applyServer(d);
+        renderAll();
+      }).catch(function () {});
+    }
+    function refreshMe() {
+      return api('/api/me').then(function (m) { ME = m.user; role = m.role; });
+    }
 
     function loadStage(s) {
       stage = s;
@@ -804,6 +895,23 @@
         st === 'draft' ? 'Draft in progress' : st === 'live' ? 'Series live' : 'Series complete';
 
       var auth = document.getElementById('auth');
+      if (LIVE) {
+        if (!ME) {
+          auth.innerHTML =
+            '<a class="btn btn-ghost" href="/api/auth/login">' + TWITCH_ICON + 'Log in with Twitch</a>' +
+            '<span class="auth-hint">Just watching? No login needed. Captains and helpers log in to make changes.</span>';
+        } else {
+          var lbl = role === 'captain-a' ? 'Captain · ' + TEAMS.a.name : role === 'captain-b' ? 'Captain · ' + TEAMS.b.name
+                  : role === 'helper' ? 'Helper' : role === 'admin' ? 'Admin' : 'Viewer';
+          var acls = role === 'captain-a' ? 'team-a' : role === 'captain-b' ? 'team-b' : '';
+          auth.innerHTML =
+            '<span class="auth-chip"><span class="avatar ' + acls + '">' + (ME.avatar ? '<img src="' + esc(ME.avatar) + '" alt="">' : esc(initials(ME.name || ME.login))) + '</span>' +
+            '<span><b>' + esc(ME.name || ME.login) + '</b><br><span class="role">' + esc(lbl) + '</span></span>' +
+            '<a href="/api/auth/logout" id="logout-btn">Log out</a></span>' +
+            (role === 'viewer' ? '<span class="auth-hint">You are logged in but not on the captain or helper list yet. Ask an admin to add you.</span>' : '');
+        }
+        return;
+      }
       if (role === 'viewer') {
         auth.innerHTML =
           '<button class="btn btn-ghost" id="login-btn" aria-haspopup="true" aria-expanded="' + loginOpen + '">' + TWITCH_ICON + 'Log in with Twitch</button>' +
@@ -961,14 +1069,28 @@
     function draftPlayer(pid) {
       var slot = nextSlot();
       if (!slot || !canDraftNow() || takenBy(pid)) return;
+      var pl = player(pid);
+      if (LIVE) {
+        confirming = null;
+        api('/api/draft', { player: pid }).then(function () {
+          toast(TEAMS[slot.team].captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
+          return refresh(true);
+        }).catch(function (e) { toast(e.message); refresh(true); });
+        return;
+      }
       state.picks.push({ team: slot.team, player: pid });
       confirming = null;
-      var pl = player(pid);
       toast(TEAMS[slot.team].captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
       renderAll(slot.pickNo);
     }
-    function undoPick() { state.picks.pop(); toast('Last pick undone'); renderAll(); }
-    function resetDraft() { state.picks = []; toast('Draft reset'); renderAll(); }
+    function undoPick() {
+      if (LIVE) return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return refresh(true); }).catch(function (e) { toast(e.message); });
+      state.picks.pop(); toast('Last pick undone'); renderAll();
+    }
+    function resetDraft() {
+      if (LIVE) return api('/api/draft', { action: 'reset' }).then(function () { toast('Draft reset'); return refresh(true); }).catch(function (e) { toast(e.message); });
+      state.picks = []; toast('Draft reset'); renderAll();
+    }
 
     /* ------------------------------------------------------------
        RENDER: matches
@@ -1031,9 +1153,14 @@
         b.onclick = function () {
           var i = +b.dataset.save;
           var m = state.matches[i];
-          m.score = [+document.getElementById('sa-' + i).value || 0, +document.getElementById('sb-' + i).value || 0];
-          m.status = document.getElementById('ss-' + i).value;
+          var score = [+document.getElementById('sa-' + i).value || 0, +document.getElementById('sb-' + i).value || 0];
+          var status = document.getElementById('ss-' + i).value;
           editingMatch = -1;
+          if (LIVE) {
+            api('/api/matches', { index: i, score: score, status: status }).then(function () { toast('Map ' + (i + 1) + ' updated'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
+            return;
+          }
+          m.score = score; m.status = status;
           toast('Map ' + (i + 1) + ' updated');
           renderAll();
         };
@@ -1054,13 +1181,50 @@
       return rows;
     }
 
+    function renderStatsTools() {
+      var el = document.getElementById('stats-tools');
+      if (!canEditResults() || !draftDone()) { el.innerHTML = ''; return; }
+      el.innerHTML = statsEditing
+        ? '<button class="btn btn-sm btn-primary" id="stats-save">Save stats</button><button class="link-btn" id="stats-cancel">Cancel</button>'
+        : '<button class="btn btn-sm btn-ghost" id="stats-edit">Edit stats</button>';
+      var e = document.getElementById('stats-edit'); if (e) e.onclick = function () { statsEditing = true; renderStats(); };
+      var c = document.getElementById('stats-cancel'); if (c) c.onclick = function () { statsEditing = false; renderStats(); };
+      var sv = document.getElementById('stats-save'); if (sv) sv.onclick = saveStats;
+    }
+    function saveStats() {
+      var bulk = {};
+      document.querySelectorAll('input.stat').forEach(function (inp) {
+        var pid = inp.dataset.pid; bulk[pid] = bulk[pid] || [0, 0, 0];
+        bulk[pid][+inp.dataset.f] = Math.max(0, +inp.value || 0);
+      });
+      statsEditing = false;
+      if (LIVE) {
+        api('/api/stats', { bulk: bulk }).then(function () { toast('Stats saved'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
+        return;
+      }
+      state.stats = bulk; toast('Stats saved'); renderStats();
+    }
+
     function renderStats() {
+      renderStatsTools();
       var rows = statRows().filter(function (r) { return teamFilter === 'all' || r.team === teamFilter; });
       var hasStats = Object.keys(state.stats).length > 0;
       var wrap = document.getElementById('stats-table');
 
       if (!draftDone()) { wrap.innerHTML = '<div class="empty-note">Player stats appear once the draft is complete and the first map is played.</div>'; return; }
-      if (!hasStats) { wrap.innerHTML = '<div class="empty-note">Rosters are set. Stats will show up after the first map.</div>'; return; }
+      if (!hasStats && !statsEditing) { wrap.innerHTML = '<div class="empty-note">Rosters are set. Stats will show up after the first map.' + (canEditResults() ? ' Use <b>Edit stats</b> above to enter them.' : '') + '</div>'; return; }
+
+      if (statsEditing) {
+        var all = statRows(); /* ignore team filter while editing so nothing is lost on save */
+        var eh = '<table><thead><tr><th>Player</th><th>Team</th><th class="num">Kills</th><th class="num">Deaths</th><th class="num">Assists</th></tr></thead><tbody>';
+        all.forEach(function (r) {
+          eh += '<tr><td class="player"><span class="avatar team-' + r.team + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
+            '<td><span class="team-tag team-' + r.team + '">' + esc(TEAMS[r.team].name) + '</span></td>' +
+            [r.k, r.d, r.a].map(function (v, f) { return '<td class="num"><input class="stat" type="number" min="0" max="999" value="' + v + '" data-pid="' + esc(r.id) + '" data-f="' + f + '"></td>'; }).join('') + '</tr>';
+        });
+        wrap.innerHTML = eh + '</tbody></table>';
+        return;
+      }
 
       rows.sort(function (x, y) { var d = x[sortKey] < y[sortKey] ? -1 : x[sortKey] > y[sortKey] ? 1 : 0; return sortAsc ? d : -d; });
       var topKd = Math.max.apply(null, rows.map(function (r) { return r.kd; }));
@@ -1127,8 +1291,88 @@
     });
     document.querySelectorAll('[data-team-name]').forEach(function (c) { c.textContent = TEAMS[c.dataset.team].name; });
 
-    loadStage('draft');
-    renderAll();
+    /* ------------------------------------------------------------
+       ADMIN PANEL (live mode only)
+       ------------------------------------------------------------ */
+    function roleLabel(r) {
+      return r === 'captain-a' ? 'Captain · ' + TEAMS.a.name : r === 'captain-b' ? 'Captain · ' + TEAMS.b.name : r === 'helper' ? 'Helper' : r === 'admin' ? 'Admin' : r;
+    }
+    function renderAdmin() {
+      var sec = document.getElementById('admin');
+      var show = LIVE && role === 'admin';
+      sec.hidden = !show;
+      if (!show) return;
+      document.querySelector('#role-role option[value="captain-a"]').textContent = roleLabel('captain-a');
+      document.querySelector('#role-role option[value="captain-b"]').textContent = roleLabel('captain-b');
+      api('/api/admin/roles').then(function (d) {
+        var list = document.getElementById('role-list');
+        var html = '';
+        (d.alwaysAdmin || []).forEach(function (l) {
+          html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>';
+        });
+        Object.keys(d.roles || {}).sort().forEach(function (l) {
+          html += '<li><b>' + esc(l) + '</b><span class="rl">' + esc(roleLabel(d.roles[l])) + '</span><button class="link-btn" data-remove-role="' + esc(l) + '">Remove</button></li>';
+        });
+        list.innerHTML = html || '<li><span class="rl">Nobody added yet.</span></li>';
+        list.querySelectorAll('[data-remove-role]').forEach(function (b) {
+          b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderAdmin(); }).catch(function (e) { toast(e.message); }); };
+        });
+      }).catch(function (e) { toast(e.message); });
+    }
+    document.getElementById('role-form').onsubmit = function (e) {
+      e.preventDefault();
+      var login = document.getElementById('role-login').value.trim().replace(/^@/, '').toLowerCase();
+      var r = document.getElementById('role-role').value;
+      if (!login) return;
+      api('/api/admin/roles', { login: login, role: r }).then(function () {
+        toast(login + ' is now ' + roleLabel(r));
+        document.getElementById('role-login').value = '';
+        renderAdmin();
+      }).catch(function (err) { toast(err.message); });
+    };
+    function resetAllClick() {
+      var wrap = document.getElementById('reset-all-wrap');
+      wrap.innerHTML = '<span style="font-size:14px;margin-right:10px">Wipe picks, scores, and stats?</span><button class="btn btn-sm btn-primary" id="reset-yes">Yes, reset everything</button> <button class="link-btn" id="reset-no">Cancel</button>';
+      document.getElementById('reset-no').onclick = restoreResetBtn;
+      document.getElementById('reset-yes').onclick = function () {
+        api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); restoreResetBtn(); return refresh(true); }).catch(function (e) { toast(e.message); restoreResetBtn(); });
+      };
+    }
+    function restoreResetBtn() {
+      document.getElementById('reset-all-wrap').innerHTML = '<button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button>';
+      document.getElementById('reset-all').onclick = resetAllClick;
+    }
+    document.getElementById('reset-all').onclick = resetAllClick;
+
+    /* ------------------------------------------------------------
+       BOOT
+       ------------------------------------------------------------ */
+    function bootDemo() {
+      LIVE = false;
+      document.querySelector('.preview-bar').hidden = false;
+      loadStage('draft');
+      renderAll();
+    }
+    function boot() {
+      if (location.search.indexOf('demo=1') >= 0 || location.protocol === 'file:') return bootDemo();
+      Promise.all([api('/api/me'), api('/api/tournament')]).then(function (r) {
+        LIVE = true;
+        ME = r[0].user; role = r[0].role;
+        document.querySelector('.preview-bar').hidden = true;
+        applyServer(r[1]);
+        renderAll();
+        var q = new URLSearchParams(location.search).get('login');
+        if (q === 'ok' && ME) toast('Logged in as ' + (ME.name || ME.login));
+        else if (q === 'denied') toast('Twitch login was cancelled');
+        else if (q) toast('Login did not work (' + q + '). Try again.');
+        if (q) history.replaceState(null, '', location.pathname);
+        setInterval(function () { refresh(); }, 5000);
+        document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+      }).catch(function () { bootDemo(); });
+    }
+    var _renderAll = renderAll;
+    renderAll = function (n) { _renderAll(n); renderAdmin(); };
+    boot();
 
     /* Sub-nav active state */
     var subLinks = Array.prototype.slice.call(document.querySelectorAll('.subnav a'));

@@ -18,7 +18,9 @@ function redis() {
 
 export async function getState() {
   const s = await redis().get(KEY_STATE);
-  return s || structuredClone(DEFAULT_STATE);
+  /* No state yet, or state from the old 2-team shape → start from the current defaults. */
+  if (!s || !Array.isArray(s.teams)) return structuredClone(DEFAULT_STATE);
+  return s;
 }
 export async function setState(state) {
   state.updatedAt = Date.now();

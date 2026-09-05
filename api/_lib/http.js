@@ -18,7 +18,8 @@ export async function whoami(req) {
 export async function requireRole(req, res, allowed) {
   const me = await whoami(req);
   if (!me.user) { json(res, 401, { error: 'Log in with Twitch first' }); return null; }
-  if (!allowed.includes(me.role)) { json(res, 403, { error: 'You do not have permission to do that' }); return null; }
+  const ok = allowed.includes(me.role) || (allowed.includes('captain') && me.role.startsWith('captain:'));
+  if (!ok) { json(res, 403, { error: 'You do not have permission to do that' }); return null; }
   return me;
 }
 export function readBody(req) {

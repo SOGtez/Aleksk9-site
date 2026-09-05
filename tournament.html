@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>R6 Siege Tournament — AleksK9</title>
-  <meta name="description" content="AleksK9's Rainbow Six Siege community tournament. Live draft board, series score, and player stats.">
+  <title>17th Roller Tourney — AleksK9</title>
+  <meta name="description" content="AleksK9's 17th Roller Tourney. Rainbow Six Siege community tournament: live snake draft, match scores, standings, and player stats.">
   <meta name="theme-color" content="#0a0a0a">
 
   <!-- LINKS — keep in sync with index.html -->
@@ -16,8 +16,8 @@
   </script>
 
   <meta property="og:type" content="website">
-  <meta property="og:title" content="R6 Siege Tournament — AleksK9">
-  <meta property="og:description" content="Live draft board, series score, and player stats.">
+  <meta property="og:title" content="17th Roller Tourney — AleksK9">
+  <meta property="og:description" content="Live snake draft, match scores, standings, and player stats.">
   <meta property="og:url" content="https://aleksk9.com/tournament">
   <meta property="og:image" content="/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
@@ -30,36 +30,19 @@
 
   <style>
     :root {
-      --bg: #0a0a0a;
-      --bg-elev: #111111;
-      --bg-elev-2: #171717;
-      --fg: #ffffff;
-      --fg-muted: rgba(255, 255, 255, 0.64);
-      --fg-dim: rgba(255, 255, 255, 0.40);
-      --line: rgba(255, 255, 255, 0.10);
-      --line-strong: rgba(255, 255, 255, 0.18);
-      --accent: #E10600;
-      --accent-hover: #ff1a12;
-      --accent-soft: rgba(225, 6, 0, 0.12);
-      --live: #FF2A2A;
-      --radius: 14px;
-      --nav-h: 68px;
-      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --bg: #0a0a0a; --bg-elev: #111111; --bg-elev-2: #171717;
+      --fg: #ffffff; --fg-muted: rgba(255,255,255,.64); --fg-dim: rgba(255,255,255,.40);
+      --line: rgba(255,255,255,.10); --line-strong: rgba(255,255,255,.18);
+      --accent: #E10600; --accent-hover: #ff1a12; --accent-soft: rgba(225,6,0,.12); --live: #FF2A2A;
+      --radius: 14px; --nav-h: 68px; --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
     *, *::before, *::after { box-sizing: border-box; }
     html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
     body {
-      margin: 0;
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg);
-      color: var(--fg);
+      margin: 0; min-height: 100svh; display: flex; flex-direction: column;
+      background: var(--bg); color: var(--fg);
       font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      font-size: 16px;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
+      font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden;
     }
     a { color: inherit; text-decoration: none; }
     svg { display: block; }
@@ -70,164 +53,99 @@
     .container { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: 20px; }
     @media (min-width: 720px) { .container { padding-inline: 32px; } }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    [hidden] { display: none !important; }
 
     /* Buttons */
     .btn {
       display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-      min-height: 52px; padding: 0 26px; border-radius: 999px;
-      font-weight: 600; font-size: 16px; letter-spacing: -0.01em;
-      border: 1px solid transparent;
-      transition: transform .25s var(--ease), background-color .25s var(--ease),
-                  border-color .25s var(--ease), box-shadow .25s var(--ease), opacity .2s;
+      min-height: 52px; padding: 0 26px; border-radius: 999px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em;
+      border: 1px solid transparent; white-space: nowrap;
+      transition: transform .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease), box-shadow .25s var(--ease), opacity .2s;
     }
     .btn:hover { transform: translateY(-2px); }
     .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
     .btn svg { width: 18px; height: 18px; }
     .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 28px -10px rgba(225,6,0,.6); }
-    .btn-primary:hover { background: var(--accent-hover); box-shadow: 0 14px 34px -10px rgba(225,6,0,.75); }
+    .btn-primary:hover { background: var(--accent-hover); }
     .btn-ghost { background: transparent; color: var(--fg); border-color: rgba(255,255,255,.18); }
     .btn-ghost:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
     .btn-sm { min-height: 36px; padding: 0 16px; font-size: 13px; gap: 6px; }
-    .btn-sm svg { width: 14px; height: 14px; }
-
-    /* Nav (same as index.html) */
-    .nav {
-      position: sticky; top: 0; z-index: 50; height: var(--nav-h);
-      background: rgba(10,10,10,.72);
-      -webkit-backdrop-filter: saturate(140%) blur(14px);
-      backdrop-filter: saturate(140%) blur(14px);
-      border-bottom: 1px solid var(--line);
+    .link-btn { color: var(--fg-muted); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .link-btn:hover { color: var(--fg); }
+    .field {
+      padding: 8px 12px; border-radius: 10px; background: var(--bg-elev-2); color: var(--fg);
+      border: 1px solid var(--line-strong); font-size: 14px; min-width: 0;
     }
+    .field.num { width: 64px; text-align: center; font-weight: 700; }
+
+    /* Nav */
+    .nav { position: sticky; top: 0; z-index: 50; height: var(--nav-h); background: rgba(10,10,10,.72); -webkit-backdrop-filter: saturate(140%) blur(14px); backdrop-filter: saturate(140%) blur(14px); border-bottom: 1px solid var(--line); }
     .nav .container { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
     .wordmark { font-weight: 900; font-size: 20px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; }
     .wordmark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
     .nav-links { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
-    .nav-links a {
-      display: inline-block; padding: 8px 12px; border-radius: 8px;
-      font-weight: 500; font-size: 14px; color: var(--fg-muted); position: relative;
-      transition: color .2s var(--ease), background-color .2s var(--ease);
-    }
+    .nav-links a { display: inline-block; padding: 8px 12px; border-radius: 8px; font-weight: 500; font-size: 14px; color: var(--fg-muted); position: relative; transition: color .2s var(--ease); }
     .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--fg); }
-    .nav-links a::after {
-      content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px;
-      background: var(--accent); transform: scaleX(0); transform-origin: left;
-      transition: transform .3s var(--ease); border-radius: 2px;
-    }
+    .nav-links a::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--ease); border-radius: 2px; }
     .nav-links a:hover::after, .nav-links a[aria-current="page"]::after { transform: scaleX(1); }
     .nav-links .nav-cta { color: #fff; background: var(--accent); margin-left: 6px; }
     .nav-links .nav-cta:hover { background: var(--accent-hover); }
     .nav-links .nav-cta::after { display: none; }
     @media (max-width: 420px) { .nav-links a { padding: 8px 9px; font-size: 13px; } }
 
-    /* ============================================================
-       PREVIEW BAR — remove once the real backend is wired up
-       ============================================================ */
-    .preview-bar {
-      background: var(--accent-soft);
-      border-bottom: 1px solid rgba(225,6,0,.35);
-      font-size: 13px;
-      color: var(--fg-muted);
-    }
-    .preview-bar .container { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; min-height: 48px; padding-block: 8px; }
-    .preview-bar strong { color: var(--fg); font-weight: 700; }
-    .pv-group { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
-    .pv-title { font-weight: 600; margin-right: 4px; }
-    .pv-btn {
-      padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--fg-muted);
-      border: 1px solid var(--line-strong); background: rgba(0,0,0,.25); transition: all .2s var(--ease);
-    }
-    .pv-btn:hover { color: var(--fg); border-color: rgba(255,255,255,.4); }
-    .pv-btn.is-on { background: #fff; color: #000; border-color: #fff; }
+    /* Demo bar (only when the API is unreachable or ?demo=1) */
+    .demo-bar { background: var(--accent-soft); border-bottom: 1px solid rgba(225,6,0,.35); font-size: 13px; color: var(--fg-muted); }
+    .demo-bar .container { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; min-height: 44px; padding-block: 8px; }
+    .demo-bar strong { color: var(--fg); }
 
-    /* ============================================================
-       PAGE HERO
-       ============================================================ */
-    .t-hero { position: relative; isolation: isolate; z-index: 45; padding: 64px 0 36px; }
+    /* Hero */
+    .t-hero { position: relative; isolation: isolate; z-index: 45; padding: 56px 0 36px; }
     .t-hero .bg { position: absolute; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
-    .t-hero .bg::before {
-      content: ""; position: absolute; z-index: -1; left: 50%; top: 20%;
-      width: min(80vw, 720px); aspect-ratio: 1; transform: translate(-50%, -50%);
-      background: radial-gradient(circle, rgba(225,6,0,.26) 0%, rgba(225,6,0,.10) 32%, transparent 68%);
-      filter: blur(40px); pointer-events: none;
-    }
-    .t-hero .bg::after {
-      content: "R6"; position: absolute; z-index: -2; right: -0.05em; top: -0.2em;
-      font-weight: 900; font-size: clamp(200px, 30vw, 420px); letter-spacing: -0.08em; line-height: 1;
-      color: rgba(255,255,255,.03); pointer-events: none; user-select: none;
-    }
+    .t-hero .bg::before { content: ""; position: absolute; left: 50%; top: 20%; width: min(80vw, 720px); aspect-ratio: 1; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(225,6,0,.26) 0%, rgba(225,6,0,.10) 32%, transparent 68%); filter: blur(40px); }
+    .t-hero .bg::after { content: "R6"; position: absolute; z-index: -2; right: -0.05em; top: -0.2em; font-weight: 900; font-size: clamp(200px, 30vw, 420px); letter-spacing: -0.08em; line-height: 1; color: rgba(255,255,255,.03); user-select: none; }
     .t-hero .container { display: grid; gap: 22px; }
-    @media (min-width: 820px) {
-      .t-hero .container { grid-template-columns: 1fr auto; align-items: end; }
-    }
-    .eyebrow {
-      display: inline-flex; align-items: center; gap: 10px;
-      font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
-    }
+    @media (min-width: 820px) { .t-hero .container { grid-template-columns: 1fr auto; align-items: end; } }
+    .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
     .eyebrow::before { content: ""; width: 18px; height: 2px; background: var(--accent); }
-    .t-hero h1 { font-size: clamp(40px, 7vw, 76px); letter-spacing: -0.05em; line-height: .95; margin-top: 12px; }
+    .t-hero h1 { font-size: clamp(38px, 6.5vw, 72px); letter-spacing: -0.05em; line-height: .95; margin-top: 12px; }
     .t-hero h1 span { color: var(--accent); }
+    .t-hero .lede { margin-top: 14px; font-size: clamp(16px, 2vw, 18px); color: var(--fg-muted); max-width: 54ch; }
     .meta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 18px; }
-    .pill {
-      display: inline-flex; align-items: center; gap: 7px;
-      padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
-      border: 1px solid var(--line-strong); color: var(--fg-muted); white-space: nowrap;
-    }
+    .pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); white-space: nowrap; }
     .pill-status { color: var(--fg); border-color: transparent; background: var(--bg-elev-2); }
     .pill-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--fg-dim); }
     .pill-status[data-status="draft"] .dot { background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: blink 1.4s ease-in-out infinite; }
     .pill-status[data-status="live"] .dot { background: var(--live); box-shadow: 0 0 10px var(--live); animation: blink 1.4s ease-in-out infinite; }
-    .pill-status[data-status="complete"] .dot { background: #fff; }
+    .pill-status[data-status="matches"] .dot, .pill-status[data-status="complete"] .dot { background: #fff; }
     @keyframes blink { 50% { opacity: .35; } }
 
     .auth { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
     @media (min-width: 820px) { .auth { align-items: flex-end; } }
-    .login-menu {
-      position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 280px;
-      background: var(--bg-elev-2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 8px;
-      box-shadow: 0 24px 60px -20px rgba(0,0,0,.9);
-      animation: cellin .25s var(--ease);
-    }
-    @media (min-width: 820px) { .login-menu { left: auto; right: 0; } }
-    .login-menu .lm-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); padding: 8px 10px 6px; }
-    .login-menu button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 10px; border-radius: 10px; transition: background-color .15s var(--ease); }
-    .login-menu button:hover { background: rgba(255,255,255,.06); }
-    .login-menu .avatar { width: 34px; height: 34px; font-size: 12px; }
-    .login-menu b { display: block; font-size: 14px; }
-    .login-menu small { display: block; font-size: 12px; color: var(--fg-muted); }
-    .t-hero .lede { margin-top: 14px; font-size: clamp(16px, 2vw, 18px); color: var(--fg-muted); max-width: 52ch; }
-    .auth-chip {
-      display: inline-flex; align-items: center; gap: 10px;
-      padding: 8px 8px 8px 8px; border-radius: 999px;
-      background: var(--bg-elev); border: 1px solid var(--line-strong); font-size: 14px;
-    }
+    .auth-chip { display: inline-flex; align-items: center; gap: 10px; padding: 8px; border-radius: 999px; background: var(--bg-elev); border: 1px solid var(--line-strong); font-size: 14px; }
     .auth-chip .avatar { width: 30px; height: 30px; font-size: 12px; }
     .auth-chip b { font-weight: 700; }
     .auth-chip .role { color: var(--fg-muted); font-size: 12px; }
-    .auth-chip button { color: var(--fg-muted); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
-    .auth-chip button:hover { color: var(--fg); background: rgba(255,255,255,.06); }
-    .auth-hint { font-size: 12px; color: var(--fg-dim); }
+    .auth-chip a, .auth-chip button { color: var(--fg-muted); font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+    .auth-chip a:hover, .auth-chip button:hover { color: var(--fg); background: rgba(255,255,255,.06); }
+    .auth-hint { font-size: 12px; color: var(--fg-dim); max-width: 40ch; }
+    @media (min-width: 820px) { .auth-hint { text-align: right; } }
+    .login-menu { position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 280px; max-height: 60vh; overflow-y: auto; background: var(--bg-elev-2); border: 1px solid var(--line-strong); border-radius: 14px; padding: 8px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.9); animation: cellin .25s var(--ease); }
+    @media (min-width: 820px) { .login-menu { left: auto; right: 0; } }
+    .login-menu .lm-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); padding: 8px 10px 6px; }
+    .login-menu button { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 9px 10px; border-radius: 10px; }
+    .login-menu button:hover { background: rgba(255,255,255,.06); }
+    .login-menu .avatar { width: 32px; height: 32px; font-size: 12px; }
+    .login-menu b { display: block; font-size: 14px; }
+    .login-menu small { display: block; font-size: 12px; color: var(--fg-muted); }
 
-    /* ============================================================
-       SUB NAV
-       ============================================================ */
-    .subnav {
-      position: sticky; top: var(--nav-h); z-index: 40;
-      background: rgba(10,10,10,.85);
-      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-      border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
-    }
+    /* Sub nav */
+    .subnav { position: sticky; top: var(--nav-h); z-index: 40; background: rgba(10,10,10,.85); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
     .subnav .container { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
     .subnav .container::-webkit-scrollbar { display: none; }
-    .subnav a {
-      flex: 0 0 auto; padding: 14px 14px; font-size: 14px; font-weight: 600; color: var(--fg-muted);
-      border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .2s var(--ease), border-color .2s var(--ease);
-    }
+    .subnav a { flex: 0 0 auto; padding: 14px; font-size: 14px; font-weight: 600; color: var(--fg-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .2s var(--ease), border-color .2s var(--ease); }
     .subnav a:hover, .subnav a.is-active { color: var(--fg); border-bottom-color: var(--accent); }
 
-    /* ============================================================
-       SECTIONS
-       ============================================================ */
+    /* Sections */
     section.block { padding: 56px 0; scroll-margin-top: calc(var(--nav-h) + 56px); }
     section.block + section.block { border-top: 1px solid var(--line); }
     .section-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; margin-bottom: 24px; }
@@ -235,228 +153,139 @@
     .section-head .sub { color: var(--fg-muted); font-size: 15px; }
     .section-head .sub b { color: var(--fg); font-weight: 700; }
     .section-head .sub .clock { color: var(--accent); font-weight: 700; }
+    .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 20px 50px -30px rgba(0,0,0,.9); }
+    .empty-note { padding: 32px 20px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+    .empty-note b { color: var(--fg); }
 
-    .card {
-      background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius);
-      box-shadow: 0 20px 50px -30px rgba(0,0,0,.9);
-    }
+    .avatar { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(160deg, #1f1f1f, #0d0d0d); border: 1px solid rgba(255,255,255,.14); font-weight: 800; font-size: 14px; letter-spacing: -0.04em; color: var(--fg); user-select: none; overflow: hidden; }
+    .avatar.cap { border-color: rgba(225,6,0,.6); box-shadow: 0 0 0 3px rgba(225,6,0,.12); }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    /* Avatars */
-    .avatar {
-      width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%;
-      display: grid; place-items: center;
-      background: linear-gradient(160deg, #1f1f1f, #0d0d0d);
-      border: 1px solid rgba(255,255,255,.12);
-      font-weight: 800; font-size: 14px; letter-spacing: -0.04em; color: var(--fg); user-select: none;
-    }
-    .avatar.team-a { border-color: rgba(225,6,0,.6); box-shadow: 0 0 0 3px rgba(225,6,0,.12); }
-    .avatar.team-b { border-color: rgba(255,255,255,.5); box-shadow: 0 0 0 3px rgba(255,255,255,.08); }
-
-    /* ============================================================
-       DRAFT BOARD
-       ============================================================ */
     /* Turn banner */
     .turn { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 18px 20px; margin-bottom: 20px; }
     .turn .avatar { width: 48px; height: 48px; font-size: 16px; }
     .turn .tx { flex: 1; min-width: 200px; }
     .turn .tx b { display: block; font-size: 18px; letter-spacing: -0.02em; font-weight: 800; line-height: 1.2; }
     .turn .tx span { font-size: 14px; color: var(--fg-muted); }
+    .turn .tx span b { display: inline; font-size: inherit; color: var(--fg); }
     .turn.is-you { border-color: rgba(225,6,0,.6); background: linear-gradient(90deg, rgba(225,6,0,.16), var(--bg-elev) 60%); animation: turnpulse 2s var(--ease) infinite; }
-    .turn.is-you .tx b { color: var(--accent); }
-    .turn.is-done { border-color: rgba(255,255,255,.2); }
+    .turn.is-you .tx > b { color: var(--accent); }
     @keyframes turnpulse { 50% { border-color: rgba(225,6,0,.25); } }
 
-    .draft-layout { display: grid; gap: 20px; }
-    @media (min-width: 900px) { .draft-layout { grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr); align-items: start; } }
-
+    /* Board */
     .board { overflow: hidden; }
-    .board-head { display: grid; grid-template-columns: 56px 1fr 1fr; border-bottom: 1px solid var(--line); }
-    .board-head > div { padding: 16px 14px; }
-    .board-head .team {
-      display: flex; align-items: center; gap: 12px; min-width: 0;
-      border-left: 1px solid var(--line);
-    }
-    .team-name { font-weight: 800; font-size: 15px; letter-spacing: -0.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .team-cap { font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .team-a .team-name { color: var(--accent); }
-
-    .board-row { display: grid; grid-template-columns: 56px 1fr 1fr; border-bottom: 1px solid var(--line); }
-    .board-row:last-child { border-bottom: 0; }
-    .round-label {
-      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-      font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim);
-      background: rgba(255,255,255,.02);
-    }
+    .board-scroll { overflow-x: auto; }
+    .board-grid { display: grid; min-width: 100%; }
+    .board-grid > div { border-bottom: 1px solid var(--line); border-left: 1px solid var(--line); min-width: 0; }
+    .board-grid > .corner, .board-grid > .round-label { border-left: 0; }
+    .board-grid > .last-row { border-bottom: 0; }
+    .team-head { padding: 12px 12px; display: flex; align-items: center; gap: 10px; }
+    .team-head.on { background: var(--accent-soft); }
+    .team-head .avatar { width: 34px; height: 34px; font-size: 12px; }
+    .team-head .tn { font-weight: 800; font-size: 13px; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-head .tc { font-size: 11px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .round-label { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); background: rgba(255,255,255,.02); }
     .round-label b { font-size: 18px; color: var(--fg); letter-spacing: -0.03em; }
-    .round-label .dir { font-size: 10px; letter-spacing: 0; text-transform: none; color: var(--fg-dim); white-space: nowrap; max-width: 50px; overflow: hidden; text-overflow: ellipsis; }
-    .cell {
-      position: relative; min-height: 76px; padding: 12px 14px;
-      display: flex; align-items: center; gap: 12px;
-      border-left: 1px solid var(--line);
-      transition: background-color .25s var(--ease);
-    }
-    .cell.is-empty { color: var(--fg-dim); }
-    .cell.is-empty::before {
-      content: ""; position: absolute; inset: 8px; border: 1px dashed rgba(255,255,255,.10); border-radius: 10px;
-    }
-    .cell .pick-no { position: absolute; top: 8px; right: 12px; font-size: 11px; font-weight: 700; color: var(--fg-dim); letter-spacing: .04em; }
-    .cell .name { font-weight: 700; font-size: 15px; letter-spacing: -0.01em; line-height: 1.2; }
-    .cell .mains { font-size: 12px; color: var(--fg-muted); }
+    .round-label .dir { font-size: 9px; letter-spacing: 0; text-transform: none; }
+    .cell { position: relative; min-height: 66px; padding: 10px 12px; display: flex; align-items: center; gap: 10px; }
+    .cell .avatar { width: 30px; height: 30px; font-size: 11px; }
+    .cell .nm { font-weight: 700; font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cell .inf { font-size: 11px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cell .who { min-width: 0; }
+    .cell .pn { position: absolute; top: 6px; right: 8px; font-size: 10px; font-weight: 700; color: var(--fg-dim); }
+    .cell.is-empty::before { content: ""; position: absolute; inset: 7px; border: 1px dashed rgba(255,255,255,.10); border-radius: 8px; }
+    .cell.is-empty { color: var(--fg-dim); font-size: 13px; }
     .cell.is-clock { background: var(--accent-soft); }
-    .cell.is-clock::before { border-color: rgba(225,6,0,.6); animation: clockpulse 1.6s var(--ease) infinite; }
-    .cell.is-clock .clock-text { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: .04em; text-transform: uppercase; }
-    .cell.is-clock .clock-sub { font-size: 12px; color: var(--fg-muted); }
+    .cell.is-clock::before { content: ""; position: absolute; inset: 7px; border: 1px dashed rgba(225,6,0,.6); border-radius: 8px; animation: clockpulse 1.6s var(--ease) infinite; }
+    .cell.is-clock .ct { font-size: 11px; font-weight: 800; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; }
+    .cell.is-clock .cs { font-size: 11px; color: var(--fg-muted); }
     .cell.is-new { animation: cellin .5s var(--ease); }
     @keyframes clockpulse { 50% { border-color: rgba(225,6,0,.2); } }
     @keyframes cellin { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-    /* Snake order strip */
-    .snake { margin-top: 16px; padding: 14px 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 6px; }
-    .snake .lbl { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-dim); margin-right: 8px; }
-    .snake .rnd { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 10px; border-radius: 999px; background: rgba(255,255,255,.03); border: 1px solid var(--line); }
-    .snake .rl { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--fg-dim); margin-right: 4px; }
-    .snake .slot {
-      height: 28px; padding: 0 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px;
-      font-size: 12px; font-weight: 700; color: var(--fg-dim); border: 1px solid var(--line); white-space: nowrap;
-    }
+    /* Pick order */
+    .snake { margin-top: 16px; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .snake .lbl { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--fg-dim); }
+    .snake .rnd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+    .snake .rl { font-size: 10px; font-weight: 800; letter-spacing: .08em; color: var(--fg-dim); width: 26px; }
+    .snake .slot { height: 26px; padding: 0 9px; border-radius: 999px; display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--fg-dim); border: 1px solid var(--line); white-space: nowrap; }
     .snake .slot i { font-style: normal; font-size: 10px; opacity: .7; }
-    .snake .slot.a { color: var(--accent); border-color: rgba(225,6,0,.4); }
-    .snake .slot.b { color: var(--fg); border-color: rgba(255,255,255,.3); }
-    .snake .slot.done.a { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .snake .slot.done.b { background: #fff; color: #000; border-color: #fff; }
-    .snake .slot.now { box-shadow: 0 0 0 3px rgba(225,6,0,.25); animation: blink 1.4s ease-in-out infinite; }
-    .snake .arrow { color: var(--fg-dim); font-size: 12px; }
-    .snake .flip { font-size: 11px; color: var(--fg-dim); margin-left: auto; }
+    .snake .slot.done { background: #fff; color: #000; border-color: #fff; }
+    .snake .slot.now { color: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(225,6,0,.2); animation: blink 1.4s ease-in-out infinite; }
+    .snake .arrow { color: var(--fg-dim); font-size: 11px; margin-left: 4px; }
 
-    /* Player pool */
-    .pool { overflow: hidden; }
-    .pool-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--line); }
-    .pool-head h3 { font-size: 15px; letter-spacing: -0.01em; }
-    .pool-head .count { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
-    .pool-head.is-turn { background: var(--accent-soft); border-bottom-color: rgba(225,6,0,.4); }
-    .pool-head.is-turn h3 { color: var(--accent); }
-    .pool-item .confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-size: 13px; font-weight: 600; }
-    .pool-item.is-confirming { background: var(--accent-soft); }
-    .pool-list { list-style: none; margin: 0; padding: 0; max-height: 520px; overflow-y: auto; }
-    .pool-item {
-      display: flex; align-items: center; gap: 12px; padding: 12px 18px;
-      border-bottom: 1px solid var(--line); transition: background-color .2s var(--ease);
-    }
+    /* Pool */
+    .pool-wrap { margin-top: 20px; }
+    .pool-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .pool-head h3 { font-size: 17px; letter-spacing: -0.02em; }
+    .pool-head h3.is-turn { color: var(--accent); }
+    .pool-head .count { font-size: 13px; color: var(--fg-muted); font-weight: 600; }
+    .tiers { display: grid; gap: 14px; }
+    @media (min-width: 900px) { .tiers { grid-template-columns: repeat(3, 1fr); align-items: start; } }
+    .tier { overflow: hidden; }
+    .tier-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); }
+    .tier-head span { font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--fg-dim); }
+    .pool-list { list-style: none; margin: 0; padding: 0; }
+    .pool-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
     .pool-item:last-child { border-bottom: 0; }
-    .pool-item:hover { background: rgba(255,255,255,.02); }
+    .pool-item .avatar { width: 34px; height: 34px; font-size: 12px; }
     .pool-item .who { min-width: 0; flex: 1; }
-    .pool-item .name { font-weight: 700; font-size: 14px; }
-    .pool-item .mains { font-size: 12px; color: var(--fg-muted); }
+    .pool-item .nm { font-weight: 700; font-size: 14px; }
+    .pool-item .inf { font-size: 12px; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pool-item.is-taken { opacity: .45; }
-    .pool-item.is-taken .name { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.4); }
-    .pool-item .taken-by { font-size: 12px; font-weight: 600; color: var(--fg-muted); white-space: nowrap; }
-    .pool-item .btn-draft { background: var(--accent); color: #fff; }
-    .pool-item .btn-draft:hover { background: var(--accent-hover); }
+    .pool-item.is-taken .nm { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.4); }
+    .pool-item .tb { font-size: 11px; font-weight: 600; color: var(--fg-muted); white-space: nowrap; }
+    .pool-item.is-confirming { background: var(--accent-soft); }
+    .pool-item .confirm { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; font-size: 12px; font-weight: 600; }
+    .btn-draft { background: var(--accent); color: #fff; }
+    .btn-draft:hover { background: var(--accent-hover); }
+    .pool-foot { margin-top: 10px; font-size: 12px; color: var(--fg-muted); display: flex; flex-wrap: wrap; gap: 8px 14px; }
 
-    .pool-foot { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; font-size: 12px; color: var(--fg-muted); }
-    .link-btn { color: var(--fg-muted); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
-    .link-btn:hover { color: var(--fg); }
-
-    /* ============================================================
-       MATCHES
-       ============================================================ */
-    .scoreboard {
-      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px;
-      padding: 28px 20px; text-align: center;
-      background:
-        radial-gradient(700px 240px at 50% 0%, rgba(225,6,0,.16), transparent 70%),
-        var(--bg-elev);
-    }
-    .scoreboard .side { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
-    .scoreboard .side .avatar { width: 56px; height: 56px; font-size: 18px; }
-    .scoreboard .side .tn { font-weight: 800; font-size: clamp(15px, 2.4vw, 20px); letter-spacing: -0.02em; }
-    .scoreboard .side.team-a .tn { color: var(--accent); }
-    .scoreboard .side .cap { font-size: 12px; color: var(--fg-muted); }
-    .scoreboard .score { display: flex; align-items: center; gap: 14px; font-weight: 900; font-size: clamp(48px, 9vw, 84px); letter-spacing: -0.06em; line-height: 1; }
-    .scoreboard .score .sep { color: var(--fg-dim); font-weight: 400; }
-    .scoreboard .series { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: var(--fg-muted); }
-    .scoreboard .series.win { color: var(--fg); }
-    .scoreboard .side.winner .tn::after { content: " ✓"; color: var(--accent); }
-
-    .match-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
-    .match {
-      display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 14px;
-      padding: 14px 18px;
-    }
-    .match .mnum { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; background: var(--bg-elev-2); border: 1px solid var(--line); font-weight: 800; font-size: 13px; color: var(--fg-muted); }
-    .match .info { min-width: 0; }
-    .match .map { font-weight: 700; font-size: 15px; }
-    .match .when { font-size: 12px; color: var(--fg-muted); }
-    .match .ms { font-weight: 900; font-size: 22px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
-    .match .ms .a { color: var(--accent); }
-    .match .ms .sep { color: var(--fg-dim); font-weight: 400; font-size: 16px; }
-    .match .ms.tbd { color: var(--fg-dim); font-size: 14px; font-weight: 600; letter-spacing: 0; }
-    .match .status { justify-self: end; }
-    .pill-live { color: var(--live); border-color: rgba(255,42,42,.4); }
-    .pill-live .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); animation: blink 1.2s ease-in-out infinite; }
-    .pill-final { color: var(--fg); }
-    .pill-upcoming { color: var(--fg-dim); }
-    .match .tools { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); }
-    .match .tools label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-muted); }
-    .match .tools input, .match .tools select {
-      width: 64px; padding: 6px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg);
-      border: 1px solid var(--line-strong); font-size: 13px; font-weight: 700; text-align: center;
-    }
-    .match .tools select { width: auto; text-align: left; }
-    .match .edit { justify-self: end; }
-    @media (max-width: 560px) {
-      .match { grid-template-columns: auto 1fr auto; }
-      .match .status { grid-column: 2 / -1; justify-self: start; }
-      .match .edit { grid-column: 1 / -1; justify-self: start; }
-    }
-
-    /* ============================================================
-       STATS
-       ============================================================ */
-    .filters { display: flex; flex-wrap: wrap; gap: 6px; }
-    .chip {
-      padding: 7px 14px; border-radius: 999px; font-size: 13px; font-weight: 600; color: var(--fg-muted);
-      border: 1px solid var(--line-strong); transition: all .2s var(--ease);
-    }
-    .chip:hover { color: var(--fg); }
-    .chip.is-on { background: #fff; color: #000; border-color: #fff; }
+    /* Standings */
     .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 560px; }
-    thead th {
-      text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim);
-      padding: 14px 16px; border-bottom: 1px solid var(--line); white-space: nowrap;
-    }
+    table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    thead th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-dim); padding: 12px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
     thead th.num, tbody td.num { text-align: right; }
     thead th button { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit; }
     thead th button:hover, thead th.is-sorted button { color: var(--fg); }
     thead th.is-sorted button::after { content: "↓"; color: var(--accent); }
     thead th.is-sorted.asc button::after { content: "↑"; }
-    tbody td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 14px; }
+    tbody td { padding: 11px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
     tbody tr:last-child td { border-bottom: 0; }
     tbody tr:hover td { background: rgba(255,255,255,.02); }
-    td.rank { color: var(--fg-dim); font-weight: 700; width: 48px; }
-    td.player { display: flex; align-items: center; gap: 10px; font-weight: 700; }
-    td.player .avatar { width: 32px; height: 32px; font-size: 11px; }
-    td.player .cap-tag { font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--line-strong); color: var(--fg-muted); }
-    td .team-tag { font-size: 12px; font-weight: 600; color: var(--fg-muted); }
-    td .team-tag.team-a { color: var(--accent); }
-    td.kd { font-weight: 800; }
-    tr.top td.kd { color: var(--accent); }
-    .empty-note { padding: 32px 20px; text-align: center; color: var(--fg-muted); font-size: 14px; }
-
-    /* ============================================================
-       RULES
-       ============================================================ */
-    .rules { display: grid; gap: 14px; }
-    @media (min-width: 720px) { .rules { grid-template-columns: repeat(3, 1fr); } }
-    .rule { padding: 22px; }
-    .rule .n { font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--accent); }
-    .rule h3 { font-size: 17px; margin: 8px 0 8px; letter-spacing: -0.02em; }
-    .rule p { font-size: 14px; color: var(--fg-muted); }
-
-    /* Stats editor */
-    .stats-tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    td.rank { color: var(--fg-dim); font-weight: 700; width: 44px; }
+    td.who { display: flex; align-items: center; gap: 10px; font-weight: 700; white-space: nowrap; }
+    td.who .avatar { width: 30px; height: 30px; font-size: 11px; }
+    td.who small { font-weight: 500; color: var(--fg-muted); }
+    .cap-tag { font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 2px 6px; border-radius: 4px; border: 1px solid var(--line-strong); color: var(--fg-muted); margin-left: 6px; }
+    td.kd, td.w { font-weight: 800; }
+    tr.top td.kd, tr.top td.w { color: var(--accent); }
     td input.stat { width: 64px; padding: 6px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--line-strong); font-size: 14px; font-weight: 700; text-align: right; }
+
+    /* Matches */
+    .match-list { list-style: none; margin: 16px 0 0; padding: 0; display: grid; gap: 10px; }
+    .match { padding: 14px 18px; display: grid; grid-template-columns: 1fr auto; gap: 10px 14px; align-items: center; }
+    .match .mp { font-size: 12px; color: var(--fg-muted); font-weight: 600; display: flex; gap: 8px; align-items: center; }
+    .match .vs { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+    .match .side { display: flex; align-items: center; gap: 10px; min-width: 0; font-weight: 800; font-size: 15px; }
+    .match .side.r { justify-content: flex-end; text-align: right; }
+    .match .side .avatar { width: 34px; height: 34px; font-size: 12px; }
+    .match .side span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .match .side.win span { color: var(--accent); }
+    .match .sc { font-weight: 900; font-size: 26px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; }
+    .match .sc .sep { color: var(--fg-dim); font-weight: 400; font-size: 18px; }
+    .match .sc.tbd { color: var(--fg-dim); font-size: 14px; font-weight: 600; letter-spacing: 0; }
+    .pill-live { color: var(--live); border-color: rgba(255,42,42,.4); }
+    .pill-live .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--live); box-shadow: 0 0 8px var(--live); animation: blink 1.2s ease-in-out infinite; }
+    .pill-final { color: var(--fg); }
+    .pill-upcoming { color: var(--fg-dim); }
+    .match .edit { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding-top: 12px; border-top: 1px solid var(--line); }
+    .match .edit label { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-muted); }
+    .add-match { padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 16px; }
+    .add-match .lbl { font-size: 13px; font-weight: 700; margin-right: 6px; }
+    .add-match .field { flex: 1 1 150px; }
+    @media (max-width: 560px) { .match .side { font-size: 13px; } .match .side .avatar { display: none; } }
 
     /* Admin */
     .admin-grid { display: grid; gap: 14px; }
@@ -465,38 +294,31 @@
     .admin-card h3 { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 6px; }
     .admin-card p { font-size: 14px; color: var(--fg-muted); margin-bottom: 14px; }
     .role-form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-    .role-form input, .role-form select {
-      flex: 1 1 140px; min-width: 0; padding: 9px 12px; border-radius: 10px; background: var(--bg-elev-2); color: var(--fg);
-      border: 1px solid var(--line-strong); font-size: 14px;
-    }
+    .role-form .field { flex: 1 1 140px; }
     .role-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
     .role-list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
-    .role-list li b { font-weight: 700; }
     .role-list li .rl { color: var(--fg-muted); font-size: 13px; flex: 1; }
     .role-list li .lock { font-size: 11px; color: var(--fg-dim); }
-    .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
 
-    /* Toast */
-    .toast {
-      position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100;
-      background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px;
-      opacity: 0; pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease);
-      box-shadow: 0 20px 50px -20px rgba(0,0,0,.9);
-    }
+    /* Rules */
+    .rules-grid { display: grid; gap: 14px; }
+    @media (min-width: 820px) { .rules-grid { grid-template-columns: 1.2fr 1fr; align-items: start; } }
+    .rule-card { padding: 22px; }
+    .rule-card h3 { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .rule-card ol, .rule-card ul { margin: 0; padding-left: 20px; color: var(--fg-muted); font-size: 14px; display: grid; gap: 6px; }
+    .map-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .map-chips span { padding: 7px 12px; border-radius: 10px; background: var(--bg-elev-2); border: 1px solid var(--line); font-size: 13px; font-weight: 600; }
+
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease); box-shadow: 0 20px 50px -20px rgba(0,0,0,.9); max-width: 90vw; text-align: center; }
     .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
-    /* Reveal */
     .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
     .reveal.is-visible { opacity: 1; transform: none; }
     .reveal[data-delay="1"] { transition-delay: .08s; }
-    .reveal[data-delay="2"] { transition-delay: .16s; }
     .no-js .reveal { opacity: 1; transform: none; }
 
-    /* Footer */
     .footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: 14px; color: var(--fg-muted); margin-top: auto; }
     .footer .container { display: flex; flex-direction: column; gap: 8px; align-items: center; text-align: center; }
-    .footer a { color: var(--fg); transition: color .2s var(--ease); }
-    .footer a:hover { color: var(--accent); }
 
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
@@ -521,48 +343,33 @@
     </div>
   </header>
 
-  <!-- DEMO BAR: sample data + stage switcher. Delete once Twitch login and the API exist. -->
-  <div class="preview-bar" role="region" aria-label="Demo controls" hidden>
-    <div class="container">
-      <span><strong>Demo</strong> · sample data, nothing you do here is saved</span>
-      <span class="pv-group" role="group" aria-label="Jump to a point in the tournament">
-        <span class="pv-title">Show me:</span>
-        <button class="pv-btn is-on" data-stage="draft">The draft</button>
-        <button class="pv-btn" data-stage="live">Mid-series</button>
-        <button class="pv-btn" data-stage="complete">Final result</button>
-      </span>
-    </div>
+  <div class="demo-bar" id="demo-bar" hidden>
+    <div class="container"><span><strong>Demo</strong> · sample data, nothing you do here is saved. Use "Log in" to try a role.</span></div>
   </div>
 
   <main id="main">
 
-    <!-- HERO -->
     <section class="t-hero" aria-labelledby="page-title">
       <div class="bg" aria-hidden="true"></div>
       <div class="container">
         <div class="reveal">
-          <span class="eyebrow">Community Event</span>
-          <h1 id="page-title">R6 Siege <span>Tournament</span></h1>
-          <p class="lede">Two captains draft their squads live on this page, then settle it in a best of three. Scores and player stats update here as the maps are played.</p>
-          <div class="meta-row">
-            <span class="pill pill-status" id="status-pill" data-status="draft"><span class="dot"></span><span id="status-text">Draft in progress</span></span>
-            <span class="pill">5v5</span>
-            <span class="pill">Best of 3</span>
-            <span class="pill">2 teams</span>
-            <span class="pill">Snake draft</span>
+          <span class="eyebrow">R6 Siege · Community Event</span>
+          <h1 id="page-title">Roller <span>Tourney</span></h1>
+          <p class="lede" id="lede"></p>
+          <div class="meta-row" id="meta-row">
+            <span class="pill pill-status" id="status-pill" data-status="draft"><span class="dot"></span><span id="status-text">Loading…</span></span>
           </div>
         </div>
         <div class="auth reveal" data-delay="1" id="auth"></div>
       </div>
     </section>
 
-    <!-- SUB NAV -->
     <nav class="subnav" aria-label="Tournament sections">
       <div class="container">
-        <a href="#draft" class="is-active">Draft Board</a>
+        <a href="#draft" class="is-active">Draft</a>
         <a href="#matches">Matches</a>
         <a href="#stats">Player Stats</a>
-        <a href="#rules">Rules</a>
+        <a href="#rules">Rules &amp; Maps</a>
       </div>
     </nav>
 
@@ -574,19 +381,15 @@
           <p class="sub" id="draft-sub"></p>
         </div>
         <div class="card turn" id="turn" aria-live="polite"></div>
-        <div class="draft-layout">
-          <div>
-            <div class="card board" id="board"></div>
-            <div class="card snake" id="snake" aria-label="Pick order"></div>
+        <div class="card board"><div class="board-scroll"><div class="board-grid" id="board"></div></div></div>
+        <div class="card snake" id="snake" aria-label="Pick order"></div>
+        <div class="pool-wrap">
+          <div class="pool-head">
+            <h3 id="pool-title">Player Pool</h3>
+            <span class="count" id="pool-count"></span>
           </div>
-          <aside class="card pool" aria-labelledby="pool-title">
-            <div class="pool-head">
-              <h3 id="pool-title">Player Pool</h3>
-              <span class="count" id="pool-count"></span>
-            </div>
-            <ul class="pool-list" id="pool"></ul>
-            <div class="pool-foot" id="pool-foot"></div>
-          </aside>
+          <div class="tiers" id="tiers"></div>
+          <div class="pool-foot" id="pool-foot"></div>
         </div>
       </div>
     </section>
@@ -598,7 +401,8 @@
           <h2 id="matches-title">Matches</h2>
           <p class="sub" id="matches-sub"></p>
         </div>
-        <div class="card scoreboard" id="scoreboard"></div>
+        <div class="card table-wrap" id="standings"></div>
+        <div class="card add-match" id="add-match" hidden></div>
         <ul class="match-list" id="match-list"></ul>
       </div>
     </section>
@@ -608,18 +412,16 @@
       <div class="container">
         <div class="section-head">
           <h2 id="stats-title">Player Stats</h2>
-          <div class="stats-tools" id="stats-tools"></div>
-          <div class="filters" id="stat-filters">
-            <button class="chip is-on" data-team="all">Both teams</button>
-            <button class="chip" data-team="a" data-team-name></button>
-            <button class="chip" data-team="b" data-team-name></button>
+          <div class="tools">
+            <div id="stats-tools" class="tools"></div>
+            <select class="field" id="team-filter" aria-label="Filter by team"><option value="all">All teams</option></select>
           </div>
         </div>
         <div class="card table-wrap" id="stats-table"></div>
       </div>
     </section>
 
-    <!-- ADMIN (only rendered for admins) -->
+    <!-- ADMIN (admins only) -->
     <section class="block" id="admin" aria-labelledby="admin-title" hidden>
       <div class="container">
         <div class="section-head">
@@ -629,22 +431,17 @@
         <div class="admin-grid">
           <div class="card admin-card">
             <h3>Who can do what</h3>
-            <p>Add people by their Twitch username. Captains can draft for their team, helpers can enter scores and stats, admins can do everything.</p>
+            <p>Add people by Twitch username. Captains can draft for their team, helpers can enter scores and stats, admins can do everything.</p>
             <form class="role-form" id="role-form">
-              <input type="text" id="role-login" placeholder="twitch username" autocomplete="off" required>
-              <select id="role-role">
-                <option value="captain-a">Captain · Team A</option>
-                <option value="captain-b">Captain · Team B</option>
-                <option value="helper">Helper</option>
-                <option value="admin">Admin</option>
-              </select>
+              <input class="field" type="text" id="role-login" placeholder="twitch username" autocomplete="off" required>
+              <select class="field" id="role-role"></select>
               <button class="btn btn-sm btn-primary" type="submit">Add</button>
             </form>
             <ul class="role-list" id="role-list"></ul>
           </div>
           <div class="card admin-card">
             <h3>Reset everything</h3>
-            <p>Reloads the teams, player pool, and maps from the site's config and clears all picks, scores, and stats. Use this before a new tournament. Undo and reset for just the draft are under the player pool.</p>
+            <p>Reloads teams, players, and maps from the site config and clears all picks, matches, and stats. Undo and reset for just the draft are under the player pool.</p>
             <div id="reset-all-wrap"><button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button></div>
           </div>
         </div>
@@ -654,139 +451,65 @@
     <!-- RULES -->
     <section class="block" id="rules" aria-labelledby="rules-title">
       <div class="container">
-        <div class="section-head">
-          <h2 id="rules-title">How it works</h2>
-        </div>
-        <div class="rules">
-          <div class="card rule">
-            <div class="n">01</div>
-            <h3>Two captains, snake draft</h3>
-            <p>Captains log in with Twitch and pick from the player pool on this page. Round 1 goes A then B. Round 2 flips to B then A, and it keeps alternating until both rosters are full.</p>
-          </div>
-          <div class="card rule">
-            <div class="n">02</div>
-            <h3>Best of three</h3>
-            <p>5v5 Rainbow Six Siege, first team to win two maps takes the series. Scores update here as the maps are played.</p>
-          </div>
-          <div class="card rule">
-            <div class="n">03</div>
-            <h3>Stats after every map</h3>
-            <p>Kills, deaths, and assists are entered from the in-game scoreboard after each map and roll up into the leaderboard above.</p>
-          </div>
+        <div class="section-head"><h2 id="rules-title">Rules &amp; Maps</h2></div>
+        <div class="rules-grid">
+          <div class="card rule-card"><h3>Rules</h3><ol id="rules-list"></ol></div>
+          <div class="card rule-card"><h3>Map pool</h3><div class="map-chips" id="map-chips"></div></div>
         </div>
       </div>
     </section>
   </main>
 
   <footer class="footer">
-    <div class="container">
-      <p>© <span data-year>2026</span> AleksK9</p>
-    </div>
+    <div class="container"><p>© <span data-year>2026</span> AleksK9</p></div>
   </footer>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    /* ------------------------------------------------------------
-       Shared bits (same as index.html)
-       ------------------------------------------------------------ */
     document.querySelectorAll('[data-link]').forEach(function (a) {
-      var url = LINKS[a.dataset.link];
-      if (!url) return;
-      a.href = url;
+      var url = LINKS[a.dataset.link]; if (!url) return; a.href = url;
       if (url === '#') { a.removeAttribute('target'); a.setAttribute('aria-disabled', 'true'); }
     });
-    var y = document.querySelector('[data-year]');
-    if (y) y.textContent = new Date().getFullYear();
+    var yEl = document.querySelector('[data-year]'); if (yEl) yEl.textContent = new Date().getFullYear();
 
     /* ------------------------------------------------------------
-       SAMPLE DATA
-       In the real version this comes from /api/tournament and
-       changes are written back via /api/draft, /api/matches, etc.
+       DEMO DATA — same shape as /api/tournament. Used only when the
+       API is unreachable (opening the file directly) or with ?demo=1.
        ------------------------------------------------------------ */
-    var TEAMS = {
-      a: { id: 'a', name: 'Team Vexo', captain: 'Vexo' },
-      b: { id: 'b', name: 'Team Nyx',  captain: 'Nyx'  }
-    };
-    var ROUNDS = 4; /* captains play, so 4 picks each fills a 5-stack */
-
-    var POOL = [
-      { id: 'slayde',    name: 'Slayde',    mains: 'Ash · Jäger'      },
-      { id: 'kova',      name: 'Kova',      mains: 'Thatcher · Smoke' },
-      { id: 'brixx',     name: 'Brixx',     mains: 'Sledge · Mute'    },
-      { id: 'mono',      name: 'Mono',      mains: 'Iana · Valk'      },
-      { id: 'tallow',    name: 'Tallow',    mains: 'Zofia · Kaid'     },
-      { id: 'juno',      name: 'Juno',      mains: 'Hibana · Mira'    },
-      { id: 'reyz',      name: 'Reyz',      mains: 'Buck · Bandit'    },
-      { id: 'ghostline', name: 'Ghostline', mains: 'Thermite · Doc'   }
-    ];
-
-    /* Full draft, in pick order. The stage decides how many are applied. */
-    var FULL_PICKS = [
-      { team: 'a', player: 'slayde'    },   /* R1 */
-      { team: 'b', player: 'kova'      },
-      { team: 'b', player: 'brixx'     },   /* R2 (flipped) */
-      { team: 'a', player: 'mono'      },
-      { team: 'a', player: 'tallow'    },   /* R3 */
-      { team: 'b', player: 'juno'      },
-      { team: 'b', player: 'ghostline' },   /* R4 (flipped) */
-      { team: 'a', player: 'reyz'      }
-    ];
-
-    var MAPS = ['Clubhouse', 'Oregon', 'Kafe Dostoyevsky'];
-
-    var STAGES = {
-      draft: {
-        picks: 5,
-        matches: [
-          { status: 'upcoming', score: [0, 0] },
-          { status: 'upcoming', score: [0, 0] },
-          { status: 'upcoming', score: [0, 0] }
-        ],
-        stats: null
-      },
-      live: {
-        picks: 8,
-        matches: [
-          { status: 'final',    score: [7, 5] },
-          { status: 'live',     score: [4, 3] },
-          { status: 'upcoming', score: [0, 0] }
-        ],
-        stats: {
-          vexo: [16, 11, 5], slayde: [14, 12, 3], mono: [11, 13, 6], tallow: [9, 12, 8], reyz: [12, 10, 4],
-          nyx:  [13, 12, 4], kova:   [15, 12, 2], brixx: [10, 13, 5], juno: [7, 14, 6], ghostline: [8, 13, 7]
-        }
-      },
-      complete: {
-        picks: 8,
-        matches: [
-          { status: 'final', score: [7, 5] },
-          { status: 'final', score: [6, 8] },
-          { status: 'final', score: [7, 3] }
-        ],
-        stats: {
-          vexo: [27, 17, 8], slayde: [22, 19, 6], mono: [18, 20, 9], tallow: [15, 19, 12], reyz: [21, 16, 7],
-          nyx:  [20, 21, 7], kova:   [24, 20, 4], brixx: [16, 22, 8], juno: [12, 23, 10], ghostline: [14, 21, 11]
-        }
-      }
+    var DEMO = {
+      name: '17th Roller Tourney', hosts: ['AleksK9', 'NV30'],
+      format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
+      rules: ['First to 7 rounds wins. If it goes 6-6, overtime is first to 8.', 'Sides swap every 3 rounds.', 'Pro League operator bans.', 'Shields allowed. Roaming allowed. Spawn peeks allowed.', 'Snake draft. Round 1 goes worst captain to best, then the order flips every round.'],
+      maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Consulate', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
+      teams: [
+        { id: 'frankie', name: 'Team Frankie', captain: 'Frankie', info: '32 hrs · lvl 18 · Unranked' },
+        { id: 'leo', name: 'Team Leo', captain: 'Leo', info: '102 hrs · lvl 55 · Unranked' },
+        { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver' },
+        { id: 'mxlly', name: 'Team Mxlly', captain: 'Mxlly', info: '202 hrs · lvl 90 · Bronze' },
+        { id: 'niko', name: 'Team Niko', captain: 'Niko', info: '263 hrs · lvl 65 · Bronze' },
+        { id: 'fiddle', name: 'Team Fiddle', captain: 'Fiddle', info: '52 hrs · lvl 32 · Unranked' }
+      ],
+      rounds: 4, tiers: ['Champs', 'Ranked', 'Rookies'],
+      pool: [
+        { id: 'duke', name: 'Duke', tier: 0, info: '4000+ hrs · 3x Champ' }, { id: 'zynjto', name: 'Zynjto', tier: 0, info: '8000+ hrs · 6x Champ · Flex / Support' },
+        { id: 'mycern', name: 'MyCern', tier: 0, info: '4000+ hrs · 10x Champ' }, { id: 'vexjng', name: 'Vexjng', tier: 0, info: '1400+ hrs · 2x Champ' }, { id: 'iso', name: 'Iso', tier: 0, info: '2000 hrs · 1x Champ' },
+        { id: 'nv30', name: 'NV30', tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor' }, { id: 'beebo', name: 'Beebo', tier: 1, info: '1409 hrs · Emerald · Intel / Anchor' },
+        { id: 'noni', name: 'Noni', tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex' }, { id: 'jake', name: 'Jake', tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor' },
+        { id: 'halo', name: 'Halo', tier: 1, info: '4000+ hrs · 2x Diamond · Flex / Support' }, { id: 'tubs', name: 'Tubs', tier: 1, info: '962 hrs · 2x Emerald (PC) · Flex' },
+        { id: 'carlos', name: 'Carlos', tier: 2, info: '251 hrs · lvl 124 · Bronze' }, { id: 'colin', name: 'Colin', tier: 2, info: '' }, { id: 'pocket', name: 'Pocket', tier: 2, info: 'Plat' }, { id: 'jimmy', name: 'Jimmy', tier: 2, info: '' },
+        { id: 'alfe', name: 'Alfe', tier: 2, info: '55 hrs · lvl 55 · Unranked' }, { id: 'aleksk9', name: 'AleksK9', tier: 2, info: '205 hrs · lvl 89 · Silver' }, { id: 'angel', name: 'Angel', tier: 2, info: '98 hrs · lvl 66 · Silver' },
+        { id: 'niko2', name: 'Niko', tier: 2, info: '86 hrs · lvl 42 · Unranked' }, { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' }
+      ],
+      picks: [], matches: [], stats: {}, updatedAt: 0
     };
 
     /* ------------------------------------------------------------
        STATE
        ------------------------------------------------------------ */
-    var stage = 'draft';
-    var role  = 'viewer';
-    var state = null;
-    var sortKey = 'kd', sortAsc = false, teamFilter = 'all';
-    var editingMatch = -1;
-    var confirming = null;   /* player id awaiting draft confirmation */
-    var loginOpen = false;
-    var statsEditing = false;
-
-    /* Live mode: talk to /api/*. Demo mode (?demo=1 or API unreachable): sample data above. */
-    var LIVE = false;
-    var ME = null;           /* { login, name, avatar } from /api/me */
-    var lastUpdated = 0;
+    var LIVE = false, ME = null, role = 'viewer', D = null, lastUpdated = 0;
+    var confirming = null, editingMatch = null, statsEditing = false, loginOpen = false;
+    var teamFilter = 'all', sortKey = 'kd', sortAsc = false;
 
     function api(path, body) {
       var opts = body
@@ -799,264 +522,229 @@
         });
       });
     }
-    function applyServer(d) {
-      TEAMS = d.teams; ROUNDS = d.rounds; POOL = d.pool;
-      state = { picks: d.picks || [], matches: d.matches || [], stats: d.stats || {} };
-      lastUpdated = d.updatedAt || 0;
-      document.querySelectorAll('[data-team-name]').forEach(function (c) { c.textContent = TEAMS[c.dataset.team].name; });
-    }
-    function busy() { return confirming || editingMatch >= 0 || statsEditing; }
+    function busy() { return confirming || editingMatch || statsEditing; }
     function refresh(force) {
       if (!LIVE) return Promise.resolve();
       return api('/api/tournament').then(function (d) {
         if (!force && (d.updatedAt === lastUpdated || busy())) return;
-        applyServer(d);
-        renderAll();
+        D = d; lastUpdated = d.updatedAt || 0; renderAll();
       }).catch(function () {});
-    }
-    function refreshMe() {
-      return api('/api/me').then(function (m) { ME = m.user; role = m.role; });
-    }
-
-    function loadStage(s) {
-      stage = s;
-      var src = STAGES[s];
-      state = {
-        picks: FULL_PICKS.slice(0, src.picks),
-        matches: src.matches.map(function (m, i) { return { map: MAPS[i], status: m.status, score: m.score.slice() }; }),
-        stats: src.stats ? JSON.parse(JSON.stringify(src.stats)) : {}
-      };
-      editingMatch = -1;
-      confirming = null;
     }
 
     /* ------------------------------------------------------------
        HELPERS
        ------------------------------------------------------------ */
-    function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-    function initials(n) { return n.slice(0, 2).toUpperCase(); }
-    function player(id) { for (var i = 0; i < POOL.length; i++) if (POOL[i].id === id) return POOL[i]; return null; }
-    function pickOrder(round) { return round % 2 === 1 ? ['a', 'b'] : ['b', 'a']; }
-    function totalPicks() { return ROUNDS * 2; }
-    function draftDone() { return state.picks.length >= totalPicks(); }
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function initials(n) { return String(n || '?').slice(0, 2).toUpperCase(); }
+    function team(id) { for (var i = 0; i < D.teams.length; i++) if (D.teams[i].id === id) return D.teams[i]; return null; }
+    function player(id) { for (var i = 0; i < D.pool.length; i++) if (D.pool[i].id === id) return D.pool[i]; return null; }
+    function pickOrder(round) { var ids = D.teams.map(function (t) { return t.id; }); return round % 2 === 1 ? ids : ids.slice().reverse(); }
+    function totalPicks() { return Math.min(D.rounds * D.teams.length, D.pool.length); }
     function nextSlot() {
-      if (draftDone()) return null;
-      var n = state.picks.length;
-      var round = Math.floor(n / 2) + 1;
-      var team = pickOrder(round)[n % 2];
-      return { round: round, team: team, pickNo: n + 1 };
+      var T = D.teams.length, n = D.picks.length;
+      if (n >= totalPicks()) return null;
+      var round = Math.floor(n / T) + 1;
+      return { round: round, team: pickOrder(round)[n % T], pickNo: n + 1 };
     }
-    function pickAt(round, team) {
-      var n = (round - 1) * 2 + pickOrder(round).indexOf(team);
-      return state.picks[n] ? { pick: state.picks[n], pickNo: n + 1 } : null;
+    function draftDone() { return !nextSlot(); }
+    function pickAt(round, tid) {
+      var n = (round - 1) * D.teams.length + pickOrder(round).indexOf(tid);
+      return D.picks[n] ? { pick: D.picks[n], pickNo: n + 1 } : null;
     }
-    function takenBy(pid) { for (var i = 0; i < state.picks.length; i++) if (state.picks[i].player === pid) return state.picks[i].team; return null; }
-    function myTeam() { return role === 'captain-a' ? 'a' : role === 'captain-b' ? 'b' : null; }
-    function canDraftNow() {
-      var slot = nextSlot();
-      if (!slot) return false;
-      if (role === 'admin') return true;
-      return myTeam() === slot.team;
-    }
-    function canEditResults() { return role === 'helper' || role === 'admin'; }
-    function seriesScore() {
-      var s = [0, 0];
-      state.matches.forEach(function (m) { if (m.status === 'final') { if (m.score[0] > m.score[1]) s[0]++; else if (m.score[1] > m.score[0]) s[1]++; } });
-      return s;
-    }
-    function seriesWinner() { var s = seriesScore(); return s[0] >= 2 ? 'a' : s[1] >= 2 ? 'b' : null; }
-    function overallStatus() {
-      if (!draftDone()) return 'draft';
-      if (seriesWinner()) return 'complete';
-      return 'live';
-    }
-    function roster(team) {
-      var list = [{ id: TEAMS[team].captain.toLowerCase(), name: TEAMS[team].captain, captain: true }];
-      state.picks.forEach(function (p) { if (p.team === team) { var pl = player(p.player); list.push({ id: pl.id, name: pl.name }); } });
+    function takenBy(pid) { for (var i = 0; i < D.picks.length; i++) if (D.picks[i].player === pid) return D.picks[i].team; return null; }
+    function myTeam() { return role.indexOf('captain:') === 0 ? role.slice(8) : null; }
+    function canDraftNow() { var s = nextSlot(); if (!s) return false; return role === 'admin' || myTeam() === s.team; }
+    function canEdit() { return role === 'helper' || role === 'admin'; }
+    function roster(tid) {
+      var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info }];
+      D.picks.forEach(function (p) { if (p.team === tid) { var pl = player(p.player); if (pl) list.push(pl); } });
       return list;
     }
-    var toastTimer;
-    function toast(msg) {
-      var t = document.getElementById('toast');
-      t.textContent = msg; t.classList.add('show');
-      clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2200);
+    function roleLabel(r) {
+      if (r === 'admin') return 'Admin'; if (r === 'helper') return 'Helper';
+      if (r && r.indexOf('captain:') === 0) { var t = team(r.slice(8)); return 'Captain · ' + (t ? t.name : r.slice(8)); }
+      return 'Viewer';
     }
+    function overallStatus() {
+      if (!draftDone()) return 'draft';
+      if (D.matches.some(function (m) { return m.status === 'live'; })) return 'live';
+      return 'matches';
+    }
+    function standings() {
+      var rows = D.teams.map(function (t) { return { id: t.id, name: t.name, captain: t.captain, w: 0, l: 0, rf: 0, ra: 0 }; });
+      var by = {}; rows.forEach(function (r) { by[r.id] = r; });
+      D.matches.forEach(function (m) {
+        if (m.status !== 'final') return;
+        var a = by[m.teams[0]], b = by[m.teams[1]]; if (!a || !b) return;
+        a.rf += m.score[0]; a.ra += m.score[1]; b.rf += m.score[1]; b.ra += m.score[0];
+        if (m.score[0] > m.score[1]) { a.w++; b.l++; } else if (m.score[1] > m.score[0]) { b.w++; a.l++; }
+      });
+      rows.forEach(function (r) { r.diff = r.rf - r.ra; });
+      rows.sort(function (x, y) { return y.w - x.w || y.diff - x.diff || y.rf - x.rf || x.name.localeCompare(y.name); });
+      return rows;
+    }
+    var toastTimer;
+    function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600); }
+    var TWITCH_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>';
 
     /* ------------------------------------------------------------
        RENDER: hero + auth
        ------------------------------------------------------------ */
-    var TWITCH_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>';
-
     function renderHero() {
+      var parts = (D.name || 'Tourney').split(' ');
+      var last = parts.pop();
+      document.getElementById('page-title').innerHTML = esc(parts.join(' ')) + ' <span>' + esc(last) + '</span>';
+      document.title = D.name + ' — AleksK9';
+      document.getElementById('lede').textContent =
+        'Hosted by ' + (D.hosts || []).join(' and ') + '. ' + D.teams.length + ' captains draft their squads live on this page, then it’s ' +
+        D.format.teamSize + 'v' + D.format.teamSize + ' first to ' + D.format.firstTo + '. Scores and player stats update here as the maps are played.';
+
       var st = overallStatus();
-      var pill = document.getElementById('status-pill');
-      pill.dataset.status = st;
-      document.getElementById('status-text').textContent =
-        st === 'draft' ? 'Draft in progress' : st === 'live' ? 'Series live' : 'Series complete';
+      document.getElementById('status-pill').dataset.status = st;
+      document.getElementById('status-text').textContent = st === 'draft' ? 'Draft in progress' : st === 'live' ? 'Match live now' : 'Draft complete · matches';
+      var mr = document.getElementById('meta-row');
+      mr.querySelectorAll('.pill:not(.pill-status)').forEach(function (p) { p.remove(); });
+      [D.teams.length + ' teams', D.format.teamSize + 'v' + D.format.teamSize, 'First to ' + D.format.firstTo, 'Snake draft', D.pool.length + ' in the pool'].forEach(function (t) {
+        var s = document.createElement('span'); s.className = 'pill'; s.textContent = t; mr.appendChild(s);
+      });
 
       var auth = document.getElementById('auth');
       if (LIVE) {
         if (!ME) {
-          auth.innerHTML =
-            '<a class="btn btn-ghost" href="/api/auth/login">' + TWITCH_ICON + 'Log in with Twitch</a>' +
+          auth.innerHTML = '<a class="btn btn-ghost" href="/api/auth/login">' + TWITCH_ICON + 'Log in with Twitch</a>' +
             '<span class="auth-hint">Just watching? No login needed. Captains and helpers log in to make changes.</span>';
         } else {
-          var lbl = role === 'captain-a' ? 'Captain · ' + TEAMS.a.name : role === 'captain-b' ? 'Captain · ' + TEAMS.b.name
-                  : role === 'helper' ? 'Helper' : role === 'admin' ? 'Admin' : 'Viewer';
-          var acls = role === 'captain-a' ? 'team-a' : role === 'captain-b' ? 'team-b' : '';
           auth.innerHTML =
-            '<span class="auth-chip"><span class="avatar ' + acls + '">' + (ME.avatar ? '<img src="' + esc(ME.avatar) + '" alt="">' : esc(initials(ME.name || ME.login))) + '</span>' +
-            '<span><b>' + esc(ME.name || ME.login) + '</b><br><span class="role">' + esc(lbl) + '</span></span>' +
-            '<a href="/api/auth/logout" id="logout-btn">Log out</a></span>' +
+            '<span class="auth-chip"><span class="avatar' + (myTeam() ? ' cap' : '') + '">' + (ME.avatar ? '<img src="' + esc(ME.avatar) + '" alt="">' : esc(initials(ME.name || ME.login))) + '</span>' +
+            '<span><b>' + esc(ME.name || ME.login) + '</b><br><span class="role">' + esc(roleLabel(role)) + '</span></span>' +
+            '<a href="/api/auth/logout">Log out</a></span>' +
             (role === 'viewer' ? '<span class="auth-hint">You are logged in but not on the captain or helper list yet. Ask an admin to add you.</span>' : '');
         }
         return;
       }
+      /* demo login */
       if (role === 'viewer') {
-        auth.innerHTML =
-          '<button class="btn btn-ghost" id="login-btn" aria-haspopup="true" aria-expanded="' + loginOpen + '">' + TWITCH_ICON + 'Log in with Twitch</button>' +
-          '<span class="auth-hint">Just watching? No login needed. Captains and helpers log in to make changes.</span>' +
-          (loginOpen ?
-            '<div class="login-menu" id="login-menu"><div class="lm-title">Demo · continue as</div>' +
-            '<button data-login="captain-a"><span class="avatar team-a">' + esc(initials(TEAMS.a.captain)) + '</span><span><b>' + esc(TEAMS.a.captain) + '</b><small>Captain · ' + esc(TEAMS.a.name) + '</small></span></button>' +
-            '<button data-login="captain-b"><span class="avatar team-b">' + esc(initials(TEAMS.b.captain)) + '</span><span><b>' + esc(TEAMS.b.captain) + '</b><small>Captain · ' + esc(TEAMS.b.name) + '</small></span></button>' +
-            '<button data-login="helper"><span class="avatar">MS</span><span><b>mod_sarah</b><small>Helper · enters scores</small></span></button>' +
-            '<button data-login="admin"><span class="avatar">AL</span><span><b>aleksk9_</b><small>Admin · full control</small></span></button>' +
-            '</div>' : '');
+        var menu = '';
+        if (loginOpen) {
+          menu = '<div class="login-menu" id="login-menu"><div class="lm-title">Demo · continue as</div>';
+          D.teams.forEach(function (t) { menu += '<button data-login="captain:' + esc(t.id) + '"><span class="avatar cap">' + esc(initials(t.captain)) + '</span><span><b>' + esc(t.captain) + '</b><small>Captain · ' + esc(t.name) + '</small></span></button>'; });
+          menu += '<button data-login="helper"><span class="avatar">HE</span><span><b>helper</b><small>Enters scores and stats</small></span></button>' +
+                  '<button data-login="admin"><span class="avatar">AD</span><span><b>admin</b><small>Full control</small></span></button></div>';
+        }
+        auth.innerHTML = '<button class="btn btn-ghost" id="login-btn">' + TWITCH_ICON + 'Log in (demo)</button><span class="auth-hint">Pick a role to see what they can do.</span>' + menu;
         document.getElementById('login-btn').onclick = function (e) { e.stopPropagation(); loginOpen = !loginOpen; renderHero(); };
-        document.querySelectorAll('[data-login]').forEach(function (b) { b.onclick = function () { loginOpen = false; setRole(b.dataset.login); toast('Logged in as ' + b.querySelector('b').textContent + ' (demo)'); }; });
+        document.querySelectorAll('[data-login]').forEach(function (b) { b.onclick = function () { loginOpen = false; role = b.dataset.login; ME = { login: b.querySelector('b').textContent, name: b.querySelector('b').textContent }; renderAll(); toast('Logged in as ' + ME.name + ' (demo)'); }; });
       } else {
-        var who = role === 'captain-a' ? TEAMS.a.captain : role === 'captain-b' ? TEAMS.b.captain : role === 'helper' ? 'mod_sarah' : 'aleksk9_';
-        var label = role === 'captain-a' ? 'Captain · ' + TEAMS.a.name : role === 'captain-b' ? 'Captain · ' + TEAMS.b.name : role === 'helper' ? 'Helper' : 'Admin';
-        var cls = role === 'captain-a' ? 'team-a' : role === 'captain-b' ? 'team-b' : '';
-        auth.innerHTML =
-          '<span class="auth-chip"><span class="avatar ' + cls + '">' + esc(initials(who)) + '</span>' +
-          '<span><b>' + esc(who) + '</b><br><span class="role">' + esc(label) + '</span></span>' +
-          '<button id="logout-btn">Log out</button></span>';
-        document.getElementById('logout-btn').onclick = function () { setRole('viewer'); };
+        auth.innerHTML = '<span class="auth-chip"><span class="avatar' + (myTeam() ? ' cap' : '') + '">' + esc(initials(ME.name)) + '</span><span><b>' + esc(ME.name) + '</b><br><span class="role">' + esc(roleLabel(role)) + '</span></span><button id="logout-btn">Log out</button></span>';
+        document.getElementById('logout-btn').onclick = function () { role = 'viewer'; ME = null; renderAll(); };
       }
     }
 
     /* ------------------------------------------------------------
-       RENDER: draft board
+       RENDER: draft
        ------------------------------------------------------------ */
-    function teamHead(t) {
-      var tm = TEAMS[t];
-      return '<div class="team team-' + t + '"><span class="avatar team-' + t + '">' + esc(initials(tm.captain)) + '</span>' +
-        '<span><div class="team-name">' + esc(tm.name) + '</div><div class="team-cap">Captain · ' + esc(tm.captain) + '</div></span></div>';
-    }
-
-    function renderBoard(newPickNo) {
-      var slot = nextSlot();
-      var html = '<div class="board-head"><div></div>' + teamHead('a') + teamHead('b') + '</div>';
-      for (var r = 1; r <= ROUNDS; r++) {
-        var order = pickOrder(r);
-        html += '<div class="board-row"><div class="round-label"><span>Rnd</span><b>' + r + '</b><span class="dir">' + esc(TEAMS[order[0]].captain) + ' 1st</span></div>';
-        ['a', 'b'].forEach(function (t) {
-          var got = pickAt(r, t);
-          if (got) {
-            var pl = player(got.pick.player);
-            html += '<div class="cell' + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pick-no">#' + got.pickNo + '</span>' +
-              '<span class="avatar team-' + t + '">' + esc(initials(pl.name)) + '</span>' +
-              '<span><div class="name">' + esc(pl.name) + '</div><div class="mains">' + esc(pl.mains) + '</div></span></div>';
-          } else if (slot && slot.round === r && slot.team === t) {
-            html += '<div class="cell is-clock"><span class="pick-no">#' + slot.pickNo + '</span>' +
-              '<span><div class="clock-text">On the clock</div><div class="clock-sub">' + (canDraftNow() ? 'Your pick · tap Draft in the pool' : esc(TEAMS[t].captain) + ' is picking') + '</div></span></div>';
-          } else {
-            html += '<div class="cell is-empty"><span class="pick-no">#' + ((r - 1) * 2 + order.indexOf(t) + 1) + '</span><span style="padding-left:6px">—</span></div>';
-          }
-        });
-        html += '</div>';
-      }
-      document.getElementById('board').innerHTML = html;
-
-      var sub = document.getElementById('draft-sub');
-      if (slot) {
-        sub.innerHTML = 'Round <b>' + slot.round + '</b> · Pick <b>' + slot.pickNo + ' of ' + totalPicks() + '</b> · <span class="clock">' + esc(TEAMS[slot.team].captain) + ' is on the clock</span>';
-      } else {
-        sub.innerHTML = '<b>Draft complete.</b> Rosters are locked.';
-      }
-    }
-
     function renderTurn() {
-      var slot = nextSlot();
-      var el = document.getElementById('turn');
+      var slot = nextSlot(), el = document.getElementById('turn');
       el.className = 'card turn';
-      var html = '';
+      var tot = totalPicks();
       if (!slot) {
-        el.classList.add('is-done');
-        html = '<span class="avatar">✓</span><span class="tx"><b>Draft complete</b><span>Both rosters are locked. Scroll down for the matches.</span></span>';
-      } else if (canDraftNow()) {
+        el.innerHTML = '<span class="avatar">✓</span><span class="tx"><b>Draft complete</b><span>Rosters are locked. Scroll down for matches and standings.</span></span>';
+        document.getElementById('draft-sub').innerHTML = '<b>Draft complete.</b>';
+        return;
+      }
+      var t = team(slot.team);
+      var who = '<span class="avatar cap">' + esc(initials(t.captain)) + '</span>';
+      if (canDraftNow()) {
         el.classList.add('is-you');
-        html = '<span class="avatar team-' + slot.team + '">' + esc(initials(TEAMS[slot.team].captain)) + '</span>' +
-          '<span class="tx"><b>Your pick, ' + esc(TEAMS[slot.team].captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + totalPicks() + '. Tap <b style="display:inline;font-size:inherit;color:inherit">Draft</b> next to a player in the pool, then confirm.</span></span>' +
+        el.innerHTML = who + '<span class="tx"><b>Your pick, ' + esc(t.captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Tap <b>Draft</b> next to a player below, then confirm.</span></span>' +
           '<button class="btn btn-primary btn-sm" id="goto-pool">Choose a player</button>';
       } else if (myTeam()) {
-        html = '<span class="avatar team-' + slot.team + '">' + esc(initials(TEAMS[slot.team].captain)) + '</span>' +
-          '<span class="tx"><b>Waiting on ' + esc(TEAMS[slot.team].captain) + '</b><span>Pick ' + slot.pickNo + ' of ' + totalPicks() + '. You are up next. The page updates on its own.</span></span>';
+        var order = pickOrder(slot.round), mine = order.indexOf(myTeam()), cur = order.indexOf(slot.team);
+        var away = mine > cur ? mine - cur : (order.length - cur) + pickOrder(slot.round + 1).indexOf(myTeam());
+        el.innerHTML = who + '<span class="tx"><b>Waiting on ' + esc(t.captain) + '</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. You pick in ' + away + ' turn' + (away === 1 ? '' : 's') + '. This page updates on its own.</span></span>';
       } else {
-        html = '<span class="avatar team-' + slot.team + '">' + esc(initials(TEAMS[slot.team].captain)) + '</span>' +
-          '<span class="tx"><b>' + esc(TEAMS[slot.team].captain) + ' is on the clock</b><span>Pick ' + slot.pickNo + ' of ' + totalPicks() + '. Captains take turns, and the order flips every round.</span></span>';
+        el.innerHTML = who + '<span class="tx"><b>' + esc(t.captain) + ' is on the clock</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Captains take turns, and the order flips every round.</span></span>';
       }
-      el.innerHTML = html;
+      document.getElementById('draft-sub').innerHTML = 'Round <b>' + slot.round + '</b> · Pick <b>' + slot.pickNo + ' of ' + tot + '</b> · <span class="clock">' + esc(t.captain) + ' is on the clock</span>';
       var go = document.getElementById('goto-pool');
       if (go) go.onclick = function () {
-        var pool = document.getElementById('pool');
-        pool.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        var first = pool.querySelector('[data-draft]');
-        if (first) setTimeout(function () { first.focus(); }, 500);
+        document.getElementById('tiers').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var first = document.querySelector('[data-draft]'); if (first) setTimeout(function () { first.focus(); }, 500);
       };
     }
 
-    function renderSnake() {
-      var slot = nextSlot();
-      var html = '<span class="lbl">Pick order</span>';
-      for (var r = 1; r <= ROUNDS; r++) {
-        var order = pickOrder(r);
-        html += '<span class="rnd"><span class="rl">R' + r + '</span>';
-        order.forEach(function (t, i) {
-          var no = (r - 1) * 2 + i + 1;
-          var cls = 'slot ' + t + (no <= state.picks.length ? ' done' : '') + (slot && slot.pickNo === no ? ' now' : '');
-          html += '<span class="' + cls + '" title="Pick ' + no + '"><i>' + no + '</i>' + esc(TEAMS[t].captain) + '</span>';
+    function renderBoard(newPickNo) {
+      var slot = nextSlot(), T = D.teams.length, R = D.rounds;
+      var g = document.getElementById('board');
+      g.style.gridTemplateColumns = '48px repeat(' + T + ', minmax(150px, 1fr))';
+      var html = '<div class="corner"></div>';
+      D.teams.forEach(function (t) {
+        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '"><span class="avatar cap">' + esc(initials(t.captain)) + '</span><span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
+      });
+      for (var r = 1; r <= R; r++) {
+        var order = pickOrder(r), lastRow = r === R ? ' last-row' : '';
+        html += '<div class="round-label' + lastRow + '"><span>Rnd</span><b>' + r + '</b><span class="dir">' + (r % 2 ? '→' : '←') + '</span></div>';
+        D.teams.forEach(function (t) {
+          var got = pickAt(r, t.id), pn = (r - 1) * T + order.indexOf(t.id) + 1;
+          if (got) {
+            var pl = player(got.pick.player) || { name: got.pick.player, info: '' };
+            html += '<div class="cell' + lastRow + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pn">#' + got.pickNo + '</span><span class="avatar">' + esc(initials(pl.name)) + '</span><span class="who"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></div>';
+          } else if (slot && slot.round === r && slot.team === t.id) {
+            html += '<div class="cell is-clock' + lastRow + '"><span class="pn">#' + pn + '</span><span class="who"><div class="ct">On the clock</div><div class="cs">' + (canDraftNow() ? 'Your pick' : esc(t.captain) + ' is picking') + '</div></span></div>';
+          } else {
+            html += '<div class="cell is-empty' + lastRow + '"><span class="pn">#' + pn + '</span><span style="padding-left:4px">' + (pn > totalPicks() ? '<span class="inf">no player left</span>' : '—') + '</span></div>';
+          }
         });
-        html += '</span>';
-        if (r < ROUNDS) html += '<span class="arrow">→</span>';
       }
-      html += '<span class="flip">Order flips every round</span>';
+      g.innerHTML = html;
+    }
+
+    function renderSnake() {
+      var slot = nextSlot(), T = D.teams.length, html = '<span class="lbl">Pick order · flips every round</span>';
+      for (var r = 1; r <= D.rounds; r++) {
+        html += '<div class="rnd"><span class="rl">R' + r + '</span>';
+        pickOrder(r).forEach(function (tid, i) {
+          var no = (r - 1) * T + i + 1, t = team(tid);
+          if (no > totalPicks()) return;
+          html += '<span class="slot' + (no <= D.picks.length ? ' done' : '') + (slot && slot.pickNo === no ? ' now' : '') + '"><i>' + no + '</i>' + esc(t.captain) + '</span>';
+        });
+        html += '</div>';
+      }
       document.getElementById('snake').innerHTML = html;
     }
 
     function renderPool() {
-      var slot = nextSlot();
-      var can = canDraftNow();
-      var open = 0;
+      var slot = nextSlot(), can = canDraftNow(), open = 0;
+      var tiers = D.tiers || ['Players'];
       var html = '';
-      POOL.forEach(function (p) {
-        var t = takenBy(p.id);
-        if (!t) open++;
-        html += '<li class="pool-item' + (t ? ' is-taken' : '') + '">' +
-          '<span class="avatar' + (t ? ' team-' + t : '') + '">' + esc(initials(p.name)) + '</span>' +
-          '<span class="who"><div class="name">' + esc(p.name) + '</div><div class="mains">' + esc(p.mains) + '</div></span>';
-        if (t) html += '<span class="taken-by">' + esc(TEAMS[t].name) + '</span>';
-        else if (can && confirming === p.id) html += '<span class="confirm">Draft ' + esc(p.name) + '?<button class="btn btn-sm btn-draft" data-confirm="' + p.id + '">Yes, draft</button><button class="link-btn" data-cancel-draft>Cancel</button></span>';
-        else if (can) html += '<button class="btn btn-sm btn-draft" data-draft="' + p.id + '">Draft</button>';
-        html += '</li>';
+      tiers.forEach(function (name, ti) {
+        var list = D.pool.filter(function (p) { return (p.tier || 0) === ti; });
+        if (!list.length && tiers.length > 1) return;
+        var left = list.filter(function (p) { return !takenBy(p.id); }).length;
+        html += '<div class="card tier"><div class="tier-head">' + esc(name) + '<span>' + left + ' of ' + list.length + ' left</span></div><ul class="pool-list">';
+        list.forEach(function (p) {
+          var t = takenBy(p.id); if (!t) open++;
+          html += '<li class="pool-item' + (t ? ' is-taken' : '') + (confirming === p.id ? ' is-confirming' : '') + '"><span class="avatar">' + esc(initials(p.name)) + '</span>' +
+            '<span class="who"><div class="nm">' + esc(p.name) + '</div><div class="inf">' + esc(p.info || '—') + '</div></span>';
+          if (t) html += '<span class="tb">' + esc(team(t).name) + '</span>';
+          else if (can && confirming === p.id) html += '<span class="confirm">Draft ' + esc(p.name) + '?<button class="btn btn-sm btn-draft" data-confirm="' + esc(p.id) + '">Yes</button><button class="link-btn" data-cancel-draft>Cancel</button></span>';
+          else if (can) html += '<button class="btn btn-sm btn-draft" data-draft="' + esc(p.id) + '">Draft</button>';
+          html += '</li>';
+        });
+        html += '</ul></div>';
       });
-      document.getElementById('pool').innerHTML = html;
-      if (confirming) { var ci = document.querySelector('[data-confirm="' + confirming + '"]'); if (ci) ci.closest('.pool-item').classList.add('is-confirming'); }
+      document.getElementById('tiers').innerHTML = html;
       document.getElementById('pool-count').textContent = open + ' available';
-      var head = document.querySelector('.pool-head');
-      head.classList.toggle('is-turn', can);
-      document.getElementById('pool-title').textContent = can ? 'Your turn · tap Draft' : 'Player Pool';
+      var title = document.getElementById('pool-title');
+      title.textContent = can ? 'Your turn · tap Draft' : 'Player Pool';
+      title.classList.toggle('is-turn', can);
 
       var foot = '';
       if (!slot) foot = '<span>All picks are in.</span>';
-      else if (can) foot = '<span>Your pick, <b>' + esc(TEAMS[slot.team].captain) + '</b>. Tap Draft next to a player.</span>';
-      else if (myTeam()) foot = '<span>Waiting on <b>' + esc(TEAMS[slot.team].captain) + '</b> to pick.</span>';
-      else foot = '<span>Only captains can draft. Log in with Twitch if that is you.</span>';
-      if (role === 'admin') {
-        foot += '<span>' + (state.picks.length ? '<button class="link-btn" id="undo-btn">Undo last pick</button> · ' : '') + '<button class="link-btn" id="reset-btn">Reset draft</button></span>';
-      }
+      else if (can) foot = '<span>Your pick, <b>' + esc(team(slot.team).captain) + '</b>.</span>';
+      else if (myTeam()) foot = '<span>Waiting on <b>' + esc(team(slot.team).captain) + '</b>.</span>';
+      else foot = '<span>Only the captain on the clock can draft. Log in with Twitch if that is you.</span>';
+      if (role === 'admin') foot += '<span>' + (D.picks.length ? '<button class="link-btn" id="undo-btn">Undo last pick</button> · ' : '') + '<button class="link-btn" id="reset-btn">Reset draft</button></span>';
       document.getElementById('pool-foot').innerHTML = foot;
 
       document.querySelectorAll('[data-draft]').forEach(function (b) { b.onclick = function () { confirming = b.dataset.draft; renderPool(); }; });
@@ -1067,102 +755,112 @@
     }
 
     function draftPlayer(pid) {
-      var slot = nextSlot();
-      if (!slot || !canDraftNow() || takenBy(pid)) return;
-      var pl = player(pid);
+      var slot = nextSlot(); if (!slot || !canDraftNow() || takenBy(pid)) return;
+      var pl = player(pid), t = team(slot.team);
+      confirming = null;
       if (LIVE) {
-        confirming = null;
-        api('/api/draft', { player: pid }).then(function () {
-          toast(TEAMS[slot.team].captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
-          return refresh(true);
-        }).catch(function (e) { toast(e.message); refresh(true); });
+        api('/api/draft', { player: pid }).then(function () { toast(t.captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
         return;
       }
-      state.picks.push({ team: slot.team, player: pid });
-      confirming = null;
-      toast(TEAMS[slot.team].captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
+      D.picks.push({ team: slot.team, player: pid });
+      toast(t.captain + ' drafted ' + pl.name + ' (#' + slot.pickNo + ')');
       renderAll(slot.pickNo);
     }
     function undoPick() {
       if (LIVE) return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return refresh(true); }).catch(function (e) { toast(e.message); });
-      state.picks.pop(); toast('Last pick undone'); renderAll();
+      D.picks.pop(); toast('Last pick undone'); renderAll();
     }
     function resetDraft() {
       if (LIVE) return api('/api/draft', { action: 'reset' }).then(function () { toast('Draft reset'); return refresh(true); }).catch(function (e) { toast(e.message); });
-      state.picks = []; toast('Draft reset'); renderAll();
+      D.picks = []; toast('Draft reset'); renderAll();
     }
 
     /* ------------------------------------------------------------
-       RENDER: matches
+       RENDER: standings + matches
        ------------------------------------------------------------ */
+    function teamSelect(id, selected, placeholder) {
+      var h = '<select class="field" id="' + id + '">' + (placeholder ? '<option value="">' + esc(placeholder) + '</option>' : '');
+      D.teams.forEach(function (t) { h += '<option value="' + esc(t.id) + '"' + (t.id === selected ? ' selected' : '') + '>' + esc(t.name) + '</option>'; });
+      return h + '</select>';
+    }
+    function mapSelect(id, selected) {
+      var h = '<select class="field" id="' + id + '"><option value="">Map…</option>';
+      D.maps.forEach(function (m) { h += '<option' + (m === selected ? ' selected' : '') + '>' + esc(m) + '</option>'; });
+      if (selected && D.maps.indexOf(selected) < 0) h += '<option selected>' + esc(selected) + '</option>';
+      return h + '</select>';
+    }
     function renderMatches() {
-      var s = seriesScore();
-      var w = seriesWinner();
-      var live = state.matches.some(function (m) { return m.status === 'live'; });
-      var sb =
-        '<div class="side team-a' + (w === 'a' ? ' winner' : '') + '"><span class="avatar team-a">' + esc(initials(TEAMS.a.captain)) + '</span><span class="tn">' + esc(TEAMS.a.name) + '</span><span class="cap">Captain · ' + esc(TEAMS.a.captain) + '</span></div>' +
-        '<div class="score"><span>' + s[0] + '</span><span class="sep">–</span><span>' + s[1] + '</span></div>' +
-        '<div class="side team-b' + (w === 'b' ? ' winner' : '') + '"><span class="avatar team-b">' + esc(initials(TEAMS.b.captain)) + '</span><span class="tn">' + esc(TEAMS.b.name) + '</span><span class="cap">Captain · ' + esc(TEAMS.b.captain) + '</span></div>';
-      sb += '<div class="series' + (w ? ' win' : '') + '">' +
-        (w ? esc(TEAMS[w].name) + ' wins the series ' + s[0] + '–' + s[1]
-           : !draftDone() ? 'Series starts after the draft'
-           : live ? 'Best of 3 · in progress'
-           : 'Best of 3 · first to 2 maps') + '</div>';
-      document.getElementById('scoreboard').innerHTML = sb;
+      var rows = standings(), played = D.matches.some(function (m) { return m.status === 'final'; });
+      var st = document.getElementById('standings');
+      if (!draftDone() && !D.matches.length) {
+        st.innerHTML = '<div class="empty-note">Standings appear once the draft is done and matches are played.</div>';
+      } else {
+        var h = '<table><thead><tr><th>#</th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num">RF</th><th class="num">RA</th><th class="num">+/−</th></tr></thead><tbody>';
+        rows.forEach(function (r, i) {
+          h += '<tr' + (played && i === 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who"><span class="avatar cap">' + esc(initials(r.captain)) + '</span>' + esc(r.name) + ' <small>· ' + esc(r.captain) + '</small></td>' +
+            '<td class="num w">' + r.w + '</td><td class="num">' + r.l + '</td><td class="num">' + r.rf + '</td><td class="num">' + r.ra + '</td><td class="num">' + (r.diff > 0 ? '+' : '') + r.diff + '</td></tr>';
+        });
+        st.innerHTML = h + '</tbody></table>';
+      }
 
-      document.getElementById('matches-sub').innerHTML = canEditResults()
-        ? 'You can <b>update scores</b> after each map.'
-        : 'Scores are updated after every map.';
+      document.getElementById('matches-sub').innerHTML = canEdit() ? 'You can <b>add matches</b> and <b>update scores</b>.' : 'Scores are updated by the helpers as maps finish.';
 
-      var html = '';
-      state.matches.forEach(function (m, i) {
-        var status = m.status;
-        var pill = status === 'live' ? '<span class="pill pill-live"><span class="dot"></span>Live</span>'
-                 : status === 'final' ? '<span class="pill pill-final">Final</span>'
-                 : '<span class="pill pill-upcoming">Upcoming</span>';
-        var score = status === 'upcoming'
-          ? '<span class="ms tbd">TBD</span>'
-          : '<span class="ms"><span class="a">' + m.score[0] + '</span><span class="sep">–</span><span>' + m.score[1] + '</span></span>';
-        var when = status === 'final' ? (m.score[0] > m.score[1] ? TEAMS.a.name : TEAMS.b.name) + ' took the map'
-                 : status === 'live' ? 'Round ' + (m.score[0] + m.score[1] + 1) + ' underway'
-                 : 'Map ' + (i + 1) + ' of 3';
-        html += '<li class="card match"><span class="mnum">M' + (i + 1) + '</span>' +
-          '<span class="info"><div class="map">' + esc(m.map) + '</div><div class="when">' + esc(when) + '</div></span>' +
-          score + '<span class="status">' + pill + '</span>';
-        if (canEditResults()) {
-          if (editingMatch === i) {
-            html += '<div class="tools">' +
-              '<label>' + esc(TEAMS.a.name) + ' <input type="number" min="0" max="9" id="sa-' + i + '" value="' + m.score[0] + '"></label>' +
-              '<label>' + esc(TEAMS.b.name) + ' <input type="number" min="0" max="9" id="sb-' + i + '" value="' + m.score[1] + '"></label>' +
-              '<label>Status <select id="ss-' + i + '">' +
-                ['upcoming', 'live', 'final'].map(function (o) { return '<option value="' + o + '"' + (o === status ? ' selected' : '') + '>' + o[0].toUpperCase() + o.slice(1) + '</option>'; }).join('') +
-              '</select></label>' +
-              '<button class="btn btn-sm btn-primary" data-save="' + i + '">Save</button>' +
-              '<button class="link-btn" data-cancel="' + i + '">Cancel</button></div>';
+      var add = document.getElementById('add-match');
+      add.hidden = !canEdit();
+      if (canEdit()) {
+        add.innerHTML = '<span class="lbl">Add a match</span>' + teamSelect('am-a', '', 'Team 1') + '<span style="color:var(--fg-dim)">vs</span>' + teamSelect('am-b', '', 'Team 2') + mapSelect('am-map', '') + '<button class="btn btn-sm btn-primary" id="am-go">Add match</button>';
+        document.getElementById('am-go').onclick = function () {
+          var a = document.getElementById('am-a').value, b = document.getElementById('am-b').value, map = document.getElementById('am-map').value;
+          if (!a || !b || a === b) return toast('Pick two different teams');
+          if (LIVE) return api('/api/matches', { action: 'add', teams: [a, b], map: map }).then(function () { toast('Match added'); return refresh(true); }).catch(function (e) { toast(e.message); });
+          D.matches.push({ id: 'm' + Date.now(), teams: [a, b], map: map || 'TBD', status: 'upcoming', score: [0, 0] }); toast('Match added'); renderAll();
+        };
+      }
+
+      var list = document.getElementById('match-list'), html = '';
+      if (!D.matches.length) html = '<li class="card empty-note">No matches yet.' + (canEdit() ? ' Add the first one above.' : '') + '</li>';
+      D.matches.slice().reverse().forEach(function (m) {
+        var ta = team(m.teams[0]) || { name: m.teams[0], captain: '?' }, tb = team(m.teams[1]) || { name: m.teams[1], captain: '?' };
+        var pill = m.status === 'live' ? '<span class="pill pill-live"><span class="dot"></span>Live</span>' : m.status === 'final' ? '<span class="pill pill-final">Final</span>' : '<span class="pill pill-upcoming">Upcoming</span>';
+        var aw = m.status === 'final' && m.score[0] > m.score[1], bw = m.status === 'final' && m.score[1] > m.score[0];
+        html += '<li class="card match"><span class="mp">' + esc(m.map || 'TBD') + '</span>' + pill +
+          '<div class="vs"><span class="side' + (aw ? ' win' : '') + '"><span class="avatar cap">' + esc(initials(ta.captain)) + '</span><span>' + esc(ta.name) + '</span></span>' +
+          (m.status === 'upcoming' ? '<span class="sc tbd">vs</span>' : '<span class="sc">' + m.score[0] + '<span class="sep">–</span>' + m.score[1] + '</span>') +
+          '<span class="side r' + (bw ? ' win' : '') + '"><span>' + esc(tb.name) + '</span><span class="avatar cap">' + esc(initials(tb.captain)) + '</span></span></div>';
+        if (canEdit()) {
+          if (editingMatch === m.id) {
+            html += '<div class="edit"><label>' + esc(ta.name) + ' <input class="field num" type="number" min="0" max="99" id="sa-' + m.id + '" value="' + m.score[0] + '"></label>' +
+              '<label>' + esc(tb.name) + ' <input class="field num" type="number" min="0" max="99" id="sb-' + m.id + '" value="' + m.score[1] + '"></label>' +
+              '<label>Status <select class="field" id="ss-' + m.id + '">' + ['upcoming', 'live', 'final'].map(function (o) { return '<option value="' + o + '"' + (o === m.status ? ' selected' : '') + '>' + o[0].toUpperCase() + o.slice(1) + '</option>'; }).join('') + '</select></label>' +
+              '<label>Map ' + mapSelect('sm-' + m.id, m.map) + '</label>' +
+              '<button class="btn btn-sm btn-primary" data-save="' + m.id + '">Save</button><button class="link-btn" data-cancel="' + m.id + '">Cancel</button>' +
+              '<span style="flex:1"></span><button class="link-btn" data-remove="' + m.id + '">Remove match</button></div>';
           } else {
-            html += '<button class="btn btn-sm btn-ghost edit" data-edit="' + i + '">Update score</button>';
+            html += '<div class="edit"><button class="btn btn-sm btn-ghost" data-edit="' + m.id + '">Update score</button></div>';
           }
         }
         html += '</li>';
       });
-      document.getElementById('match-list').innerHTML = html;
+      list.innerHTML = html;
 
-      document.querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { editingMatch = +b.dataset.edit; renderMatches(); }; });
-      document.querySelectorAll('[data-cancel]').forEach(function (b) { b.onclick = function () { editingMatch = -1; renderMatches(); }; });
-      document.querySelectorAll('[data-save]').forEach(function (b) {
+      list.querySelectorAll('[data-edit]').forEach(function (b) { b.onclick = function () { editingMatch = b.dataset.edit; renderMatches(); }; });
+      list.querySelectorAll('[data-cancel]').forEach(function (b) { b.onclick = function () { editingMatch = null; renderMatches(); }; });
+      list.querySelectorAll('[data-remove]').forEach(function (b) {
         b.onclick = function () {
-          var i = +b.dataset.save;
-          var m = state.matches[i];
-          var score = [+document.getElementById('sa-' + i).value || 0, +document.getElementById('sb-' + i).value || 0];
-          var status = document.getElementById('ss-' + i).value;
-          editingMatch = -1;
-          if (LIVE) {
-            api('/api/matches', { index: i, score: score, status: status }).then(function () { toast('Map ' + (i + 1) + ' updated'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
-            return;
-          }
-          m.score = score; m.status = status;
-          toast('Map ' + (i + 1) + ' updated');
-          renderAll();
+          if (b.textContent !== 'Really remove?') { b.textContent = 'Really remove?'; return; }
+          var id = b.dataset.remove; editingMatch = null;
+          if (LIVE) return api('/api/matches', { action: 'remove', id: id }).then(function () { toast('Match removed'); return refresh(true); }).catch(function (e) { toast(e.message); });
+          D.matches = D.matches.filter(function (m) { return m.id !== id; }); toast('Match removed'); renderAll();
+        };
+      });
+      list.querySelectorAll('[data-save]').forEach(function (b) {
+        b.onclick = function () {
+          var id = b.dataset.save, m = D.matches.filter(function (x) { return x.id === id; })[0];
+          var score = [+document.getElementById('sa-' + id).value || 0, +document.getElementById('sb-' + id).value || 0];
+          var status = document.getElementById('ss-' + id).value, map = document.getElementById('sm-' + id).value;
+          editingMatch = null;
+          if (LIVE) return api('/api/matches', { action: 'update', id: id, score: score, status: status, map: map }).then(function () { toast('Match updated'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
+          m.score = score; m.status = status; if (map) m.map = map; toast('Match updated'); renderAll();
         };
       });
     }
@@ -1172,194 +870,112 @@
        ------------------------------------------------------------ */
     function statRows() {
       var rows = [];
-      ['a', 'b'].forEach(function (t) {
-        roster(t).forEach(function (p) {
-          var s = state.stats[p.id] || [0, 0, 0];
-          rows.push({ id: p.id, name: p.name, team: t, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
+      D.teams.forEach(function (t) {
+        roster(t.id).forEach(function (p) {
+          var s = D.stats[p.id] || [0, 0, 0];
+          rows.push({ id: p.id, name: p.name, team: t.id, teamName: t.name, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
         });
       });
       return rows;
     }
-
     function renderStatsTools() {
       var el = document.getElementById('stats-tools');
-      if (!canEditResults() || !draftDone()) { el.innerHTML = ''; return; }
-      el.innerHTML = statsEditing
-        ? '<button class="btn btn-sm btn-primary" id="stats-save">Save stats</button><button class="link-btn" id="stats-cancel">Cancel</button>'
-        : '<button class="btn btn-sm btn-ghost" id="stats-edit">Edit stats</button>';
+      if (!canEdit() || !draftDone()) { el.innerHTML = ''; return; }
+      el.innerHTML = statsEditing ? '<button class="btn btn-sm btn-primary" id="stats-save">Save stats</button><button class="link-btn" id="stats-cancel">Cancel</button>' : '<button class="btn btn-sm btn-ghost" id="stats-edit">Edit stats</button>';
       var e = document.getElementById('stats-edit'); if (e) e.onclick = function () { statsEditing = true; renderStats(); };
       var c = document.getElementById('stats-cancel'); if (c) c.onclick = function () { statsEditing = false; renderStats(); };
       var sv = document.getElementById('stats-save'); if (sv) sv.onclick = saveStats;
     }
     function saveStats() {
       var bulk = {};
-      document.querySelectorAll('input.stat').forEach(function (inp) {
-        var pid = inp.dataset.pid; bulk[pid] = bulk[pid] || [0, 0, 0];
-        bulk[pid][+inp.dataset.f] = Math.max(0, +inp.value || 0);
-      });
+      document.querySelectorAll('input.stat').forEach(function (inp) { var pid = inp.dataset.pid; bulk[pid] = bulk[pid] || [0, 0, 0]; bulk[pid][+inp.dataset.f] = Math.max(0, +inp.value || 0); });
       statsEditing = false;
-      if (LIVE) {
-        api('/api/stats', { bulk: bulk }).then(function () { toast('Stats saved'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
-        return;
-      }
-      state.stats = bulk; toast('Stats saved'); renderStats();
+      if (LIVE) return api('/api/stats', { bulk: bulk }).then(function () { toast('Stats saved'); return refresh(true); }).catch(function (e) { toast(e.message); refresh(true); });
+      D.stats = bulk; toast('Stats saved'); renderStats();
     }
-
     function renderStats() {
       renderStatsTools();
-      var rows = statRows().filter(function (r) { return teamFilter === 'all' || r.team === teamFilter; });
-      var hasStats = Object.keys(state.stats).length > 0;
+      var sel = document.getElementById('team-filter');
+      if (sel.options.length !== D.teams.length + 1) {
+        sel.innerHTML = '<option value="all">All teams</option>' + D.teams.map(function (t) { return '<option value="' + esc(t.id) + '">' + esc(t.name) + '</option>'; }).join('');
+        sel.value = teamFilter;
+      }
       var wrap = document.getElementById('stats-table');
-
-      if (!draftDone()) { wrap.innerHTML = '<div class="empty-note">Player stats appear once the draft is complete and the first map is played.</div>'; return; }
-      if (!hasStats && !statsEditing) { wrap.innerHTML = '<div class="empty-note">Rosters are set. Stats will show up after the first map.' + (canEditResults() ? ' Use <b>Edit stats</b> above to enter them.' : '') + '</div>'; return; }
+      if (!draftDone()) { wrap.innerHTML = '<div class="empty-note">Player stats appear once the draft is complete and maps are played.</div>'; return; }
+      var hasStats = Object.keys(D.stats).length > 0;
+      if (!hasStats && !statsEditing) { wrap.innerHTML = '<div class="empty-note">Rosters are set. Stats show up after the first map.' + (canEdit() ? ' Use <b>Edit stats</b> to enter them.' : '') + '</div>'; return; }
 
       if (statsEditing) {
-        var all = statRows(); /* ignore team filter while editing so nothing is lost on save */
         var eh = '<table><thead><tr><th>Player</th><th>Team</th><th class="num">Kills</th><th class="num">Deaths</th><th class="num">Assists</th></tr></thead><tbody>';
-        all.forEach(function (r) {
-          eh += '<tr><td class="player"><span class="avatar team-' + r.team + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
-            '<td><span class="team-tag team-' + r.team + '">' + esc(TEAMS[r.team].name) + '</span></td>' +
+        statRows().forEach(function (r) {
+          eh += '<tr><td class="who"><span class="avatar' + (r.captain ? ' cap' : '') + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td><td><small style="color:var(--fg-muted)">' + esc(r.teamName) + '</small></td>' +
             [r.k, r.d, r.a].map(function (v, f) { return '<td class="num"><input class="stat" type="number" min="0" max="999" value="' + v + '" data-pid="' + esc(r.id) + '" data-f="' + f + '"></td>'; }).join('') + '</tr>';
         });
-        wrap.innerHTML = eh + '</tbody></table>';
-        return;
+        wrap.innerHTML = eh + '</tbody></table>'; return;
       }
 
+      var rows = statRows().filter(function (r) { return teamFilter === 'all' || r.team === teamFilter; });
       rows.sort(function (x, y) { var d = x[sortKey] < y[sortKey] ? -1 : x[sortKey] > y[sortKey] ? 1 : 0; return sortAsc ? d : -d; });
       var topKd = Math.max.apply(null, rows.map(function (r) { return r.kd; }));
-
-      function th(key, label, num) {
-        return '<th class="' + (num ? 'num ' : '') + (sortKey === key ? 'is-sorted' + (sortAsc ? ' asc' : '') : '') + '"><button data-sort="' + key + '">' + label + '</button></th>';
-      }
-      var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('team', 'Team') + th('k', 'Kills', 1) + th('d', 'Deaths', 1) + th('a', 'Assists', 1) + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
+      function th(key, label, num) { return '<th class="' + (num ? 'num ' : '') + (sortKey === key ? 'is-sorted' + (sortAsc ? ' asc' : '') : '') + '"><button data-sort="' + key + '">' + label + '</button></th>'; }
+      var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('teamName', 'Team') + th('k', 'Kills', 1) + th('d', 'Deaths', 1) + th('a', 'Assists', 1) + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
       rows.forEach(function (r, i) {
-        html += '<tr' + (r.kd === topKd ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td>' +
-          '<td class="player"><span class="avatar team-' + r.team + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
-          '<td><span class="team-tag team-' + r.team + '">' + esc(TEAMS[r.team].name) + '</span></td>' +
-          '<td class="num">' + r.k + '</td><td class="num">' + r.d + '</td><td class="num">' + r.a + '</td>' +
-          '<td class="num kd">' + r.kd.toFixed(2) + '</td></tr>';
+        html += '<tr' + (r.kd === topKd && r.kd > 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who"><span class="avatar' + (r.captain ? ' cap' : '') + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
+          '<td><small style="color:var(--fg-muted)">' + esc(r.teamName) + '</small></td><td class="num">' + r.k + '</td><td class="num">' + r.d + '</td><td class="num">' + r.a + '</td><td class="num kd">' + r.kd.toFixed(2) + '</td></tr>';
       });
-      html += '</tbody></table>';
-      wrap.innerHTML = html;
-      document.querySelectorAll('[data-sort]').forEach(function (b) {
-        b.onclick = function () {
-          var k = b.dataset.sort;
-          if (sortKey === k) sortAsc = !sortAsc; else { sortKey = k; sortAsc = (k === 'name' || k === 'team'); }
-          renderStats();
-        };
-      });
+      wrap.innerHTML = html + '</tbody></table>';
+      wrap.querySelectorAll('[data-sort]').forEach(function (b) { b.onclick = function () { var k = b.dataset.sort; if (sortKey === k) sortAsc = !sortAsc; else { sortKey = k; sortAsc = (k === 'name' || k === 'teamName'); } renderStats(); }; });
     }
-
-    document.querySelectorAll('#stat-filters .chip').forEach(function (c) {
-      c.onclick = function () {
-        teamFilter = c.dataset.team;
-        document.querySelectorAll('#stat-filters .chip').forEach(function (x) { x.classList.toggle('is-on', x === c); });
-        renderStats();
-      };
-    });
+    document.getElementById('team-filter').onchange = function (e) { teamFilter = e.target.value; renderStats(); };
 
     /* ------------------------------------------------------------
-       WIRING
+       RENDER: rules + admin
        ------------------------------------------------------------ */
-    function renderAll(newPickNo) {
-      renderHero();
-      renderTurn();
-      renderBoard(newPickNo);
-      renderSnake();
-      renderPool();
-      renderMatches();
-      renderStats();
-    }
-    function setRole(r) {
-      role = r;
-      editingMatch = -1;
-      confirming = null;
-      renderAll();
-    }
-
-    document.querySelectorAll('[data-stage]').forEach(function (b) {
-      b.onclick = function () {
-        document.querySelectorAll('[data-stage]').forEach(function (x) { x.classList.toggle('is-on', x === b); });
-        loadStage(b.dataset.stage);
-        renderAll();
-        toast(b.dataset.stage === 'draft' ? 'Showing the draft' : b.dataset.stage === 'live' ? 'Showing the series in progress' : 'Showing the final result');
-      };
-    });
-    document.addEventListener('click', function (e) {
-      if (loginOpen && !e.target.closest('#login-menu') && !e.target.closest('#login-btn')) { loginOpen = false; renderHero(); }
-    });
-    document.querySelectorAll('[data-team-name]').forEach(function (c) { c.textContent = TEAMS[c.dataset.team].name; });
-
-    /* ------------------------------------------------------------
-       ADMIN PANEL (live mode only)
-       ------------------------------------------------------------ */
-    function roleLabel(r) {
-      return r === 'captain-a' ? 'Captain · ' + TEAMS.a.name : r === 'captain-b' ? 'Captain · ' + TEAMS.b.name : r === 'helper' ? 'Helper' : r === 'admin' ? 'Admin' : r;
+    function renderRules() {
+      document.getElementById('rules-list').innerHTML = (D.rules || []).map(function (r) { return '<li>' + esc(r) + '</li>'; }).join('');
+      document.getElementById('map-chips').innerHTML = (D.maps || []).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('');
     }
     function renderAdmin() {
-      var sec = document.getElementById('admin');
-      var show = LIVE && role === 'admin';
-      sec.hidden = !show;
-      if (!show) return;
-      document.querySelector('#role-role option[value="captain-a"]').textContent = roleLabel('captain-a');
-      document.querySelector('#role-role option[value="captain-b"]').textContent = roleLabel('captain-b');
+      var sec = document.getElementById('admin'), show = LIVE && role === 'admin';
+      sec.hidden = !show; if (!show) return;
+      var rs = document.getElementById('role-role');
+      rs.innerHTML = D.teams.map(function (t) { return '<option value="captain:' + esc(t.id) + '">Captain · ' + esc(t.name) + '</option>'; }).join('') + '<option value="helper">Helper</option><option value="admin">Admin</option>';
       api('/api/admin/roles').then(function (d) {
-        var list = document.getElementById('role-list');
         var html = '';
-        (d.alwaysAdmin || []).forEach(function (l) {
-          html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>';
-        });
-        Object.keys(d.roles || {}).sort().forEach(function (l) {
-          html += '<li><b>' + esc(l) + '</b><span class="rl">' + esc(roleLabel(d.roles[l])) + '</span><button class="link-btn" data-remove-role="' + esc(l) + '">Remove</button></li>';
-        });
+        (d.alwaysAdmin || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>'; });
+        Object.keys(d.roles || {}).sort().forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">' + esc(roleLabel(d.roles[l])) + '</span><button class="link-btn" data-remove-role="' + esc(l) + '">Remove</button></li>'; });
+        var list = document.getElementById('role-list');
         list.innerHTML = html || '<li><span class="rl">Nobody added yet.</span></li>';
-        list.querySelectorAll('[data-remove-role]').forEach(function (b) {
-          b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderAdmin(); }).catch(function (e) { toast(e.message); }); };
-        });
+        list.querySelectorAll('[data-remove-role]').forEach(function (b) { b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderAdmin(); }).catch(function (e) { toast(e.message); }); }; });
       }).catch(function (e) { toast(e.message); });
     }
     document.getElementById('role-form').onsubmit = function (e) {
       e.preventDefault();
-      var login = document.getElementById('role-login').value.trim().replace(/^@/, '').toLowerCase();
-      var r = document.getElementById('role-role').value;
+      var login = document.getElementById('role-login').value.trim().replace(/^@/, '').toLowerCase(), r = document.getElementById('role-role').value;
       if (!login) return;
-      api('/api/admin/roles', { login: login, role: r }).then(function () {
-        toast(login + ' is now ' + roleLabel(r));
-        document.getElementById('role-login').value = '';
-        renderAdmin();
-      }).catch(function (err) { toast(err.message); });
+      api('/api/admin/roles', { login: login, role: r }).then(function () { toast(login + ' is now ' + roleLabel(r)); document.getElementById('role-login').value = ''; renderAdmin(); }).catch(function (err) { toast(err.message); });
     };
     function resetAllClick() {
-      var wrap = document.getElementById('reset-all-wrap');
-      wrap.innerHTML = '<span style="font-size:14px;margin-right:10px">Wipe picks, scores, and stats?</span><button class="btn btn-sm btn-primary" id="reset-yes">Yes, reset everything</button> <button class="link-btn" id="reset-no">Cancel</button>';
+      document.getElementById('reset-all-wrap').innerHTML = '<span style="font-size:14px;margin-right:10px">Wipe picks, matches, and stats?</span><button class="btn btn-sm btn-primary" id="reset-yes">Yes, reset everything</button> <button class="link-btn" id="reset-no">Cancel</button>';
       document.getElementById('reset-no').onclick = restoreResetBtn;
-      document.getElementById('reset-yes').onclick = function () {
-        api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); restoreResetBtn(); return refresh(true); }).catch(function (e) { toast(e.message); restoreResetBtn(); });
-      };
+      document.getElementById('reset-yes').onclick = function () { api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); restoreResetBtn(); return refresh(true); }).catch(function (e) { toast(e.message); restoreResetBtn(); }); };
     }
-    function restoreResetBtn() {
-      document.getElementById('reset-all-wrap').innerHTML = '<button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button>';
-      document.getElementById('reset-all').onclick = resetAllClick;
-    }
+    function restoreResetBtn() { document.getElementById('reset-all-wrap').innerHTML = '<button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button>'; document.getElementById('reset-all').onclick = resetAllClick; }
     document.getElementById('reset-all').onclick = resetAllClick;
 
     /* ------------------------------------------------------------
-       BOOT
+       WIRING + BOOT
        ------------------------------------------------------------ */
-    function bootDemo() {
-      LIVE = false;
-      document.querySelector('.preview-bar').hidden = false;
-      loadStage('draft');
-      renderAll();
+    function renderAll(newPickNo) {
+      renderHero(); renderTurn(); renderBoard(newPickNo); renderSnake(); renderPool(); renderMatches(); renderStats(); renderRules(); renderAdmin();
     }
+    document.addEventListener('click', function (e) { if (loginOpen && !e.target.closest('#login-menu') && !e.target.closest('#login-btn')) { loginOpen = false; renderHero(); } });
+
+    function bootDemo() { LIVE = false; D = JSON.parse(JSON.stringify(DEMO)); document.getElementById('demo-bar').hidden = false; renderAll(); }
     function boot() {
       if (location.search.indexOf('demo=1') >= 0 || location.protocol === 'file:') return bootDemo();
       Promise.all([api('/api/me'), api('/api/tournament')]).then(function (r) {
-        LIVE = true;
-        ME = r[0].user; role = r[0].role;
-        document.querySelector('.preview-bar').hidden = true;
-        applyServer(r[1]);
+        LIVE = true; ME = r[0].user; role = r[0].role; D = r[1]; lastUpdated = D.updatedAt || 0;
         renderAll();
         var q = new URLSearchParams(location.search).get('login');
         if (q === 'ok' && ME) toast('Logged in as ' + (ME.name || ME.login));
@@ -1370,38 +986,25 @@
         document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
       }).catch(function () { bootDemo(); });
     }
-    var _renderAll = renderAll;
-    renderAll = function (n) { _renderAll(n); renderAdmin(); };
     boot();
 
     /* Sub-nav active state */
     var subLinks = Array.prototype.slice.call(document.querySelectorAll('.subnav a'));
     var blocks = subLinks.map(function (a) { return document.querySelector(a.getAttribute('href')); });
     function updateSubnav() {
-      var top = window.scrollY + (window.innerHeight || 800) * 0.45;
-      var idx = 0;
+      var top = window.scrollY + (window.innerHeight || 800) * 0.45, idx = 0;
       blocks.forEach(function (b, i) { if (b.offsetTop <= top) idx = i; });
       subLinks.forEach(function (a, i) { a.classList.toggle('is-active', i === idx); });
     }
-    window.addEventListener('scroll', updateSubnav, { passive: true });
-    updateSubnav();
+    window.addEventListener('scroll', updateSubnav, { passive: true }); updateSubnav();
 
     /* Reveal */
-    var reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
-    var vh = window.innerHeight || document.documentElement.clientHeight;
-    var pending = reveals.filter(function (el) {
-      var r = el.getBoundingClientRect();
-      if (r.top < vh * 0.92 && r.bottom > 0) { el.classList.add('is-visible'); return false; }
-      return true;
-    });
+    var reveals = Array.prototype.slice.call(document.querySelectorAll('.reveal')), vh = window.innerHeight || 800;
+    var pending = reveals.filter(function (el) { var r = el.getBoundingClientRect(); if (r.top < vh * 0.92 && r.bottom > 0) { el.classList.add('is-visible'); return false; } return true; });
     if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); } });
-      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+      var io = new IntersectionObserver(function (entries) { entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); } }); }, { threshold: 0.12 });
       pending.forEach(function (el) { io.observe(el); });
-    } else {
-      pending.forEach(function (el) { el.classList.add('is-visible'); });
-    }
+    } else { pending.forEach(function (el) { el.classList.add('is-visible'); }); }
   </script>
 </body>
 </html>

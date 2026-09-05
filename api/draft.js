@@ -6,7 +6,7 @@ import { nextSlot } from './_lib/defaults.js';
    POST { action: 'undo' | 'reset' } — admin only */
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
-  const me = await requireRole(req, res, ['captain-a', 'captain-b', 'admin']);
+  const me = await requireRole(req, res, ['captain', 'admin']);
   if (!me) return;
   const body = readBody(req);
   const state = await getState();
@@ -20,8 +20,9 @@ export default async function handler(req, res) {
 
   const slot = nextSlot(state);
   if (!slot) return json(res, 409, { error: 'The draft is already complete' });
-  const myTeam = me.role === 'captain-a' ? 'a' : me.role === 'captain-b' ? 'b' : null;
-  if (me.role !== 'admin' && myTeam !== slot.team) return json(res, 409, { error: `It is ${state.teams[slot.team].captain}'s pick, not yours` });
+  const myTeam = me.role.startsWith('captain:') ? me.role.slice(8) : null;
+  const onClock = state.teams.find(t => t.id === slot.team);
+  if (me.role !== 'admin' && myTeam !== slot.team) return json(res, 409, { error: `It is ${onClock.captain}'s pick, not yours` });
 
   const pid = String(body.player || '');
   if (!state.pool.some(p => p.id === pid)) return json(res, 400, { error: 'Unknown player' });

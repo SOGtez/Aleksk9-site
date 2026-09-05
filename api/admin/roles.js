@@ -1,5 +1,5 @@
 import { json, requireRole, readBody } from '../_lib/http.js';
-import { getRoles, setRole } from '../_lib/store.js';
+import { getRoles, setRole, getState } from '../_lib/store.js';
 
 /* GET  → { roles: { login: role } }
    POST { login, role } — role '' or null removes. Admin only. */
@@ -10,7 +10,10 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   const b = readBody(req);
   const role = b.role || null;
-  if (role && !['captain-a', 'captain-b', 'helper', 'admin'].includes(role)) return json(res, 400, { error: 'Bad role' });
+  if (role && !['helper', 'admin'].includes(role)) {
+    const state = await getState();
+    if (!role.startsWith('captain:') || !state.teams.some(t => t.id === role.slice(8))) return json(res, 400, { error: 'Bad role' });
+  }
   if (!b.login) return json(res, 400, { error: 'login required' });
   await setRole(b.login, role);
   json(res, 200, { ok: true, roles: await getRoles() });

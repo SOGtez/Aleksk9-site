@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   if (!me) return;
   const b = readBody(req);
   const state = await getState();
-  const valid = new Set(state.pool.map(p => p.id).concat(['a', 'b'].map(t => state.teams[t].captain.toLowerCase())));
+  const valid = new Set(state.pool.map(p => p.id).concat(state.teams.map(t => t.id)));
   const clean = v => Math.max(0, Math.min(999, Number(v) || 0));
 
   if (b.bulk && typeof b.bulk === 'object') {

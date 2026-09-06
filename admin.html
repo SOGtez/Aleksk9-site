@@ -130,6 +130,10 @@
     .danger { border-color: rgba(225,6,0,.35); }
     .confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
     .empty { padding: 28px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+    .ver { display: block; margin-top: 4px; font-size: 11px; line-height: 1.5; }
+    .ver.ok { color: var(--fg-muted); }
+    .ver.bad { color: var(--accent); }
+    .ver.err { color: var(--fg-dim); }
   </style>
 </head>
 <body>
@@ -242,6 +246,16 @@
             <ul class="role-list" id="role-list"></ul>
           </div>
           <div class="card pad">
+            <h3>Ubisoft lookup test</h3>
+            <p class="d">Try the stats lookup on any Ubisoft name to check it is working.</p>
+            <form class="role-form" id="lk-form">
+              <input class="field" type="text" id="lk-name" placeholder="Ubisoft name" autocomplete="off" required>
+              <select class="field" id="lk-platform"><option>PlayStation</option><option>Xbox</option><option>PC</option></select>
+              <button class="btn btn-sm btn-primary" type="submit">Look up</button>
+            </form>
+            <pre id="lk-out" class="small" style="white-space:pre-wrap;margin:0"></pre>
+          </div>
+          <div class="card pad">
             <h3>Tip</h3>
             <p class="d">When you build a tournament from applications, the captains get their team role automatically from their Twitch login. You only need this tab for helpers, extra admins, or a last-minute captain swap.</p>
           </div>
@@ -287,22 +301,44 @@
       rows.forEach(function (a) {
         var tierSel = '<select class="field" data-tier="' + esc(a.login) + '"><option value=""' + (a.tier == null ? ' selected' : '') + '>Auto (' + a.suggestedTier + ')</option>' + [0, 1, 2].map(function (t) { return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + t + ' · ' + ['Champs', 'Ranked', 'Rookies'][t] + '</option>'; }).join('') + '</select>';
         h += '<tr><td class="who">' + av(a) + '<span><b>' + esc(a.name) + '</b><small>' + esc(a.login) + '</small></span></td>' +
-          '<td>' + esc(a.ign) + '<span class="sub">' + esc(a.platform) + '</span></td>' +
-          '<td>' + (a.hours || 0) + '</td>' +
-          '<td>' + esc(a.rank) + '<span class="sub">peak ' + esc(a.peakRank) + (a.champs ? ' · ' + a.champs + 'x' : '') + '</span></td>' +
+          '<td>' + esc(a.ign) + '<span class="sub">' + esc(a.platform) + '</span>' + verCell(a, 'ign') + '</td>' +
+          '<td>' + (a.hours || 0) + verCell(a, 'hours') + '</td>' +
+          '<td>' + esc(a.rank) + '<span class="sub">peak ' + esc(a.peakRank) + (a.champs ? ' · ' + a.champs + 'x' : '') + '</span>' + verCell(a, 'rank') + '</td>' +
           '<td>' + esc((a.roles || []).join(' / ')) + (a.captain ? '<span class="sub">wants to captain</span>' : '') + '</td>' +
           '<td>' + esc(a.discord) + (a.notes ? '<span class="sub" title="' + esc(a.notes) + '">' + esc(a.notes.slice(0, 40)) + (a.notes.length > 40 ? '…' : '') + '</span>' : '') + '</td>' +
           '<td>' + esc(fmt(a.followedAt)) + '<span class="sub">applied ' + esc(fmt(a.submittedAt)) + '</span></td>' +
           '<td>' + tierSel + '</td>' +
           '<td><input type="checkbox" data-cap="' + esc(a.login) + '"' + (a.captainPick ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:var(--accent)"></td>' +
           '<td><span class="st">' + ['accepted', 'pending', 'rejected'].map(function (s) { return '<button data-status="' + s + '" data-login="' + esc(a.login) + '" class="' + (a.status === s ? 'on-' + s : '') + '">' + s[0].toUpperCase() + s.slice(1) + '</button>'; }).join('') + '</span></td>' +
-          '<td><button class="link-btn" data-del="' + esc(a.login) + '">Delete</button></td></tr>';
+          '<td><button class="link-btn" data-lookup="' + esc(a.login) + '">' + (a.verified ? 'Look up again' : 'Look up') + '</button><br><button class="link-btn" data-del="' + esc(a.login) + '">Delete</button></td></tr>';
       });
       wrap.innerHTML = h + '</tbody></table>';
+      wrap.querySelectorAll('[data-lookup]').forEach(function (b) {
+        b.onclick = function () {
+          b.textContent = 'Looking up…'; b.disabled = true;
+          api('/api/admin/lookup', { login: b.dataset.lookup }).then(function (r) {
+            var i = A.applications.findIndex(function (a) { return a.login === b.dataset.lookup; });
+            if (i >= 0) { A.applications[i].verified = r.verified; delete A.applications[i].lookupError; }
+            toast(r.verified.errors.length ? 'Looked up with ' + r.verified.errors.length + ' warning(s)' : 'Ubisoft stats fetched'); renderApps();
+          }).catch(function (e) {
+            toast('Lookup failed: ' + e.message);
+            var i = A.applications.findIndex(function (a) { return a.login === b.dataset.lookup; }); if (i >= 0) A.applications[i].lookupError = e.message; renderApps();
+          });
+        };
+      });
       wrap.querySelectorAll('[data-status]').forEach(function (b) { b.onclick = function () { review(b.dataset.login, { status: b.dataset.status }, 'Marked ' + b.dataset.status); }; });
       wrap.querySelectorAll('[data-tier]').forEach(function (s) { s.onchange = function () { review(s.dataset.tier, { tier: s.value === '' ? null : +s.value }, 'Tier saved'); }; });
       wrap.querySelectorAll('[data-cap]').forEach(function (c) { c.onchange = function () { review(c.dataset.cap, { captain: c.checked }, c.checked ? 'Marked as captain' : 'Captain removed'); }; });
       wrap.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (b.textContent !== 'Really delete?') { b.textContent = 'Really delete?'; return; } api('/api/admin/applications', { action: 'delete', login: b.dataset.del }).then(function () { toast('Deleted'); return loadApps(); }).catch(function (e) { toast(e.message); }); }; });
+    }
+    /* Ubisoft-verified numbers shown under the claimed ones. Red when far off. */
+    function verCell(a, what) {
+      if (a.lookupError && what === 'ign') return '<span class="ver err">Lookup failed: ' + esc(a.lookupError) + '</span>';
+      var v = a.verified; if (!v) return '';
+      if (what === 'ign') return '<span class="ver ok">Ubisoft: ' + esc(v.name) + (v.level != null ? ' · lvl ' + v.level : '') + (v.errors && v.errors.length ? '<br>' + esc(v.errors.join('; ')) : '') + '</span>';
+      if (what === 'hours') { if (v.hours == null) return '<span class="ver err">hours n/a</span>'; var off = Math.abs((a.hours || 0) - v.hours) > Math.max(50, v.hours * 0.25); return '<span class="ver ' + (off ? 'bad' : 'ok') + '">Ubisoft: ' + v.hours + '</span>'; }
+      if (what === 'rank') { if (!v.rank) return '<span class="ver err">rank n/a</span>'; var bad = v.peakRankTier && a.peakRank && v.peakRankTier !== a.peakRank; return '<span class="ver ' + (bad ? 'bad' : 'ok') + '">Ubisoft: ' + esc(v.rank) + ' · peak ' + esc(v.peakRank) + (v.kd != null ? ' · K/D ' + v.kd : '') + '</span>'; }
+      return '';
     }
     function review(login, patch, msg) {
       api('/api/admin/applications', Object.assign({ action: 'review', login: login }, patch)).then(function (r) {
@@ -382,6 +418,11 @@
         list.querySelectorAll('[data-remove-role]').forEach(function (b) { b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderRoles(); }).catch(function (e) { toast(e.message); }); }; });
       }).catch(function (e) { toast(e.message); });
     }
+    document.getElementById('lk-form').onsubmit = function (e) {
+      e.preventDefault(); var out = document.getElementById('lk-out'); out.textContent = 'Looking up…';
+      api('/api/admin/lookup', { name: document.getElementById('lk-name').value.trim(), platform: document.getElementById('lk-platform').value })
+        .then(function (r) { out.textContent = JSON.stringify(r.verified, null, 2); }).catch(function (err) { out.textContent = 'Failed: ' + err.message; });
+    };
     document.getElementById('role-form').onsubmit = function (e) {
       e.preventDefault();
       var login = document.getElementById('role-login').value.trim().replace(/^@/, '').toLowerCase(), r = document.getElementById('role-role').value;

@@ -20,7 +20,7 @@ export const DEFAULT_STATE = {
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: '' },
     { id: 'mxlly',     name: 'Team Mxlly',     captain: 'Mxlly',     info: '202 hrs · lvl 90 · Bronze',   twitch: 'darealmxlly' },
     { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' },
-    { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'alfie____8' }
+    { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlewiddlemiddle' }
   ],
   rounds: 4,
   tiers: ['Champs', 'Ranked', 'Rookies'],

@@ -15,9 +15,11 @@ export default async function handler(req, res) {
     /* Spots left in the CURRENT tournament: each team needs `rounds` picks from the pool. */
     const state = await getState();
     const spotsLeft = Math.max(0, state.rounds * state.teams.length - state.pool.length);
+    const totalPlayers = state.teams.length * (state.rounds + 1);          /* captains + their picks */
+    const playersIn = state.teams.length + state.pool.length;
     return json(res, 200, {
       settings: { open: settings.open, cap: settings.cap, deadline: settings.deadline, dates: settings.dates, note: settings.note },
-      tournament: { name: state.name, teams: state.teams.length, teamSize: state.format.teamSize, spotsLeft, draftStarted: state.picks.length > 0 },
+      tournament: { name: state.name, teams: state.teams.length, teamSize: state.format.teamSize, spotsLeft, totalPlayers, playersIn, draftStarted: state.picks.length > 0 },
       options: { platforms: PLATFORMS, ranks: RANKS, roles: ROLES },
       channel: process.env.TWITCH_CHANNEL || 'aleksk9_',
       me: me.user, role: me.role, counts,

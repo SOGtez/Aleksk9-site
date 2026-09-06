@@ -660,7 +660,8 @@
       document.getElementById('status-text').textContent = st === 'draft' ? 'Draft in progress' : st === 'live' ? 'Match live now' : 'Draft complete · matches';
       var mr = document.getElementById('meta-row');
       mr.querySelectorAll('.pill:not(.pill-status)').forEach(function (p) { p.remove(); });
-      [D.teams.length + ' teams', D.format.teamSize + 'v' + D.format.teamSize, 'First to ' + D.format.firstTo, 'Snake draft', D.pool.length + ' in the pool'].forEach(function (t) {
+      var totalPlayers = D.teams.length * (D.rounds + 1), playersIn = D.teams.length + D.pool.length;
+      [D.teams.length + ' teams', D.format.teamSize + 'v' + D.format.teamSize, 'First to ' + D.format.firstTo, 'Snake draft', playersIn + ' of ' + totalPlayers + ' players'].forEach(function (t) {
         var s = document.createElement('span'); s.className = 'pill'; s.textContent = t; mr.appendChild(s);
       });
 

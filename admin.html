@@ -344,7 +344,7 @@
       var inT = {}; T.teams.concat(T.pool).forEach(function (x) { if (x.twitch) inT[x.twitch.toLowerCase()] = 1; });
       var fresh = acc.filter(function (a) { return !inT[a.login]; });
       var need = Math.max(0, T.rounds * T.teams.length - T.pool.length);
-      document.getElementById('fill-note').textContent = 'Teams still need ' + need + ' player' + (need === 1 ? '' : 's') + '. ' + (fresh.length ? fresh.length + ' accepted applicant' + (fresh.length === 1 ? '' : 's') + ' ready to add: ' + fresh.map(function (a) { return a.name; }).join(', ') + '.' : 'No accepted applicants waiting.');
+      document.getElementById('fill-note').textContent = (T.teams.length + T.pool.length) + ' of ' + (T.teams.length * (T.rounds + 1)) + ' players in, ' + need + ' spot' + (need === 1 ? '' : 's') + ' open. ' + (fresh.length ? fresh.length + ' accepted applicant' + (fresh.length === 1 ? '' : 's') + ' ready to add: ' + fresh.map(function (a) { return a.name; }).join(', ') + '.' : 'No accepted applicants waiting.');
       document.getElementById('fill-btn').disabled = !fresh.length;
       document.getElementById('undo-btn').disabled = !picks;
       document.getElementById('revert-btn').disabled = !T.fromApplications;

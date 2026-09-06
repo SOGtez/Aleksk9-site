@@ -19,11 +19,11 @@ export const DEFAULT_STATE = {
   maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Consulate', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
   teams: [
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
-    { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'leogotmotionissosexy' },
+    { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlediddlemiddle' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
-    { id: 'mxlly',     name: 'Team Mxlly',     captain: 'Mxlly',     info: '202 hrs · lvl 90 · Bronze',   twitch: 'darealmxlly' },
-    { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' },
-    { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlediddlemiddle' }
+    { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'leogotmotionissosexy' },
+    { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '55 hrs · lvl 55 · Unranked',  twitch: 'alfie____8' },
+    { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' }
   ],
   rounds: 4,
   tiers: ['Champs', 'Ranked', 'Rookies'],
@@ -45,7 +45,7 @@ export const DEFAULT_STATE = {
     { id: 'colin',      name: 'Colin',      tier: 2, info: '' },
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
     { id: 'jimmy',      name: 'Jimmy',      tier: 2, info: '' },
-    { id: 'alfe',       name: 'Alfe',       tier: 2, info: '55 hrs · lvl 55 · Unranked' },
+    { id: 'mxlly',      name: 'Mxlly',      tier: 2, info: '202 hrs · lvl 90 · Bronze', twitch: 'darealmxlly' },
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
     { id: 'angel',      name: 'Angel',      tier: 2, info: '98 hrs · lvl 66 · Silver' },
     { id: 'niko2',      name: 'Niko',       tier: 2, info: '86 hrs · lvl 42 · Unranked' },

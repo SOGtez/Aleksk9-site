@@ -129,7 +129,7 @@
       <div class="page-head">
         <span class="eyebrow">R6 Siege · Community Tournaments</span>
         <h1>Apply to <span>play</span></h1>
-        <p class="lede">Follow AleksK9 on Twitch, log in, and fill in a short form. Captains use your answers to draft their squads.</p>
+        <p class="lede" id="lede">Follow AleksK9 on Twitch, log in, and fill in a short form. Captains use your answers to draft their squads.</p>
         <div class="facts" id="facts"></div>
       </div>
       <div id="app"><div class="card gate"><p>Loading…</p></div></div>
@@ -159,9 +159,12 @@
       var facts = [];
       facts.push('<span class="chip">' + (closed ? 'Applications closed' : 'Applications open') + '</span>');
       if (s.deadline) facts.push('<span class="chip">Deadline ' + esc(fmtDate(s.deadline)) + '</span>');
+      var t = DATA.tournament;
       if (s.cap) facts.push('<span class="chip">' + DATA.counts.total + ' applied · ' + s.cap + ' spots</span>');
+      else if (t) facts.push('<span class="chip' + (t.spotsLeft ? ' red' : '') + '">' + (t.spotsLeft ? t.spotsLeft + ' spot' + (t.spotsLeft > 1 ? 's' : '') + ' left in ' + esc(t.name) : 'Teams are full · applying for the next one') + '</span>');
       if (s.dates && s.dates.length) facts.push('<span class="chip">' + s.dates.length + ' play date' + (s.dates.length > 1 ? 's' : '') + '</span>');
       document.getElementById('facts').innerHTML = facts.join('');
+      if (t && t.spotsLeft && !closed) document.getElementById('lede').textContent = 'The ' + t.name + ' still needs ' + t.spotsLeft + ' more player' + (t.spotsLeft > 1 ? 's' : '') + ' so every team has ' + t.teamSize + '. Follow AleksK9 on Twitch, log in, and fill in the short form below.';
 
       var html = '';
       if (me) {

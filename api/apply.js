@@ -1,5 +1,5 @@
 import { json, whoami, readBody } from './_lib/http.js';
-import { getSettings, getApplication, setApplication, getApplications } from './_lib/store.js';
+import { getSettings, getApplication, setApplication, getApplications, getState } from './_lib/store.js';
 import { cleanApplication, PLATFORMS, RANKS, ROLES } from './_lib/applications.js';
 
 /* GET  → settings, who you are, whether you follow, your application if any
@@ -12,8 +12,12 @@ export default async function handler(req, res) {
     const apps = await getApplications();
     const counts = { total: 0, accepted: 0 };
     for (const a of Object.values(apps)) { counts.total++; if (a.status === 'accepted') counts.accepted++; }
+    /* Spots left in the CURRENT tournament: each team needs `rounds` picks from the pool. */
+    const state = await getState();
+    const spotsLeft = Math.max(0, state.rounds * state.teams.length - state.pool.length);
     return json(res, 200, {
       settings: { open: settings.open, cap: settings.cap, deadline: settings.deadline, dates: settings.dates, note: settings.note },
+      tournament: { name: state.name, teams: state.teams.length, teamSize: state.format.teamSize, spotsLeft, draftStarted: state.picks.length > 0 },
       options: { platforms: PLATFORMS, ranks: RANKS, roles: ROLES },
       channel: process.env.TWITCH_CHANNEL || 'aleksk9_',
       me: me.user, role: me.role, counts,

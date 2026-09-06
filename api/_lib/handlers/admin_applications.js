@@ -1,5 +1,5 @@
 import { json, requireRole, readBody } from '../http.js';
-import { getSettings, setSettings, getApplications, setApplication, deleteApplication, setConfigOverride, getConfigOverride, setState } from '../store.js';
+import { getSettings, setSettings, getApplications, setApplication, deleteApplication, setConfigOverride, getConfigOverride, setState, getState } from '../store.js';
 import { DEFAULT_STATE } from '../defaults.js';
 import { STATUSES, suggestTier, infoLine } from '../applications.js';
 
@@ -9,6 +9,7 @@ import { STATUSES, suggestTier, infoLine } from '../applications.js';
    POST { action:'review', login, status, tier, captain }
    POST { action:'delete', login }
    POST { action:'build', name?, captains?: [login in round-1 order] } → tournament from accepted applicants
+   POST { action:'addToPool' } → add accepted applicants to the CURRENT pool, draft untouched
    POST { action:'revert' } → back to the config in code */
 export default async function handler(req, res) {
   const me = await requireRole(req, res, ['admin']);
@@ -43,6 +44,21 @@ export default async function handler(req, res) {
     app.reviewedBy = me.user.login; app.reviewedAt = Date.now();
     await setApplication(login, app);
     return json(res, 200, { ok: true, application: app });
+  }
+
+  if (b.action === 'addToPool') {
+    const state = await getState();
+    const taken = new Set(state.teams.map(t => (t.twitch || '').toLowerCase()).concat(state.pool.map(p => (p.twitch || '').toLowerCase())).filter(Boolean));
+    const ids = new Set(state.teams.map(t => t.id).concat(state.pool.map(p => p.id)));
+    const fresh = Object.values(await getApplications()).filter(a => a.status === 'accepted' && !taken.has(a.login));
+    if (!fresh.length) return json(res, 400, { error: 'No accepted applicants that are not already in the tournament' });
+    const added = fresh.map(a => {
+      let id = a.login.replace(/[^a-z0-9_]/g, '') || 'p'; while (ids.has(id)) id += '_'; ids.add(id);
+      return { id, name: a.name, tier: a.tier == null ? suggestTier(a) : a.tier, info: infoLine(a), twitch: a.login };
+    });
+    const cfg = { teams: state.teams.map(({ avatar, ...t }) => t), pool: state.pool.map(({ avatar, ...p }) => p).concat(added), tiers: state.tiers, name: state.name, builtAt: Date.now(), by: me.user.login, addedFromApplications: true };
+    await setConfigOverride(cfg);
+    return json(res, 200, { ok: true, added: added.map(a => a.name), pool: cfg.pool.length });
   }
 
   if (b.action === 'revert') {

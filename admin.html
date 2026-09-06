@@ -203,6 +203,11 @@
               <label class="f">Tournament name<input class="field" id="b-name" maxlength="80" placeholder="R6 5v5 Tournament"></label>
               <div id="build-wrap"><button class="btn btn-sm btn-primary" id="build-btn">Build from applications</button></div>
               <p class="small" style="margin-top:10px" id="build-note"></p>
+              <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+              <h3>Fill the current tournament</h3>
+              <p class="d">Adds every <b>accepted</b> applicant who is not already a captain or in the pool to the current pool. Picks already made stay as they are. Use this when teams still need players.</p>
+              <div id="fill-wrap"><button class="btn btn-sm btn-primary" id="fill-btn">Add accepted applicants to the pool</button></div>
+              <p class="small" style="margin-top:10px" id="fill-note"></p>
             </div>
             <div class="card pad">
               <h3>Current tournament</h3>
@@ -336,6 +341,11 @@
       var caps = acc.filter(function (a) { return a.captainPick; });
       document.getElementById('build-note').textContent = acc.length ? acc.length + ' accepted, ' + caps.length + ' ticked as captain → ' + caps.length + ' teams and ' + (acc.length - caps.length) + ' in the pool.' : 'No accepted applicants yet.';
       document.getElementById('build-btn').disabled = caps.length < 2;
+      var inT = {}; T.teams.concat(T.pool).forEach(function (x) { if (x.twitch) inT[x.twitch.toLowerCase()] = 1; });
+      var fresh = acc.filter(function (a) { return !inT[a.login]; });
+      var need = Math.max(0, T.rounds * T.teams.length - T.pool.length);
+      document.getElementById('fill-note').textContent = 'Teams still need ' + need + ' player' + (need === 1 ? '' : 's') + '. ' + (fresh.length ? fresh.length + ' accepted applicant' + (fresh.length === 1 ? '' : 's') + ' ready to add: ' + fresh.map(function (a) { return a.name; }).join(', ') + '.' : 'No accepted applicants waiting.');
+      document.getElementById('fill-btn').disabled = !fresh.length;
       document.getElementById('undo-btn').disabled = !picks;
       document.getElementById('revert-btn').disabled = !T.fromApplications;
     }
@@ -346,10 +356,11 @@
         document.getElementById('no').onclick = restore;
         document.getElementById('yes').onclick = function () { go().then(restore, function (e) { toast(e.message); restore(); }); };
       };
-      function restore() { wrap.innerHTML = '<button class="btn btn-sm btn-ghost' + (btnId === 'undo-btn' ? '' : ' danger') + (btnId === 'build-btn' ? ' btn-primary' : '') + '" id="' + btnId + '">' + label + '</button>'; twoStep(wrapId, btnId, label, question, go); renderTournament(); }
+      function restore() { wrap.innerHTML = '<button class="btn btn-sm btn-ghost' + (btnId === 'undo-btn' ? '' : ' danger') + (btnId === 'build-btn' || btnId === 'fill-btn' ? ' btn-primary' : '') + '" id="' + btnId + '">' + label + '</button>'; twoStep(wrapId, btnId, label, question, go); renderTournament(); }
     }
     function loadT() { return api('/api/tournament').then(function (d) { T = d; renderTournament(); renderRoles(); }); }
     twoStep('build-wrap', 'build-btn', 'Build from applications', 'Replace the teams and pool and clear the current draft?', function () { return api('/api/admin/applications', { action: 'build', name: document.getElementById('b-name').value }).then(function (r) { toast('Built ' + r.teams + ' teams, ' + r.pool + ' in the pool'); return loadT(); }); });
+    twoStep('fill-wrap', 'fill-btn', 'Add accepted applicants to the pool', 'Add them to the current pool?', function () { return api('/api/admin/applications', { action: 'addToPool' }).then(function (r) { toast('Added ' + r.added.join(', ')); return loadT(); }); });
     twoStep('undo-wrap', 'undo-btn', 'Undo last pick', 'Undo the last draft pick?', function () { return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return loadT(); }); });
     twoStep('reset-wrap', 'reset-btn', 'Reset picks, matches, stats', 'Wipe every pick, match, and stat?', function () { return api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); return loadT(); }); });
     twoStep('revert-wrap', 'revert-btn', 'Revert to code config', 'Throw away the roster built from applications?', function () { return api('/api/admin/applications', { action: 'revert' }).then(function () { toast('Reverted to the site config'); return loadT(); }); });

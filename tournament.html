@@ -601,7 +601,7 @@
     /* Avatar for a team (uses captain name) or player. Shows the Twitch profile picture when the API supplied one. */
     function av(x, cls) {
       var label = x.captain && !x.id ? x.captain : (x.captain && x.name ? x.name : (x.captain || x.name));
-      return '<span class="avatar' + (cls ? ' ' + cls : '') + '">' + (x.avatar ? '<img src="' + esc(x.avatar) + '" alt="" loading="lazy">' : esc(initials(label))) + '</span>';
+      return '<span class="avatar' + (cls ? ' ' + cls : '') + '">' + (x.avatar ? '<img src="' + esc(x.avatar) + '" alt="">' : esc(initials(label))) + '</span>';
     }
     function team(id) { for (var i = 0; i < D.teams.length; i++) if (D.teams[i].id === id) return D.teams[i]; return null; }
     function player(id) { for (var i = 0; i < D.pool.length; i++) if (D.pool[i].id === id) return D.pool[i]; return null; }

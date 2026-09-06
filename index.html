@@ -218,8 +218,9 @@
     }
     .nav-links .nav-cta:hover { background: var(--accent-hover); }
     .nav-links .nav-cta::after { display: none; }
-    @media (max-width: 420px) {
-      .nav-links a { padding: 8px 9px; font-size: 13px; }
+    @media (max-width: 480px) {
+      .nav-links a { padding: 8px 8px; font-size: 13px; }
+      .nav-links .nav-cta { display: none; }
     }
 
     /* ============================================================
@@ -579,6 +580,7 @@
         <ul class="nav-links">
           <li><a href="/" aria-current="page">Home</a></li>
           <li><a href="/tournament">Tournament</a></li>
+          <li><a href="/apply">Apply</a></li>
           <li><a class="nav-cta" href="#" data-link="twitch" target="_blank" rel="noopener">Twitch</a></li>
         </ul>
       </nav>
@@ -651,7 +653,8 @@
               Follow the draft board, match scores, and player stats live.
             </p>
           </div>
-          <div class="banner-action">
+          <div class="banner-action" style="display:grid;gap:10px">
+            <a class="btn btn-ghost" href="/apply">Apply to play</a>
             <a class="btn btn-primary" href="/tournament">
               Tournament Page
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>

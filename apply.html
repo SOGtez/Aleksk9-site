@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Apply to play — AleksK9</title>
+  <meta name="description" content="Apply to play in AleksK9's Rainbow Six Siege community tournaments. Follow the channel, log in with Twitch, and fill in a short form.">
+  <meta name="theme-color" content="#0a0a0a">
+  <meta name="robots" content="index">
+  <script>const LINKS = { twitch: 'https://twitch.tv/aleksk9_' };</script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-weight='800' font-size='34' fill='%23E10600'%3EA%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a; --bg-elev: #111111; --bg-elev-2: #171717;
+      --fg: #ffffff; --fg-muted: rgba(255,255,255,.64); --fg-dim: rgba(255,255,255,.40);
+      --line: rgba(255,255,255,.10); --line-strong: rgba(255,255,255,.18);
+      --accent: #E10600; --accent-hover: #ff1a12; --accent-soft: rgba(225,6,0,.12); --live: #FF2A2A;
+      --radius: 14px; --nav-h: 68px; --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; min-height: 100svh; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    svg { display: block; }
+    h1, h2, h3 { margin: 0; line-height: 1.05; letter-spacing: -0.03em; font-weight: 900; }
+    p { margin: 0; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    select, input, textarea { font: inherit; }
+    [hidden] { display: none !important; }
+    .container { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: 20px; }
+    @media (min-width: 720px) { .container { padding-inline: 32px; } }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em; border: 1px solid transparent; white-space: nowrap; transition: transform .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease), opacity .2s; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 28px -10px rgba(225,6,0,.6); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--fg); border-color: rgba(255,255,255,.18); }
+    .btn-ghost:hover { border-color: var(--accent); }
+    .btn-sm { min-height: 36px; padding: 0 16px; font-size: 13px; gap: 6px; }
+    .link-btn { color: var(--fg-muted); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .link-btn:hover { color: var(--fg); }
+    .field { width: 100%; padding: 10px 12px; border-radius: 10px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--line-strong); font-size: 14px; min-width: 0; }
+    .field:focus { outline: none; border-color: var(--accent); }
+    textarea.field { min-height: 80px; resize: vertical; }
+    .nav { position: sticky; top: 0; z-index: 50; height: var(--nav-h); background: rgba(10,10,10,.72); -webkit-backdrop-filter: saturate(140%) blur(14px); backdrop-filter: saturate(140%) blur(14px); border-bottom: 1px solid var(--line); }
+    .nav .container { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .wordmark { font-weight: 900; font-size: 20px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; }
+    .wordmark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+    .nav-links a { display: inline-block; padding: 8px 12px; border-radius: 8px; font-weight: 500; font-size: 14px; color: var(--fg-muted); position: relative; transition: color .2s var(--ease); }
+    .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--fg); }
+    .nav-links a::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--ease); border-radius: 2px; }
+    .nav-links a:hover::after, .nav-links a[aria-current="page"]::after { transform: scaleX(1); }
+    .nav-links .nav-cta { color: #fff; background: var(--accent); margin-left: 6px; }
+    .nav-links .nav-cta:hover { background: var(--accent-hover); }
+    .nav-links .nav-cta::after { display: none; }
+    @media (max-width: 480px) { .nav-links a { padding: 8px 8px; font-size: 13px; } .nav-links .nav-cta { display: none; } }
+    .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+    .eyebrow::before { content: ""; width: 18px; height: 2px; background: var(--accent); }
+    .page-head { padding: 48px 0 24px; }
+    .page-head h1 { font-size: clamp(34px, 6vw, 60px); letter-spacing: -0.05em; line-height: .95; margin-top: 12px; }
+    .page-head h1 span { color: var(--accent); }
+    .page-head .lede { margin-top: 12px; font-size: clamp(15px, 2vw, 18px); color: var(--fg-muted); max-width: 56ch; }
+    .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 20px 50px -30px rgba(0,0,0,.9); }
+    .pad { padding: 22px; }
+    @media (max-width: 560px) { .pad { padding: 16px; } }
+    .avatar { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(160deg, #1f1f1f, #0d0d0d); border: 1px solid rgba(255,255,255,.14); font-weight: 800; font-size: 14px; color: var(--fg); overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); white-space: nowrap; }
+    .chip.is-on { background: #fff; color: #000; border-color: #fff; }
+    .chip.ok { color: #fff; border-color: rgba(255,255,255,.4); }
+    .chip.red { color: var(--accent); border-color: rgba(225,6,0,.5); }
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease); max-width: 90vw; text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: 14px; color: var(--fg-muted); margin-top: auto; text-align: center; }
+    .muted { color: var(--fg-muted); font-size: 14px; }
+    .small { font-size: 12px; color: var(--fg-dim); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    .wrap { max-width: 720px; }
+    .status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 14px 18px; margin-bottom: 14px; }
+    .status .avatar { width: 44px; height: 44px; }
+    .status b { display: block; font-size: 15px; }
+    .status span.t { font-size: 13px; color: var(--fg-muted); }
+    .status .grow { flex: 1; min-width: 160px; }
+    .gate { text-align: center; padding: 36px 22px; }
+    .gate h2 { font-size: 24px; margin-bottom: 8px; }
+    .gate p { color: var(--fg-muted); margin-bottom: 20px; max-width: 44ch; margin-inline: auto; }
+    .gate .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+    .form { display: grid; gap: 18px; }
+    .row { display: grid; gap: 14px; }
+    @media (min-width: 560px) { .row.two { grid-template-columns: 1fr 1fr; } .row.three { grid-template-columns: 1fr 1fr 1fr; } }
+    label.f { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--fg-muted); }
+    label.f .field { font-weight: 500; color: var(--fg); }
+    .checks { display: flex; flex-wrap: wrap; gap: 8px; }
+    .checks label { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--line-strong); font-size: 14px; font-weight: 600; cursor: pointer; user-select: none; }
+    .checks label:has(input:checked) { background: #fff; color: #000; border-color: #fff; }
+    .checks input { position: absolute; opacity: 0; pointer-events: none; }
+    .toggle { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-strong); cursor: pointer; }
+    .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .toggle b { display: block; font-size: 14px; }
+    .toggle span { font-size: 12px; color: var(--fg-muted); }
+    .submit { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding-top: 6px; border-top: 1px solid var(--line); }
+    .facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+    .st-pending { color: #fff; } .st-accepted { color: var(--accent); } .st-rejected { color: var(--fg-dim); }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container">
+      <a class="wordmark" href="/" aria-label="AleksK9 home">AleksK9</a>
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/tournament">Tournament</a></li>
+          <li><a href="/apply" aria-current="page">Apply</a></li>
+          <li><a class="nav-cta" href="https://twitch.tv/aleksk9_" target="_blank" rel="noopener">Twitch</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <div class="container wrap">
+      <div class="page-head">
+        <span class="eyebrow">R6 Siege · Community Tournaments</span>
+        <h1>Apply to <span>play</span></h1>
+        <p class="lede">Follow AleksK9 on Twitch, log in, and fill in a short form. Captains use your answers to draft their squads.</p>
+        <div class="facts" id="facts"></div>
+      </div>
+      <div id="app"><div class="card gate"><p>Loading…</p></div></div>
+      <p class="small" style="margin-top:14px">We only read your Twitch username, picture, and whether you follow the channel. Nothing is posted on your behalf.</p>
+    </div>
+  </main>
+  <footer class="footer"><div class="container">© <span id="y"></span> AleksK9</div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    var TW = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>';
+    var DATA = null, saving = false, toastTimer;
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000); }
+    function api(path, body) {
+      var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { cache: 'no-store', credentials: 'same-origin' };
+      return fetch(path, o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Request failed'); return j; }); });
+    }
+    function av(u) { return '<span class="avatar">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="">' : esc(String(u.name || '?').slice(0, 2).toUpperCase())) + '</span>'; }
+    function fmtDate(iso) { if (!iso) return ''; var d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+    function loginUrl() { return '/api/auth/login?scope=follows&next=/apply'; }
+
+    function render() {
+      var s = DATA.settings, me = DATA.me, app = DATA.application, el = document.getElementById('app');
+      var closed = !s.open || (s.deadline && Date.now() > Date.parse(s.deadline));
+      var facts = [];
+      facts.push('<span class="chip">' + (closed ? 'Applications closed' : 'Applications open') + '</span>');
+      if (s.deadline) facts.push('<span class="chip">Deadline ' + esc(fmtDate(s.deadline)) + '</span>');
+      if (s.cap) facts.push('<span class="chip">' + DATA.counts.total + ' applied · ' + s.cap + ' spots</span>');
+      if (s.dates && s.dates.length) facts.push('<span class="chip">' + s.dates.length + ' play date' + (s.dates.length > 1 ? 's' : '') + '</span>');
+      document.getElementById('facts').innerHTML = facts.join('');
+
+      var html = '';
+      if (me) {
+        var st = app ? app.status : null;
+        html += '<div class="card status">' + av(me) + '<span class="grow"><b>' + esc(me.name) + '</b><span class="t">' +
+          (st ? 'Application ' + (st === 'accepted' ? '<span class="st-accepted">accepted</span>' : st === 'rejected' ? '<span class="st-rejected">not selected this time</span>' : '<span class="st-pending">received, pending review</span>') : 'Logged in with Twitch') +
+          '</span></span><a class="link-btn" href="/api/auth/logout?next=/apply">Log out</a></div>';
+      }
+
+      if (!me) {
+        html += '<div class="card gate"><h2>Log in with Twitch</h2><p>' + (closed ? 'Applications are closed right now, but you can log in to see the status of a past application.' : 'One click. This also lets us check that you follow the channel.') + '</p>' +
+          '<div class="actions"><a class="btn btn-primary" href="' + loginUrl() + '">' + TW + 'Log in with Twitch</a></div></div>';
+      } else if (!me.follows) {
+        html += '<div class="card gate"><h2>Follow ' + esc(DATA.channel) + ' to apply</h2><p>' + (me.followChecked ? 'Twitch says you are not following the channel yet. Follow, then check again.' : 'We need permission to check that you follow the channel. It takes one click.') + '</p>' +
+          '<div class="actions"><a class="btn btn-ghost" href="https://twitch.tv/' + esc(DATA.channel) + '" target="_blank" rel="noopener">' + TW + 'Open the channel</a><a class="btn btn-primary" href="' + loginUrl() + '">' + (me.followChecked ? 'I followed, check again' : 'Check my follow') + '</a></div></div>';
+      } else if (closed && !app) {
+        html += '<div class="card gate"><h2>Applications are closed</h2><p>' + esc(s.note || 'Follow the stream to hear when the next one opens.') + '</p></div>';
+      } else {
+        html += renderForm(app || {}, closed);
+      }
+      el.innerHTML = html;
+      wireForm(closed);
+    }
+
+    function sel(id, opts, val, placeholder) {
+      return '<select class="field" id="' + id + '"><option value="">' + esc(placeholder) + '</option>' + opts.map(function (o) { return '<option' + (o === val ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
+    }
+    function renderForm(a, closed) {
+      var o = DATA.options, s = DATA.settings;
+      var h = '<form class="card pad form" id="form"' + (closed ? ' data-locked="1"' : '') + '>';
+      if (closed) h += '<p class="muted">Applications are closed, so this is read-only. Your answers are shown below.</p>';
+      else if (a.status) h += '<p class="muted">You can update your answers any time before the deadline.</p>';
+      h += '<div class="row two"><label class="f">In-game name (Ubisoft)<input class="field" id="ign" maxlength="40" value="' + esc(a.ign) + '" required></label>' +
+        '<label class="f">Platform' + sel('platform', o.platforms, a.platform, 'Pick one') + '</label></div>';
+      h += '<div class="row three"><label class="f">Hours played<input class="field" id="hours" type="number" min="0" max="100000" value="' + (a.hours || '') + '" placeholder="e.g. 850"></label>' +
+        '<label class="f">Current rank' + sel('rank', o.ranks, a.rank, 'Pick one') + '</label>' +
+        '<label class="f">Highest rank ever' + sel('peakRank', o.ranks, a.peakRank, 'Pick one') + '</label></div>';
+      h += '<label class="f" id="champs-wrap"' + (a.peakRank === 'Champion' ? '' : ' hidden') + '>How many times have you hit Champion?<input class="field" id="champs" type="number" min="0" max="99" value="' + (a.champs || 0) + '"></label>';
+      h += '<div><div class="f" style="font-size:13px;font-weight:600;color:var(--fg-muted);margin-bottom:8px">Preferred roles (pick up to 2)</div><div class="checks" id="roles">' + o.roles.map(function (r) { return '<label><input type="checkbox" value="' + esc(r) + '"' + ((a.roles || []).indexOf(r) >= 0 ? ' checked' : '') + '>' + esc(r) + '</label>'; }).join('') + '</div></div>';
+      if (s.dates && s.dates.length) h += '<div><div class="f" style="font-size:13px;font-weight:600;color:var(--fg-muted);margin-bottom:8px">Which dates can you play?</div><div class="checks" id="dates">' + s.dates.map(function (d) { return '<label><input type="checkbox" value="' + esc(d) + '"' + ((a.availability || []).indexOf(d) >= 0 ? ' checked' : '') + '>' + esc(d) + '</label>'; }).join('') + '</div></div>';
+      h += '<label class="toggle"><input type="checkbox" id="captain"' + (a.captain ? ' checked' : '') + '><span><b>I\'m up for being a captain</b><span>Captains draft their own team live on the site.</span></span></label>';
+      h += '<div class="row two"><label class="f">Discord username<input class="field" id="discord" maxlength="40" value="' + esc(a.discord) + '" placeholder="so captains can reach you" required></label>' +
+        '<label class="f">Anything else? (optional)<input class="field" id="notes" maxlength="300" value="' + esc(a.notes) + '" placeholder="mains, schedule, whatever"></label></div>';
+      if (!closed) h += '<div class="submit"><button class="btn btn-primary" type="submit" id="submit">' + (a.status ? 'Update application' : 'Submit application') + '</button><span class="small">Your Twitch name and picture are attached automatically.</span></div>';
+      return h + '</form>';
+    }
+    function wireForm(closed) {
+      var f = document.getElementById('form'); if (!f) return;
+      if (closed) { f.querySelectorAll('input,select,button').forEach(function (x) { x.disabled = true; }); return; }
+      document.getElementById('peakRank').onchange = function () { document.getElementById('champs-wrap').hidden = this.value !== 'Champion'; };
+      document.querySelectorAll('#roles input').forEach(function (c) { c.onchange = function () { var on = document.querySelectorAll('#roles input:checked'); if (on.length > 2) { c.checked = false; toast('Pick up to 2 roles'); } }; });
+      f.onsubmit = function (e) {
+        e.preventDefault(); if (saving) return;
+        var body = {
+          ign: document.getElementById('ign').value, platform: document.getElementById('platform').value, hours: document.getElementById('hours').value,
+          rank: document.getElementById('rank').value, peakRank: document.getElementById('peakRank').value, champs: document.getElementById('champs').value,
+          roles: Array.prototype.map.call(document.querySelectorAll('#roles input:checked'), function (c) { return c.value; }),
+          availability: Array.prototype.map.call(document.querySelectorAll('#dates input:checked'), function (c) { return c.value; }),
+          captain: document.getElementById('captain').checked, discord: document.getElementById('discord').value, notes: document.getElementById('notes').value
+        };
+        saving = true; document.getElementById('submit').disabled = true;
+        api('/api/apply', body).then(function (r) { DATA.application = r.application; DATA.counts.total = Math.max(DATA.counts.total, 1); toast(body.captain ? 'Application saved. Captain interest noted.' : 'Application saved'); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); })
+          .catch(function (err) { toast(err.message); }).finally(function () { saving = false; var b = document.getElementById('submit'); if (b) b.disabled = false; });
+      };
+    }
+
+    api('/api/apply').then(function (d) {
+      DATA = d; render();
+      var q = new URLSearchParams(location.search).get('login');
+      if (q === 'ok' && d.me) toast(d.me.follows ? 'Logged in. You follow the channel, you are good to go.' : 'Logged in as ' + d.me.name);
+      else if (q === 'denied') toast('Twitch login was cancelled');
+      else if (q) toast('Login did not work. Try again.');
+      if (q) history.replaceState(null, '', location.pathname);
+    }).catch(function () { document.getElementById('app').innerHTML = '<div class="card gate"><h2>Applications are unavailable</h2><p>The site could not reach the server. Try again in a minute.</p></div>'; });
+  </script>
+</body>
+</html>

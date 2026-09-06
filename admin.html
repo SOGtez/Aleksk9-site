@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — AleksK9</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#0a0a0a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-weight='800' font-size='34' fill='%23E10600'%3EA%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a; --bg-elev: #111111; --bg-elev-2: #171717;
+      --fg: #ffffff; --fg-muted: rgba(255,255,255,.64); --fg-dim: rgba(255,255,255,.40);
+      --line: rgba(255,255,255,.10); --line-strong: rgba(255,255,255,.18);
+      --accent: #E10600; --accent-hover: #ff1a12; --accent-soft: rgba(225,6,0,.12); --live: #FF2A2A;
+      --radius: 14px; --nav-h: 68px; --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; min-height: 100svh; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 16px; line-height: 1.5; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+    svg { display: block; }
+    h1, h2, h3 { margin: 0; line-height: 1.05; letter-spacing: -0.03em; font-weight: 900; }
+    p { margin: 0; }
+    button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+    select, input, textarea { font: inherit; }
+    [hidden] { display: none !important; }
+    .container { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: 20px; }
+    @media (min-width: 720px) { .container { padding-inline: 32px; } }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 26px; border-radius: 999px; font-weight: 600; font-size: 16px; letter-spacing: -0.01em; border: 1px solid transparent; white-space: nowrap; transition: transform .25s var(--ease), background-color .25s var(--ease), border-color .25s var(--ease), opacity .2s; }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+    .btn svg { width: 18px; height: 18px; }
+    .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 8px 28px -10px rgba(225,6,0,.6); }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost { background: transparent; color: var(--fg); border-color: rgba(255,255,255,.18); }
+    .btn-ghost:hover { border-color: var(--accent); }
+    .btn-sm { min-height: 36px; padding: 0 16px; font-size: 13px; gap: 6px; }
+    .link-btn { color: var(--fg-muted); font-size: 12px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+    .link-btn:hover { color: var(--fg); }
+    .field { width: 100%; padding: 10px 12px; border-radius: 10px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--line-strong); font-size: 14px; min-width: 0; }
+    .field:focus { outline: none; border-color: var(--accent); }
+    textarea.field { min-height: 80px; resize: vertical; }
+    .nav { position: sticky; top: 0; z-index: 50; height: var(--nav-h); background: rgba(10,10,10,.72); -webkit-backdrop-filter: saturate(140%) blur(14px); backdrop-filter: saturate(140%) blur(14px); border-bottom: 1px solid var(--line); }
+    .nav .container { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    .wordmark { font-weight: 900; font-size: 20px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; }
+    .wordmark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+    .nav-links a { display: inline-block; padding: 8px 12px; border-radius: 8px; font-weight: 500; font-size: 14px; color: var(--fg-muted); position: relative; transition: color .2s var(--ease); }
+    .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--fg); }
+    .nav-links a::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: 4px; height: 2px; background: var(--accent); transform: scaleX(0); transform-origin: left; transition: transform .3s var(--ease); border-radius: 2px; }
+    .nav-links a:hover::after, .nav-links a[aria-current="page"]::after { transform: scaleX(1); }
+    .nav-links .nav-cta { color: #fff; background: var(--accent); margin-left: 6px; }
+    .nav-links .nav-cta:hover { background: var(--accent-hover); }
+    .nav-links .nav-cta::after { display: none; }
+    @media (max-width: 480px) { .nav-links a { padding: 8px 8px; font-size: 13px; } .nav-links .nav-cta { display: none; } }
+    .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+    .eyebrow::before { content: ""; width: 18px; height: 2px; background: var(--accent); }
+    .page-head { padding: 48px 0 24px; }
+    .page-head h1 { font-size: clamp(34px, 6vw, 60px); letter-spacing: -0.05em; line-height: .95; margin-top: 12px; }
+    .page-head h1 span { color: var(--accent); }
+    .page-head .lede { margin-top: 12px; font-size: clamp(15px, 2vw, 18px); color: var(--fg-muted); max-width: 56ch; }
+    .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 20px 50px -30px rgba(0,0,0,.9); }
+    .pad { padding: 22px; }
+    @media (max-width: 560px) { .pad { padding: 16px; } }
+    .avatar { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(160deg, #1f1f1f, #0d0d0d); border: 1px solid rgba(255,255,255,.14); font-weight: 800; font-size: 14px; color: var(--fg); overflow: hidden; }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); white-space: nowrap; }
+    .chip.is-on { background: #fff; color: #000; border-color: #fff; }
+    .chip.ok { color: #fff; border-color: rgba(255,255,255,.4); }
+    .chip.red { color: var(--accent); border-color: rgba(225,6,0,.5); }
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease); max-width: 90vw; text-align: center; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: 14px; color: var(--fg-muted); margin-top: auto; text-align: center; }
+    .muted { color: var(--fg-muted); font-size: 14px; }
+    .small { font-size: 12px; color: var(--fg-dim); }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    .tabs { position: sticky; top: var(--nav-h); z-index: 40; background: rgba(10,10,10,.85); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+    .tabs .container { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .tabs button { flex: 0 0 auto; padding: 14px; font-size: 14px; font-weight: 600; color: var(--fg-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+    .tabs button.is-on { color: var(--fg); border-bottom-color: var(--accent); }
+    section.tab { padding: 28px 0 56px; }
+    .head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; margin-bottom: 16px; }
+    .head h2 { font-size: 26px; }
+    .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .gate { text-align: center; padding: 48px 22px; }
+    .gate h2 { font-size: 24px; margin-bottom: 8px; }
+    .gate p { color: var(--fg-muted); margin-bottom: 20px; }
+    .grid2 { display: grid; gap: 14px; }
+    @media (min-width: 820px) { .grid2 { grid-template-columns: 1fr 1fr; align-items: start; } }
+    .card h3 { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 6px; }
+    .card p.d { font-size: 14px; color: var(--fg-muted); margin-bottom: 14px; }
+    label.f { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--fg-muted); margin-bottom: 12px; }
+    label.f .field { font-weight: 500; color: var(--fg); }
+    .toggle { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-strong); cursor: pointer; margin-bottom: 12px; }
+    .toggle input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .toggle b { display: block; font-size: 14px; }
+    .toggle span { font-size: 12px; color: var(--fg-muted); }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 900px; }
+    thead th { text-align: left; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-dim); padding: 10px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    tbody td { padding: 10px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+    tbody tr:last-child td { border-bottom: 0; }
+    td.who { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+    td.who .avatar { width: 32px; height: 32px; font-size: 11px; }
+    td.who b { display: block; }
+    td.who small { color: var(--fg-muted); }
+    td .sub { color: var(--fg-muted); font-size: 12px; display: block; }
+    td select.field, td input.field { width: auto; padding: 6px 8px; font-size: 13px; }
+    .st { display: inline-flex; gap: 4px; }
+    .st button { padding: 6px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); }
+    .st button.on-accepted { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .st button.on-pending { background: #fff; border-color: #fff; color: #000; }
+    .st button.on-rejected { background: rgba(255,255,255,.12); color: #fff; }
+    .role-list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+    .role-list li { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+    .role-list li .rl { color: var(--fg-muted); font-size: 13px; flex: 1; }
+    .role-list li .lock { font-size: 11px; color: var(--fg-dim); }
+    .role-form { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .role-form .field { flex: 1 1 140px; width: auto; }
+    .stat { display: grid; gap: 2px; padding: 12px 14px; border-radius: 10px; background: var(--bg-elev-2); border: 1px solid var(--line); }
+    .stat b { font-size: 22px; letter-spacing: -0.03em; }
+    .stat span { font-size: 12px; color: var(--fg-muted); }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .danger { border-color: rgba(225,6,0,.35); }
+    .confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
+    .empty { padding: 28px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container">
+      <a class="wordmark" href="/" aria-label="AleksK9 home">AleksK9</a>
+      <nav aria-label="Primary">
+        <ul class="nav-links">
+          <li><a href="/">Home</a></li>
+          <li><a href="/tournament">Tournament</a></li>
+          <li><a href="/apply">Apply</a></li>
+          <li><a href="/admin" aria-current="page">Admin</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <div id="gate" class="container" hidden><div class="card gate" style="margin-top:40px"><h2>Admins only</h2><p id="gate-msg">Log in with Twitch to continue.</p><a class="btn btn-primary" id="gate-btn" href="/api/auth/login?next=/admin"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>Log in with Twitch</a></div></div>
+
+    <div id="panel" hidden>
+      <div class="container page-head" style="padding-bottom:16px">
+        <span class="eyebrow">Admin</span>
+        <h1 style="font-size:clamp(30px,5vw,44px)">Tournament <span>control</span></h1>
+        <p class="lede" id="whoami"></p>
+      </div>
+      <nav class="tabs"><div class="container">
+        <button class="is-on" data-tab="applications">Applications</button>
+        <button data-tab="settings">Application settings</button>
+        <button data-tab="tournament">Tournament</button>
+        <button data-tab="roles">Roles</button>
+      </div></nav>
+
+      <section class="tab" id="tab-applications">
+        <div class="container">
+          <div class="stats" id="app-stats"></div>
+          <div class="head"><h2>Applications</h2><div class="tools" id="app-filters">
+            <button class="chip is-on" data-f="all">All</button><button class="chip" data-f="pending">Pending</button><button class="chip" data-f="accepted">Accepted</button><button class="chip" data-f="rejected">Rejected</button>
+          </div></div>
+          <div class="card table-wrap" id="app-table"></div>
+          <p class="small" style="margin-top:10px">Tier: 0 = Champs, 1 = Ranked, 2 = Rookies. Leave it on the suggestion and it is computed from their highest rank. Tick Captain for the people who should draft a team.</p>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-settings" hidden>
+        <div class="container grid2">
+          <form class="card pad" id="settings-form">
+            <h3>Application settings</h3>
+            <p class="d">Controls what people see on the Apply page.</p>
+            <label class="toggle"><input type="checkbox" id="s-open"><span><b>Applications open</b><span>When off, the form is read-only and new people cannot apply.</span></span></label>
+            <label class="f">Spots (shown as "X applied · N spots", 0 hides it)<input class="field" type="number" id="s-cap" min="0" max="200"></label>
+            <label class="f">Deadline (optional)<input class="field" type="datetime-local" id="s-deadline"></label>
+            <label class="f">Play dates, one per line (applicants tick the ones they can make)<textarea class="field" id="s-dates" placeholder="Sat Sep 20 · 7pm PT&#10;Sun Sep 21 · 7pm PT"></textarea></label>
+            <label class="f">Message when closed (optional)<input class="field" id="s-note" maxlength="300" placeholder="Next tournament opens in October"></label>
+            <button class="btn btn-sm btn-primary" type="submit">Save settings</button>
+          </form>
+          <div class="card pad">
+            <h3>How the flow works</h3>
+            <p class="d">1. Turn applications on and share <b>aleksk9.com/apply</b> (or the vercel link).<br>2. People log in with Twitch. If they do not follow the channel, they are asked to follow first.<br>3. Review them on the Applications tab: accept, set a tier, tick captains.<br>4. On the Tournament tab, build the next tournament from the accepted list. That sets the teams and pool and clears the old draft.<br>5. Turn applications off.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-tournament" hidden>
+        <div class="container">
+          <div class="stats" id="t-stats"></div>
+          <div class="grid2">
+            <div class="card pad">
+              <h3>Build the next tournament</h3>
+              <p class="d">Uses every <b>accepted</b> applicant. Those ticked as Captain become the teams, ordered worst to best by hours (round 1 order). Everyone else goes into the pool with their tier. This clears all picks, matches, and stats.</p>
+              <label class="f">Tournament name<input class="field" id="b-name" maxlength="80" placeholder="R6 5v5 Tournament"></label>
+              <div id="build-wrap"><button class="btn btn-sm btn-primary" id="build-btn">Build from applications</button></div>
+              <p class="small" style="margin-top:10px" id="build-note"></p>
+            </div>
+            <div class="card pad">
+              <h3>Current tournament</h3>
+              <p class="d" id="t-desc"></p>
+              <div class="tools">
+                <a class="btn btn-sm btn-ghost" href="/tournament">Open tournament page</a>
+                <span id="undo-wrap"><button class="btn btn-sm btn-ghost" id="undo-btn">Undo last pick</button></span>
+              </div>
+              <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
+              <h3>Danger zone</h3>
+              <p class="d">Reset clears picks, matches, and stats but keeps the teams and pool. Revert throws away the roster built from applications and goes back to the one in the site code.</p>
+              <div class="tools">
+                <span id="reset-wrap"><button class="btn btn-sm btn-ghost danger" id="reset-btn">Reset picks, matches, stats</button></span>
+                <span id="revert-wrap"><button class="btn btn-sm btn-ghost danger" id="revert-btn">Revert to code config</button></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-roles" hidden>
+        <div class="container grid2">
+          <div class="card pad">
+            <h3>Who can do what</h3>
+            <p class="d">Add people by Twitch username. Captains can draft for their team, helpers enter scores and stats, admins can do everything. People set in the site config or in Vercel are listed but can only be changed there.</p>
+            <form class="role-form" id="role-form">
+              <input class="field" type="text" id="role-login" placeholder="twitch username" autocomplete="off" required>
+              <select class="field" id="role-role"></select>
+              <button class="btn btn-sm btn-primary" type="submit">Add</button>
+            </form>
+            <ul class="role-list" id="role-list"></ul>
+          </div>
+          <div class="card pad">
+            <h3>Tip</h3>
+            <p class="d">When you build a tournament from applications, the captains get their team role automatically from their Twitch login. You only need this tab for helpers, extra admins, or a last-minute captain swap.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <footer class="footer"><div class="container">© <span id="y"></span> AleksK9</div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+    var ME = null, A = null, T = null, filter = 'all', toastTimer;
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000); }
+    function api(path, body) {
+      var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { cache: 'no-store', credentials: 'same-origin' };
+      return fetch(path, o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Request failed'); return j; }); });
+    }
+    function av(u) { return '<span class="avatar">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="">' : esc(String(u.name || '?').slice(0, 2).toUpperCase())) + '</span>'; }
+    function fmt(ts) { if (!ts) return ''; var d = new Date(ts); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+    function teamById(id) { return (T && T.teams || []).filter(function (t) { return t.id === id; })[0]; }
+    function roleLabel(r) { if (r === 'admin') return 'Admin'; if (r === 'helper') return 'Helper'; if (r && r.indexOf('captain:') === 0) { var t = teamById(r.slice(8)); return 'Captain · ' + (t ? t.name : r.slice(8)); } return r; }
+
+    /* Tabs */
+    document.querySelectorAll('.tabs button').forEach(function (b) {
+      b.onclick = function () {
+        document.querySelectorAll('.tabs button').forEach(function (x) { x.classList.toggle('is-on', x === b); });
+        document.querySelectorAll('section.tab').forEach(function (s) { s.hidden = s.id !== 'tab-' + b.dataset.tab; });
+        history.replaceState(null, '', '#' + b.dataset.tab);
+      };
+    });
+
+    /* ---------- Applications ---------- */
+    function renderApps() {
+      var list = A.applications, c = { total: list.length, pending: 0, accepted: 0, rejected: 0, captains: 0 };
+      list.forEach(function (a) { c[a.status] = (c[a.status] || 0) + 1; if (a.status === 'accepted' && a.captainPick) c.captains++; });
+      document.getElementById('app-stats').innerHTML = ['total', 'pending', 'accepted', 'rejected', 'captains'].map(function (k) { return '<div class="stat"><b>' + c[k] + '</b><span>' + k + '</span></div>'; }).join('');
+      var rows = list.filter(function (a) { return filter === 'all' || a.status === filter; });
+      var wrap = document.getElementById('app-table');
+      if (!rows.length) { wrap.innerHTML = '<div class="empty">' + (list.length ? 'Nothing in this filter.' : 'No applications yet. Turn applications on in the settings tab and share /apply.') + '</div>'; return; }
+      var h = '<table><thead><tr><th>Player</th><th>In-game</th><th>Hours</th><th>Rank</th><th>Roles</th><th>Discord</th><th>Follower since</th><th>Tier</th><th>Captain</th><th>Status</th><th></th></tr></thead><tbody>';
+      rows.forEach(function (a) {
+        var tierSel = '<select class="field" data-tier="' + esc(a.login) + '"><option value=""' + (a.tier == null ? ' selected' : '') + '>Auto (' + a.suggestedTier + ')</option>' + [0, 1, 2].map(function (t) { return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + t + ' · ' + ['Champs', 'Ranked', 'Rookies'][t] + '</option>'; }).join('') + '</select>';
+        h += '<tr><td class="who">' + av(a) + '<span><b>' + esc(a.name) + '</b><small>' + esc(a.login) + '</small></span></td>' +
+          '<td>' + esc(a.ign) + '<span class="sub">' + esc(a.platform) + '</span></td>' +
+          '<td>' + (a.hours || 0) + '</td>' +
+          '<td>' + esc(a.rank) + '<span class="sub">peak ' + esc(a.peakRank) + (a.champs ? ' · ' + a.champs + 'x' : '') + '</span></td>' +
+          '<td>' + esc((a.roles || []).join(' / ')) + (a.captain ? '<span class="sub">wants to captain</span>' : '') + '</td>' +
+          '<td>' + esc(a.discord) + (a.notes ? '<span class="sub" title="' + esc(a.notes) + '">' + esc(a.notes.slice(0, 40)) + (a.notes.length > 40 ? '…' : '') + '</span>' : '') + '</td>' +
+          '<td>' + esc(fmt(a.followedAt)) + '<span class="sub">applied ' + esc(fmt(a.submittedAt)) + '</span></td>' +
+          '<td>' + tierSel + '</td>' +
+          '<td><input type="checkbox" data-cap="' + esc(a.login) + '"' + (a.captainPick ? ' checked' : '') + ' style="width:18px;height:18px;accent-color:var(--accent)"></td>' +
+          '<td><span class="st">' + ['accepted', 'pending', 'rejected'].map(function (s) { return '<button data-status="' + s + '" data-login="' + esc(a.login) + '" class="' + (a.status === s ? 'on-' + s : '') + '">' + s[0].toUpperCase() + s.slice(1) + '</button>'; }).join('') + '</span></td>' +
+          '<td><button class="link-btn" data-del="' + esc(a.login) + '">Delete</button></td></tr>';
+      });
+      wrap.innerHTML = h + '</tbody></table>';
+      wrap.querySelectorAll('[data-status]').forEach(function (b) { b.onclick = function () { review(b.dataset.login, { status: b.dataset.status }, 'Marked ' + b.dataset.status); }; });
+      wrap.querySelectorAll('[data-tier]').forEach(function (s) { s.onchange = function () { review(s.dataset.tier, { tier: s.value === '' ? null : +s.value }, 'Tier saved'); }; });
+      wrap.querySelectorAll('[data-cap]').forEach(function (c) { c.onchange = function () { review(c.dataset.cap, { captain: c.checked }, c.checked ? 'Marked as captain' : 'Captain removed'); }; });
+      wrap.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { if (b.textContent !== 'Really delete?') { b.textContent = 'Really delete?'; return; } api('/api/admin/applications', { action: 'delete', login: b.dataset.del }).then(function () { toast('Deleted'); return loadApps(); }).catch(function (e) { toast(e.message); }); }; });
+    }
+    function review(login, patch, msg) {
+      api('/api/admin/applications', Object.assign({ action: 'review', login: login }, patch)).then(function (r) {
+        var i = A.applications.findIndex(function (a) { return a.login === login; });
+        if (i >= 0) A.applications[i] = Object.assign({}, A.applications[i], r.application);
+        toast(msg); renderApps();
+      }).catch(function (e) { toast(e.message); });
+    }
+    document.querySelectorAll('#app-filters .chip').forEach(function (c) { c.onclick = function () { filter = c.dataset.f; document.querySelectorAll('#app-filters .chip').forEach(function (x) { x.classList.toggle('is-on', x === c); }); renderApps(); }; });
+    function loadApps() { return api('/api/admin/applications').then(function (d) { A = d; renderApps(); renderSettings(); renderTournament(); }); }
+
+    /* ---------- Settings ---------- */
+    function renderSettings() {
+      var s = A.settings;
+      document.getElementById('s-open').checked = !!s.open;
+      document.getElementById('s-cap').value = s.cap || 0;
+      document.getElementById('s-deadline').value = s.deadline ? s.deadline.slice(0, 16) : '';
+      document.getElementById('s-dates').value = (s.dates || []).join('\n');
+      document.getElementById('s-note').value = s.note || '';
+    }
+    document.getElementById('settings-form').onsubmit = function (e) {
+      e.preventDefault();
+      var dl = document.getElementById('s-deadline').value;
+      api('/api/admin/applications', { action: 'settings', open: document.getElementById('s-open').checked, cap: +document.getElementById('s-cap').value || 0,
+        deadline: dl ? new Date(dl).toISOString() : '', dates: document.getElementById('s-dates').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean), note: document.getElementById('s-note').value })
+        .then(function (r) { A.settings = r.settings; toast('Settings saved'); renderSettings(); }).catch(function (err) { toast(err.message); });
+    };
+
+    /* ---------- Tournament ---------- */
+    function renderTournament() {
+      if (!T) return;
+      var picks = T.picks.length, total = Math.min(T.rounds * T.teams.length, T.pool.length);
+      document.getElementById('t-stats').innerHTML = [['teams', T.teams.length], ['in pool', T.pool.length], ['picks made', picks + ' / ' + total], ['matches', T.matches.length]].map(function (x) { return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join('');
+      document.getElementById('t-desc').innerHTML = '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';
+      document.getElementById('b-name').placeholder = T.name;
+      var acc = A ? A.applications.filter(function (a) { return a.status === 'accepted'; }) : [];
+      var caps = acc.filter(function (a) { return a.captainPick; });
+      document.getElementById('build-note').textContent = acc.length ? acc.length + ' accepted, ' + caps.length + ' ticked as captain → ' + caps.length + ' teams and ' + (acc.length - caps.length) + ' in the pool.' : 'No accepted applicants yet.';
+      document.getElementById('build-btn').disabled = caps.length < 2;
+      document.getElementById('undo-btn').disabled = !picks;
+      document.getElementById('revert-btn').disabled = !T.fromApplications;
+    }
+    function twoStep(wrapId, btnId, label, question, go) {
+      var wrap = document.getElementById(wrapId);
+      wrap.querySelector('button').onclick = function () {
+        wrap.innerHTML = '<span class="confirm">' + question + ' <button class="btn btn-sm btn-primary" id="yes">Yes, do it</button><button class="link-btn" id="no">Cancel</button></span>';
+        document.getElementById('no').onclick = restore;
+        document.getElementById('yes').onclick = function () { go().then(restore, function (e) { toast(e.message); restore(); }); };
+      };
+      function restore() { wrap.innerHTML = '<button class="btn btn-sm btn-ghost' + (btnId === 'undo-btn' ? '' : ' danger') + (btnId === 'build-btn' ? ' btn-primary' : '') + '" id="' + btnId + '">' + label + '</button>'; twoStep(wrapId, btnId, label, question, go); renderTournament(); }
+    }
+    function loadT() { return api('/api/tournament').then(function (d) { T = d; renderTournament(); renderRoles(); }); }
+    twoStep('build-wrap', 'build-btn', 'Build from applications', 'Replace the teams and pool and clear the current draft?', function () { return api('/api/admin/applications', { action: 'build', name: document.getElementById('b-name').value }).then(function (r) { toast('Built ' + r.teams + ' teams, ' + r.pool + ' in the pool'); return loadT(); }); });
+    twoStep('undo-wrap', 'undo-btn', 'Undo last pick', 'Undo the last draft pick?', function () { return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return loadT(); }); });
+    twoStep('reset-wrap', 'reset-btn', 'Reset picks, matches, stats', 'Wipe every pick, match, and stat?', function () { return api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); return loadT(); }); });
+    twoStep('revert-wrap', 'revert-btn', 'Revert to code config', 'Throw away the roster built from applications?', function () { return api('/api/admin/applications', { action: 'revert' }).then(function () { toast('Reverted to the site config'); return loadT(); }); });
+
+    /* ---------- Roles ---------- */
+    function renderRoles() {
+      var rs = document.getElementById('role-role');
+      rs.innerHTML = (T ? T.teams : []).map(function (t) { return '<option value="captain:' + esc(t.id) + '">Captain · ' + esc(t.name) + '</option>'; }).join('') + '<option value="helper">Helper</option><option value="admin">Admin</option>';
+      api('/api/admin/roles').then(function (d) {
+        var html = '';
+        (d.alwaysAdmin || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>'; });
+        (d.configCaptains || []).forEach(function (c) { html += '<li><b>' + esc(c.login) + '</b><span class="rl">' + esc(roleLabel('captain:' + c.team)) + '</span><span class="lock">from config</span></li>'; });
+        (d.configHelpers || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Helper</span><span class="lock">from config</span></li>'; });
+        Object.keys(d.roles || {}).sort().forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">' + esc(roleLabel(d.roles[l])) + '</span><button class="link-btn" data-remove-role="' + esc(l) + '">Remove</button></li>'; });
+        var list = document.getElementById('role-list');
+        list.innerHTML = html || '<li><span class="rl">Nobody added yet.</span></li>';
+        list.querySelectorAll('[data-remove-role]').forEach(function (b) { b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderRoles(); }).catch(function (e) { toast(e.message); }); }; });
+      }).catch(function (e) { toast(e.message); });
+    }
+    document.getElementById('role-form').onsubmit = function (e) {
+      e.preventDefault();
+      var login = document.getElementById('role-login').value.trim().replace(/^@/, '').toLowerCase(), r = document.getElementById('role-role').value;
+      if (!login) return;
+      api('/api/admin/roles', { login: login, role: r }).then(function () { toast(login + ' is now ' + roleLabel(r)); document.getElementById('role-login').value = ''; renderRoles(); }).catch(function (err) { toast(err.message); });
+    };
+
+    /* ---------- Boot ---------- */
+    api('/api/me').then(function (m) {
+      ME = m;
+      if (!m.user || m.role !== 'admin') {
+        document.getElementById('gate').hidden = false;
+        if (m.user) { document.getElementById('gate-msg').textContent = 'You are logged in as ' + m.user.name + ' but not an admin.'; var b = document.getElementById('gate-btn'); b.textContent = 'Log out'; b.href = '/api/auth/logout?next=/admin'; }
+        return;
+      }
+      document.getElementById('panel').hidden = false;
+      document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
+      var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();
+      return Promise.all([loadT(), loadApps()]);
+    }).catch(function (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = 'Could not reach the server: ' + e.message; });
+  </script>
+</body>
+</html>

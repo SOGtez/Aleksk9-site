@@ -13,7 +13,7 @@ export function baseUrl(req) {
 export async function whoami(req) {
   const user = getSession(req);
   const role = await roleFor(user?.login);
-  return { user: user ? { id: user.id, login: user.login, name: user.name, avatar: user.avatar } : null, role };
+  return { user: user ? { id: user.id, login: user.login, name: user.name, avatar: user.avatar, follows: !!user.follows, followedAt: user.followedAt || '', followChecked: user.followChecked || 0 } : null, role };
 }
 export async function requireRole(req, res, allowed) {
   const me = await whoami(req);

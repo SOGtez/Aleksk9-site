@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') return json(res, 200, {
     roles: await getRoles(),
     alwaysAdmin: (process.env.ADMIN_LOGINS || '').split(',').map(s => s.trim()).filter(Boolean),
-    configCaptains: DEFAULT_STATE.teams.filter(t => t.twitch).map(t => ({ login: t.twitch, team: t.id })),
+    configCaptains: (await getState()).teams.filter(t => t.twitch).map(t => ({ login: t.twitch, team: t.id })),
     configHelpers: DEFAULT_STATE.helpers || []
   });
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });

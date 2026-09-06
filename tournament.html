@@ -91,7 +91,7 @@
     .nav-links .nav-cta { color: #fff; background: var(--accent); margin-left: 6px; }
     .nav-links .nav-cta:hover { background: var(--accent-hover); }
     .nav-links .nav-cta::after { display: none; }
-    @media (max-width: 420px) { .nav-links a { padding: 8px 9px; font-size: 13px; } }
+    @media (max-width: 480px) { .nav-links a { padding: 8px 8px; font-size: 13px; } .nav-links .nav-cta { display: none; } }
 
     /* Demo bar (only when the API is unreachable or ?demo=1) */
     .demo-bar { background: var(--accent-soft); border-bottom: 1px solid rgba(225,6,0,.35); font-size: 13px; color: var(--fg-muted); }
@@ -398,6 +398,7 @@
         <ul class="nav-links">
           <li><a href="/">Home</a></li>
           <li><a href="/tournament" aria-current="page">Tournament</a></li>
+          <li><a href="/apply">Apply</a></li>
           <li><a class="nav-cta" href="#" data-link="twitch" target="_blank" rel="noopener">Twitch</a></li>
         </ul>
       </nav>
@@ -483,29 +484,17 @@
       </div>
     </section>
 
-    <!-- ADMIN (admins only) -->
+    <!-- ADMIN (admins only): the real controls live on /admin -->
     <section class="block" id="admin" aria-labelledby="admin-title" hidden>
       <div class="container">
         <div class="section-head">
           <h2 id="admin-title">Admin</h2>
-          <p class="sub">Only admins see this section.</p>
+          <p class="sub">Only admins see this.</p>
         </div>
-        <div class="admin-grid">
-          <div class="card admin-card">
-            <h3>Who can do what</h3>
-            <p>Add people by Twitch username. Captains can draft for their team, helpers can enter scores and stats, admins can do everything. People already in the site config are listed but can only be changed in code.</p>
-            <form class="role-form" id="role-form">
-              <input class="field" type="text" id="role-login" placeholder="twitch username" autocomplete="off" required>
-              <select class="field" id="role-role"></select>
-              <button class="btn btn-sm btn-primary" type="submit">Add</button>
-            </form>
-            <ul class="role-list" id="role-list"></ul>
-          </div>
-          <div class="card admin-card">
-            <h3>Reset everything</h3>
-            <p>Clears all picks, matches, and stats. Teams, players, and maps come from the site config and stay as they are. Undo and reset for just the draft are under the player pool.</p>
-            <div id="reset-all-wrap"><button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button></div>
-          </div>
+        <div class="card admin-card">
+          <h3>Admin panel</h3>
+          <p>Applications, roles, building the next tournament, and resets all live on the admin page.</p>
+          <a class="btn btn-sm btn-primary" href="/admin">Open admin panel</a>
         </div>
       </div>
     </section>
@@ -684,7 +673,7 @@
           auth.innerHTML =
             '<span class="auth-chip"><span class="avatar' + (myTeam() ? ' cap' : '') + '">' + (ME.avatar ? '<img src="' + esc(ME.avatar) + '" alt="">' : esc(initials(ME.name || ME.login))) + '</span>' +
             '<span><b>' + esc(ME.name || ME.login) + '</b><br><span class="role">' + esc(roleLabel(role)) + '</span></span>' +
-            '<a href="/api/auth/logout">Log out</a></span>' +
+            (role === 'admin' ? '<a href="/admin">Admin</a>' : '') + '<a href="/api/auth/logout">Log out</a></span>' +
             (role === 'viewer' ? '<span class="auth-hint">You are logged in but not on the captain or helper list yet. Ask an admin to add you.</span>' : '');
         }
         return;
@@ -1028,34 +1017,8 @@
       document.getElementById('map-chips').innerHTML = (D.maps || []).map(function (m) { return '<span>' + esc(m) + '</span>'; }).join('');
     }
     function renderAdmin() {
-      var sec = document.getElementById('admin'), show = LIVE && role === 'admin';
-      sec.hidden = !show; if (!show) return;
-      var rs = document.getElementById('role-role');
-      rs.innerHTML = D.teams.map(function (t) { return '<option value="captain:' + esc(t.id) + '">Captain · ' + esc(t.name) + '</option>'; }).join('') + '<option value="helper">Helper</option><option value="admin">Admin</option>';
-      api('/api/admin/roles').then(function (d) {
-        var html = '';
-        (d.alwaysAdmin || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>'; });
-        (d.configCaptains || []).forEach(function (c) { html += '<li><b>' + esc(c.login) + '</b><span class="rl">' + esc(roleLabel('captain:' + c.team)) + '</span><span class="lock">set in config</span></li>'; });
-        (d.configHelpers || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Helper</span><span class="lock">set in config</span></li>'; });
-        Object.keys(d.roles || {}).sort().forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">' + esc(roleLabel(d.roles[l])) + '</span><button class="link-btn" data-remove-role="' + esc(l) + '">Remove</button></li>'; });
-        var list = document.getElementById('role-list');
-        list.innerHTML = html || '<li><span class="rl">Nobody added yet.</span></li>';
-        list.querySelectorAll('[data-remove-role]').forEach(function (b) { b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderAdmin(); }).catch(function (e) { toast(e.message); }); }; });
-      }).catch(function (e) { toast(e.message); });
+      document.getElementById('admin').hidden = !(LIVE && role === 'admin');
     }
-    document.getElementById('role-form').onsubmit = function (e) {
-      e.preventDefault();
-      var login = document.getElementById('role-login').value.trim().replace(/^@/, '').toLowerCase(), r = document.getElementById('role-role').value;
-      if (!login) return;
-      api('/api/admin/roles', { login: login, role: r }).then(function () { toast(login + ' is now ' + roleLabel(r)); document.getElementById('role-login').value = ''; renderAdmin(); }).catch(function (err) { toast(err.message); });
-    };
-    function resetAllClick() {
-      document.getElementById('reset-all-wrap').innerHTML = '<span style="font-size:14px;margin-right:10px">Wipe picks, matches, and stats?</span><button class="btn btn-sm btn-primary" id="reset-yes">Yes, reset everything</button> <button class="link-btn" id="reset-no">Cancel</button>';
-      document.getElementById('reset-no').onclick = restoreResetBtn;
-      document.getElementById('reset-yes').onclick = function () { api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); restoreResetBtn(); return refresh(true); }).catch(function (e) { toast(e.message); restoreResetBtn(); }); };
-    }
-    function restoreResetBtn() { document.getElementById('reset-all-wrap').innerHTML = '<button class="btn btn-sm btn-ghost" id="reset-all">Reset everything</button>'; document.getElementById('reset-all').onclick = resetAllClick; }
-    document.getElementById('reset-all').onclick = resetAllClick;
 
     /* ------------------------------------------------------------
        WIRING + BOOT

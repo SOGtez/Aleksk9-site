@@ -53,3 +53,8 @@ Deployments → latest → **Redeploy**, so the new variables are picked up.
 | `GET/POST /api/admin/roles` `{login, role}` | admin | manage who is captain / helper / admin |
 | `POST /api/admin/reset` | admin | clear picks, matches, stats (config lives in `api/_lib/defaults.js`) |
 | `GET /api/live` | anyone | is the Twitch channel live (cached 60s) |
+| `GET/POST /api/apply` | logged in + following | read/submit your tournament application |
+| `GET/POST /api/admin/applications` | admin | list, review, settings, build tournament from accepted, revert |
+
+Pages: `/` home · `/tournament` draft, matches, stats · `/apply` application form (Twitch login with follow check) · `/admin` control panel.
+The Twitch app must allow the `user:read:follows` scope (all apps do by default); applicants grant it on login.

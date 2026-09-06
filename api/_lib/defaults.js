@@ -7,7 +7,7 @@ export const DEFAULT_STATE = {
   name: 'R6 5v5 Tournament',
   hosts: ['AleksK9', 'NV30'],
   /* Twitch logins (lowercase) who can enter scores and stats. Admins can add more from the site. */
-  helpers: ['pedrosahur'],
+  helpers: ['pedrosahur', 'a1iy'],
   format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
   rules: [
     'First to 7 rounds wins. If it goes 6-6, overtime is first to 8.',

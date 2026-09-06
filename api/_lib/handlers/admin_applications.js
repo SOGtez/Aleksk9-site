@@ -25,6 +25,7 @@ export default async function handler(req, res) {
   if (b.action === 'settings') {
     const patch = {};
     if (typeof b.open === 'boolean') patch.open = b.open;
+    if (typeof b.captainsOpen === 'boolean') patch.captainsOpen = b.captainsOpen;
     if (b.cap != null) patch.cap = Math.max(0, Math.min(200, Number(b.cap) || 0));
     if (b.deadline != null) patch.deadline = String(b.deadline).slice(0, 40);
     if (Array.isArray(b.dates)) patch.dates = b.dates.map(d => String(d).trim().slice(0, 60)).filter(Boolean).slice(0, 20);

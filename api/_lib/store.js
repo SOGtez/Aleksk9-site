@@ -74,7 +74,7 @@ export async function cacheGet(key) { return redis().get(key); }
 export async function cacheSet(key, value, ttlSeconds) { return redis().set(key, value, { ex: ttlSeconds }); }
 
 /* ---------- Applications ---------- */
-export const DEFAULT_SETTINGS = { open: true, cap: 0, deadline: '', dates: [], note: '' };
+export const DEFAULT_SETTINGS = { open: true, captainsOpen: false, cap: 0, deadline: '', dates: [], note: '' };
 export async function getSettings() { return { ...DEFAULT_SETTINGS, ...((await redis().get(KEY_SETTINGS)) || {}) }; }
 export async function setSettings(patch) { const s = { ...(await getSettings()), ...patch }; await redis().set(KEY_SETTINGS, s); return s; }
 export async function getApplications() { return (await redis().hgetall(KEY_APPS)) || {}; }

@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const totalPlayers = state.teams.length * (state.rounds + 1);          /* captains + their picks */
     const playersIn = state.teams.length + state.pool.length;
     return json(res, 200, {
-      settings: { open: settings.open, cap: settings.cap, deadline: settings.deadline, dates: settings.dates, note: settings.note },
+      settings: { open: settings.open, captainsOpen: !!settings.captainsOpen, cap: settings.cap, deadline: settings.deadline, dates: settings.dates, note: settings.note },
       tournament: { name: state.name, teams: state.teams.length, teamSize: state.format.teamSize, spotsLeft, totalPlayers, playersIn, draftStarted: state.picks.length > 0 },
       options: { platforms: PLATFORMS, ranks: RANKS, roles: ROLES },
       channel: process.env.TWITCH_CHANNEL || 'aleksk9_',
@@ -35,6 +35,7 @@ export default async function handler(req, res) {
   const existing = await getApplication(login);
   const v = cleanApplication(readBody(req), settings.dates || []);
   if (!v.ok) return json(res, 400, { error: v.errors.join('. ') });
+  if (!settings.captainsOpen) v.data.captain = false; /* captain spots are closed */
   const app = {
     ...(existing || {}),
     ...v.data,

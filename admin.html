@@ -180,6 +180,7 @@
             <h3>Application settings</h3>
             <p class="d">Controls what people see on the Apply page.</p>
             <label class="toggle"><input type="checkbox" id="s-open"><span><b>Applications open</b><span>When off, the form is read-only and new people cannot apply.</span></span></label>
+            <label class="toggle"><input type="checkbox" id="s-captains"><span><b>Captain spots open</b><span>When off, the "I'm up for being a captain" option is greyed out on the form.</span></span></label>
             <label class="f">Spots (shown as "X applied · N spots", 0 hides it)<input class="field" type="number" id="s-cap" min="0" max="200"></label>
             <label class="f">Deadline (optional)<input class="field" type="datetime-local" id="s-deadline"></label>
             <label class="f">Play dates, one per line (applicants tick the ones they can make)<textarea class="field" id="s-dates" placeholder="Sat Sep 20 · 7pm PT&#10;Sun Sep 21 · 7pm PT"></textarea></label>
@@ -317,6 +318,7 @@
     function renderSettings() {
       var s = A.settings;
       document.getElementById('s-open').checked = !!s.open;
+      document.getElementById('s-captains').checked = !!s.captainsOpen;
       document.getElementById('s-cap').value = s.cap || 0;
       document.getElementById('s-deadline').value = s.deadline ? s.deadline.slice(0, 16) : '';
       document.getElementById('s-dates').value = (s.dates || []).join('\n');
@@ -325,7 +327,7 @@
     document.getElementById('settings-form').onsubmit = function (e) {
       e.preventDefault();
       var dl = document.getElementById('s-deadline').value;
-      api('/api/admin/applications', { action: 'settings', open: document.getElementById('s-open').checked, cap: +document.getElementById('s-cap').value || 0,
+      api('/api/admin/applications', { action: 'settings', open: document.getElementById('s-open').checked, captainsOpen: document.getElementById('s-captains').checked, cap: +document.getElementById('s-cap').value || 0,
         deadline: dl ? new Date(dl).toISOString() : '', dates: document.getElementById('s-dates').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean), note: document.getElementById('s-note').value })
         .then(function (r) { A.settings = r.settings; toast('Settings saved'); renderSettings(); }).catch(function (err) { toast(err.message); });
     };

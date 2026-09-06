@@ -53,6 +53,7 @@ export async function roleFor(login) {
   /* Captains named in the config (defaults.js) get their team's captain role automatically. */
   const t = DEFAULT_STATE.teams.find(t => t.twitch && t.twitch.toLowerCase() === login);
   if (t) return 'captain:' + t.id;
+  if ((DEFAULT_STATE.helpers || []).some(h => h.toLowerCase() === login)) return 'helper';
   const roles = await getRoles();
   return roles[login] || 'viewer';
 }

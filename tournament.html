@@ -431,7 +431,7 @@
         <div class="admin-grid">
           <div class="card admin-card">
             <h3>Who can do what</h3>
-            <p>Add people by Twitch username. Captains can draft for their team, helpers can enter scores and stats, admins can do everything. Captains already in the site config are listed but can only be changed in code.</p>
+            <p>Add people by Twitch username. Captains can draft for their team, helpers can enter scores and stats, admins can do everything. People already in the site config are listed but can only be changed in code.</p>
             <form class="role-form" id="role-form">
               <input class="field" type="text" id="role-login" placeholder="twitch username" autocomplete="off" required>
               <select class="field" id="role-role"></select>
@@ -944,6 +944,7 @@
         var html = '';
         (d.alwaysAdmin || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>'; });
         (d.configCaptains || []).forEach(function (c) { html += '<li><b>' + esc(c.login) + '</b><span class="rl">' + esc(roleLabel('captain:' + c.team)) + '</span><span class="lock">set in config</span></li>'; });
+        (d.configHelpers || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Helper</span><span class="lock">set in config</span></li>'; });
         Object.keys(d.roles || {}).sort().forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">' + esc(roleLabel(d.roles[l])) + '</span><button class="link-btn" data-remove-role="' + esc(l) + '">Remove</button></li>'; });
         var list = document.getElementById('role-list');
         list.innerHTML = html || '<li><span class="rl">Nobody added yet.</span></li>';

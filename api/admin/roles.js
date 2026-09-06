@@ -1,12 +1,17 @@
 import { json, requireRole, readBody } from '../_lib/http.js';
 import { getRoles, setRole, getState } from '../_lib/store.js';
+import { DEFAULT_STATE } from '../_lib/defaults.js';
 
 /* GET  → { roles: { login: role } }
    POST { login, role } — role '' or null removes. Admin only. */
 export default async function handler(req, res) {
   const me = await requireRole(req, res, ['admin']);
   if (!me) return;
-  if (req.method === 'GET') return json(res, 200, { roles: await getRoles(), alwaysAdmin: (process.env.ADMIN_LOGINS || '').split(',').map(s => s.trim()).filter(Boolean) });
+  if (req.method === 'GET') return json(res, 200, {
+    roles: await getRoles(),
+    alwaysAdmin: (process.env.ADMIN_LOGINS || '').split(',').map(s => s.trim()).filter(Boolean),
+    configCaptains: DEFAULT_STATE.teams.filter(t => t.twitch).map(t => ({ login: t.twitch, team: t.id }))
+  });
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   const b = readBody(req);
   const role = b.role || null;

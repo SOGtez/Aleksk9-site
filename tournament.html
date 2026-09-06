@@ -598,6 +598,11 @@
        ------------------------------------------------------------ */
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
     function initials(n) { return String(n || '?').slice(0, 2).toUpperCase(); }
+    /* Avatar for a team (uses captain name) or player. Shows the Twitch profile picture when the API supplied one. */
+    function av(x, cls) {
+      var label = x.captain && !x.id ? x.captain : (x.captain && x.name ? x.name : (x.captain || x.name));
+      return '<span class="avatar' + (cls ? ' ' + cls : '') + '">' + (x.avatar ? '<img src="' + esc(x.avatar) + '" alt="" loading="lazy">' : esc(initials(label))) + '</span>';
+    }
     function team(id) { for (var i = 0; i < D.teams.length; i++) if (D.teams[i].id === id) return D.teams[i]; return null; }
     function player(id) { for (var i = 0; i < D.pool.length; i++) if (D.pool[i].id === id) return D.pool[i]; return null; }
     function pickOrder(round) { var ids = D.teams.map(function (t) { return t.id; }); return round % 2 === 1 ? ids : ids.slice().reverse(); }
@@ -618,7 +623,7 @@
     function canDraftNow() { var s = nextSlot(); if (!s) return false; return role === 'admin' || myTeam() === s.team; }
     function canEdit() { return role === 'helper' || role === 'admin'; }
     function roster(tid) {
-      var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info }];
+      var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info, avatar: t.avatar }];
       D.picks.forEach(function (p) { if (p.team === tid) { var pl = player(p.player); if (pl) list.push(pl); } });
       return list;
     }
@@ -633,7 +638,7 @@
       return 'matches';
     }
     function standings() {
-      var rows = D.teams.map(function (t) { return { id: t.id, name: t.name, captain: t.captain, w: 0, l: 0, rf: 0, ra: 0 }; });
+      var rows = D.teams.map(function (t) { return { id: t.id, name: t.name, captain: t.captain, avatar: t.avatar, w: 0, l: 0, rf: 0, ra: 0 }; });
       var by = {}; rows.forEach(function (r) { by[r.id] = r; });
       D.matches.forEach(function (m) {
         if (m.status !== 'final') return;
@@ -715,7 +720,7 @@
         return;
       }
       var t = team(slot.team);
-      var who = '<span class="avatar cap">' + esc(initials(t.captain)) + '</span>';
+      var who = av({ captain: t.captain, avatar: t.avatar }, 'cap');
       if (canDraftNow()) {
         el.classList.add('is-you');
         el.innerHTML = who + '<span class="tx"><b>Your pick, ' + esc(t.captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Tap <b>Draft</b> next to a player below, then confirm.</span></span>' +
@@ -747,7 +752,7 @@
       g.style.gridTemplateColumns = '48px repeat(' + T + ', minmax(150px, 1fr))';
       var html = '<div class="corner"></div>';
       D.teams.forEach(function (t) {
-        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '"><span class="avatar cap">' + esc(initials(t.captain)) + '</span><span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
+        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
       });
       for (var r = 1; r <= R; r++) {
         var order = pickOrder(r), lastRow = r === R ? ' last-row' : '';
@@ -756,7 +761,7 @@
           var got = pickAt(r, t.id), pn = (r - 1) * T + order.indexOf(t.id) + 1;
           if (got) {
             var pl = player(got.pick.player) || { name: got.pick.player, info: '' };
-            html += '<div class="cell' + lastRow + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pn">#' + got.pickNo + '</span><span class="avatar">' + esc(initials(pl.name)) + '</span><span class="who"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></div>';
+            html += '<div class="cell' + lastRow + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span class="who"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></div>';
           } else if (slot && slot.round === r && slot.team === t.id) {
             html += '<div class="cell is-clock' + lastRow + '"><span class="pn">#' + pn + '</span><span class="who"><div class="ct">On the clock</div><div class="cs">' + (canDraftNow() ? 'Your pick' : esc(t.captain) + ' is picking') + '</div></span></div>';
           } else {
@@ -771,10 +776,10 @@
       var slot = nextSlot(), T = D.teams.length, html = '';
       D.teams.forEach(function (t) {
         var on = slot && slot.team === t.id;
-        html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head"><span class="avatar cap">' + esc(initials(t.captain)) + '</span><span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
+        html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
         for (var r = 1; r <= D.rounds; r++) {
           var got = pickAt(r, t.id), pn = (r - 1) * T + pickOrder(r).indexOf(t.id) + 1;
-          if (got) { var pl = player(got.pick.player) || { name: got.pick.player, info: '' }; html += '<li><span class="pn">#' + got.pickNo + '</span><span class="avatar">' + esc(initials(pl.name)) + '</span><span style="min-width:0"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></li>'; }
+          if (got) { var pl = player(got.pick.player) || { name: got.pick.player, info: '' }; html += '<li><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span style="min-width:0"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></li>'; }
           else if (on && slot.round === r) html += '<li class="clock"><span class="pn">#' + pn + '</span>' + (canDraftNow() ? 'Your pick' : 'On the clock') + '</li>';
           else html += '<li class="empty"><span class="pn">#' + pn + '</span>' + (pn > totalPicks() ? 'no player left' : 'Round ' + r) + '</li>';
         }
@@ -808,7 +813,7 @@
         html += '<div class="card tier"><div class="tier-head">' + esc(name) + '<span>' + left + ' of ' + list.length + ' left</span></div><ul class="pool-list">';
         list.forEach(function (p) {
           var t = takenBy(p.id); if (!t) open++;
-          html += '<li class="pool-item' + (t ? ' is-taken' : '') + (confirming === p.id ? ' is-confirming' : '') + '"><span class="avatar">' + esc(initials(p.name)) + '</span>' +
+          html += '<li class="pool-item' + (t ? ' is-taken' : '') + (confirming === p.id ? ' is-confirming' : '') + '">' + av(p) +
             '<span class="who"><div class="nm">' + esc(p.name) + '</div><div class="inf">' + esc(p.info || '—') + '</div></span>';
           if (t) html += '<span class="tb">' + esc(team(t).name) + '</span>';
           else if (can && confirming === p.id) html += '<span class="confirm">Draft ' + esc(p.name) + '?<button class="btn btn-sm btn-draft" data-confirm="' + esc(p.id) + '">Yes</button><button class="link-btn" data-cancel-draft>Cancel</button></span>';
@@ -881,7 +886,7 @@
       } else {
         var h = '<table><thead><tr><th>#</th><th>Team</th><th class="num">W</th><th class="num">L</th><th class="num hide-m">RF</th><th class="num hide-m">RA</th><th class="num">+/−</th></tr></thead><tbody>';
         rows.forEach(function (r, i) {
-          h += '<tr' + (played && i === 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who"><span class="avatar cap">' + esc(initials(r.captain)) + '</span>' + esc(r.name) + ' <small>· ' + esc(r.captain) + '</small></td>' +
+          h += '<tr' + (played && i === 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who">' + av({ captain: r.captain, avatar: r.avatar }, 'cap') + esc(r.name) + ' <small>· ' + esc(r.captain) + '</small></td>' +
             '<td class="num w">' + r.w + '</td><td class="num">' + r.l + '</td><td class="num hide-m">' + r.rf + '</td><td class="num hide-m">' + r.ra + '</td><td class="num">' + (r.diff > 0 ? '+' : '') + r.diff + '</td></tr>';
         });
         st.innerHTML = h + '</tbody></table>';
@@ -908,9 +913,9 @@
         var pill = m.status === 'live' ? '<span class="pill pill-live"><span class="dot"></span>Live</span>' : m.status === 'final' ? '<span class="pill pill-final">Final</span>' : '<span class="pill pill-upcoming">Upcoming</span>';
         var aw = m.status === 'final' && m.score[0] > m.score[1], bw = m.status === 'final' && m.score[1] > m.score[0];
         html += '<li class="card match"><span class="mp">' + esc(m.map || 'TBD') + '</span>' + pill +
-          '<div class="vs"><span class="side' + (aw ? ' win' : '') + '"><span class="avatar cap">' + esc(initials(ta.captain)) + '</span><span>' + esc(ta.name) + '</span></span>' +
+          '<div class="vs"><span class="side' + (aw ? ' win' : '') + '">' + av({ captain: ta.captain, avatar: ta.avatar }, 'cap') + '<span>' + esc(ta.name) + '</span></span>' +
           (m.status === 'upcoming' ? '<span class="sc tbd">vs</span>' : '<span class="sc">' + m.score[0] + '<span class="sep">–</span>' + m.score[1] + '</span>') +
-          '<span class="side r' + (bw ? ' win' : '') + '"><span>' + esc(tb.name) + '</span><span class="avatar cap">' + esc(initials(tb.captain)) + '</span></span></div>';
+          '<span class="side r' + (bw ? ' win' : '') + '"><span>' + esc(tb.name) + '</span>' + av({ captain: tb.captain, avatar: tb.avatar }, 'cap') + '</span></div>';
         if (canEdit()) {
           if (editingMatch === m.id) {
             html += '<div class="edit"><label>' + esc(ta.name) + ' <input class="field num" type="number" min="0" max="99" id="sa-' + m.id + '" value="' + m.score[0] + '"></label>' +
@@ -957,7 +962,7 @@
       D.teams.forEach(function (t) {
         roster(t.id).forEach(function (p) {
           var s = D.stats[p.id] || [0, 0, 0];
-          rows.push({ id: p.id, name: p.name, team: t.id, teamName: t.name, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
+          rows.push({ id: p.id, name: p.name, avatar: p.avatar, team: t.id, teamName: t.name, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
         });
       });
       return rows;
@@ -992,7 +997,7 @@
       if (statsEditing) {
         var eh = '<table><thead><tr><th>Player</th><th class="hide-m">Team</th><th class="num">K</th><th class="num">D</th><th class="num">A</th></tr></thead><tbody>';
         statRows().forEach(function (r) {
-          eh += '<tr><td class="who"><span class="avatar' + (r.captain ? ' cap' : '') + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td><td class="hide-m"><small style="color:var(--fg-muted)">' + esc(r.teamName) + '</small></td>' +
+          eh += '<tr><td class="who">' + av({ name: r.name, avatar: r.avatar }, r.captain ? 'cap' : '') + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td><td class="hide-m"><small style="color:var(--fg-muted)">' + esc(r.teamName) + '</small></td>' +
             [r.k, r.d, r.a].map(function (v, f) { return '<td class="num"><input class="stat" type="number" min="0" max="999" value="' + v + '" data-pid="' + esc(r.id) + '" data-f="' + f + '"></td>'; }).join('') + '</tr>';
         });
         wrap.innerHTML = eh + '</tbody></table>'; return;
@@ -1007,7 +1012,7 @@
       }
       var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('teamName', 'Team', 0, 'hide-m') + th('k', 'Kills', 1) + th('d', 'Deaths', 1) + th('a', 'Assists', 1, 'hide-m') + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
       rows.forEach(function (r, i) {
-        html += '<tr' + (r.kd === topKd && r.kd > 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who"><span class="avatar' + (r.captain ? ' cap' : '') + '">' + esc(initials(r.name)) + '</span>' + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
+        html += '<tr' + (r.kd === topKd && r.kd > 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who">' + av({ name: r.name, avatar: r.avatar }, r.captain ? 'cap' : '') + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
           '<td class="hide-m"><small style="color:var(--fg-muted)">' + esc(r.teamName) + '</small></td><td class="num">' + r.k + '</td><td class="num">' + r.d + '</td><td class="num hide-m">' + r.a + '</td><td class="num kd">' + r.kd.toFixed(2) + '</td></tr>';
       });
       wrap.innerHTML = html + '</tbody></table>';

@@ -1,7 +1,8 @@
 /* Starting tournament config. Admin can overwrite this from /api/admin/reset.
    Team ids and player ids must be unique, lowercase, no spaces. Captains are not in the pool.
    Teams are listed in ROUND 1 draft order (worst to best); the order flips every round.
-   `twitch` is the captain's Twitch login (lowercase); logging in with it grants the captain role. */
+   `twitch` on a team is the captain's Twitch login (lowercase); logging in with it grants the captain role.
+   `twitch` on a pool player is optional and only used to show their Twitch profile picture. */
 export const DEFAULT_STATE = {
   name: 'R6 5v5 Tournament',
   hosts: ['AleksK9', 'NV30'],
@@ -45,7 +46,7 @@ export const DEFAULT_STATE = {
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
     { id: 'jimmy',      name: 'Jimmy',      tier: 2, info: '' },
     { id: 'alfe',       name: 'Alfe',       tier: 2, info: '55 hrs · lvl 55 · Unranked' },
-    { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver' },
+    { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
     { id: 'angel',      name: 'Angel',      tier: 2, info: '98 hrs · lvl 66 · Silver' },
     { id: 'niko2',      name: 'Niko',       tier: 2, info: '86 hrs · lvl 42 · Unranked' },
     { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' }

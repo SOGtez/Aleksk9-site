@@ -1,7 +1,7 @@
-import { json, requireRole, readBody } from '../_lib/http.js';
-import { getSettings, setSettings, getApplications, setApplication, deleteApplication, setConfigOverride, getConfigOverride, setState } from '../_lib/store.js';
-import { DEFAULT_STATE } from '../_lib/defaults.js';
-import { STATUSES, suggestTier, infoLine } from '../_lib/applications.js';
+import { json, requireRole, readBody } from '../http.js';
+import { getSettings, setSettings, getApplications, setApplication, deleteApplication, setConfigOverride, getConfigOverride, setState } from '../store.js';
+import { DEFAULT_STATE } from '../defaults.js';
+import { STATUSES, suggestTier, infoLine } from '../applications.js';
 
 /* Admin only.
    GET  → { settings, applications: [...], override: bool }

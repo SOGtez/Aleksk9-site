@@ -1,6 +1,6 @@
-import { json, requireRole } from '../_lib/http.js';
-import { setState } from '../_lib/store.js';
-import { DEFAULT_STATE } from '../_lib/defaults.js';
+import { json, requireRole } from '../http.js';
+import { setState } from '../store.js';
+import { DEFAULT_STATE } from '../defaults.js';
 
 /* POST — admin only. Clears all picks, matches, and stats.
    Teams, players, maps, and rules always come from api/_lib/defaults.js; edit that file to change them. */

@@ -1,6 +1,6 @@
-import { setSession, cookieHeader, getSession } from '../_lib/session.js';
-import { baseUrl } from '../_lib/http.js';
-import { followsChannel } from '../_lib/twitch.js';
+import { setSession, cookieHeader, getSession } from '../session.js';
+import { baseUrl } from '../http.js';
+import { followsChannel } from '../twitch.js';
 
 export default async function handler(req, res) {
   const { code, state, error } = req.query;

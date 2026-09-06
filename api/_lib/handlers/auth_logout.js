@@ -1,4 +1,4 @@
-import { clearSession } from '../_lib/session.js';
+import { clearSession } from '../session.js';
 export default function handler(req, res) {
   clearSession(res);
   let next = String(req.query.next || '/tournament');

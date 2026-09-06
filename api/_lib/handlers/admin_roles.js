@@ -1,6 +1,6 @@
-import { json, requireRole, readBody } from '../_lib/http.js';
-import { getRoles, setRole, getState } from '../_lib/store.js';
-import { DEFAULT_STATE } from '../_lib/defaults.js';
+import { json, requireRole, readBody } from '../http.js';
+import { getRoles, setRole, getState } from '../store.js';
+import { DEFAULT_STATE } from '../defaults.js';
 
 /* GET  → { roles: { login: role } }
    POST { login, role } — role '' or null removes. Admin only. */

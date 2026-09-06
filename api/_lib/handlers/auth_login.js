@@ -1,5 +1,5 @@
-import { randomState, cookieHeader } from '../_lib/session.js';
-import { baseUrl } from '../_lib/http.js';
+import { randomState, cookieHeader } from '../session.js';
+import { baseUrl } from '../http.js';
 
 /* GET /api/auth/login[?scope=follows][&next=/apply]
    scope=follows also asks Twitch for permission to see the user's followed channels

@@ -200,8 +200,8 @@
       var h = '<form class="card pad form" id="form"' + (closed ? ' data-locked="1"' : '') + '>';
       if (closed) h += '<p class="muted">Applications are closed, so this is read-only. Your answers are shown below.</p>';
       else if (a.status) h += '<p class="muted">You can update your answers any time before the deadline.</p>';
-      h += '<div class="row two"><label class="f">In-game name (Ubisoft)<input class="field" id="ign" maxlength="40" value="' + esc(a.ign) + '" required></label>' +
-        '<label class="f">Platform' + sel('platform', o.platforms, a.platform, 'Pick one') + '</label></div>';
+      h += '<div class="row two"><label class="f">Platform' + sel('platform', o.platforms, a.platform, 'Pick one') + '</label>' +
+        '<label class="f"><span id="ign-label">' + ignLabel(a.platform) + '</span><input class="field" id="ign" maxlength="40" value="' + esc(a.ign) + '" placeholder="exactly as it appears in game" required></label></div>';
       h += '<div class="row three"><label class="f">Hours played<input class="field" id="hours" type="number" min="0" max="100000" value="' + (a.hours || '') + '" placeholder="e.g. 850"></label>' +
         '<label class="f">Current rank' + sel('rank', o.ranks, a.rank, 'Pick one') + '</label>' +
         '<label class="f">Highest rank ever' + sel('peakRank', o.ranks, a.peakRank, 'Pick one') + '</label></div>';
@@ -215,8 +215,10 @@
       if (!closed) h += '<div class="submit"><button class="btn btn-primary" type="submit" id="submit">' + (a.status ? 'Update application' : 'Submit application') + '</button><span class="small">Your Twitch name and picture are attached automatically.</span></div>';
       return h + '</form>';
     }
+    function ignLabel(p) { return p === 'PlayStation' ? 'PSN ID' : p === 'Xbox' ? 'Xbox gamertag' : p === 'PC' ? 'Ubisoft Connect name' : 'In-game name'; }
     function wireForm(closed) {
       var f = document.getElementById('form'); if (!f) return;
+      document.getElementById('platform').onchange = function () { document.getElementById('ign-label').textContent = ignLabel(this.value); };
       if (closed) { f.querySelectorAll('input,select,button').forEach(function (x) { x.disabled = true; }); return; }
       document.getElementById('peakRank').onchange = function () { document.getElementById('champs-wrap').hidden = this.value !== 'Champion'; };
       document.querySelectorAll('#roles input').forEach(function (c) { c.onchange = function () { var on = document.querySelectorAll('#roles input:checked'); if (on.length > 2) { c.checked = false; toast('Pick up to 2 roles'); } }; });

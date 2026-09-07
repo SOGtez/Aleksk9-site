@@ -36,18 +36,32 @@ async function ubiFetch(step, url, opts = {}) {
   return body;
 }
 
+/* Ubisoft rate-limits logins per IP hard (and Vercel's egress IPs are shared), so:
+   1. reuse a session until it expires,
+   2. refresh with the remember-me ticket rather than the password when possible,
+   3. after a 429, refuse to try again for 30 minutes instead of making it worse. */
 export async function session(force) {
   if (!force) { const c = await cacheGet('ubi:session'); if (c && c.expiration && Date.parse(c.expiration) - Date.now() > 5 * 60 * 1000) return c; }
+  const cd = await cacheGet('ubi:cooldown');
+  if (cd && !force) throw new UbiError('login', 429, 'Ubisoft is rate-limiting logins from this server. Try again after ' + new Date(cd).toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT');
   const email = process.env.UBI_EMAIL, pass = process.env.UBI_PASSWORD;
   if (!email || !pass) throw new UbiError('login', 500, 'UBI_EMAIL / UBI_PASSWORD are not set in Vercel');
-  const body = await ubiFetch('login', 'https://public-ubiservices.ubi.com/v3/profiles/sessions', {
-    method: 'POST',
-    headers: { Authorization: 'Basic ' + Buffer.from(email + ':' + pass).toString('base64') },
-    body: JSON.stringify({ rememberMe: true })
-  });
+
+  const attempt = async (headers) => ubiFetch('login', 'https://public-ubiservices.ubi.com/v3/profiles/sessions', { method: 'POST', headers, body: JSON.stringify({ rememberMe: true }) });
+  let body = null;
+  try {
+    const remember = await cacheGet('ubi:remember');
+    if (remember) { try { body = await attempt({ 'Ubi-RememberMeTicket': remember }); } catch { body = null; } }
+    if (!body) body = await attempt({ Authorization: 'Basic ' + Buffer.from(email + ':' + pass).toString('base64') });
+  } catch (e) {
+    if (e.status === 429) { const until = Date.now() + 30 * 60 * 1000; await cacheSet('ubi:cooldown', until, 30 * 60); }
+    throw e;
+  }
   const s = { ticket: body.ticket, sessionId: body.sessionId, expiration: body.expiration, userId: body.userId };
   if (!s.ticket) throw new UbiError('login', 500, 'no ticket in response');
-  await cacheSet('ubi:session', s, 60 * 60 * 2);
+  const ttl = Math.max(600, Math.min(3 * 3600, Math.floor((Date.parse(body.expiration) - Date.now()) / 1000) - 300));
+  await cacheSet('ubi:session', s, ttl);
+  if (body.rememberMeTicket) await cacheSet('ubi:remember', body.rememberMeTicket, 60 * 60 * 24 * 30);
   return s;
 }
 function auth(s) { return { Authorization: 'Ubi_v1 t=' + s.ticket, 'Ubi-SessionId': s.sessionId }; }

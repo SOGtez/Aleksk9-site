@@ -3,8 +3,10 @@
    Everything here can break when Ubisoft changes things, so every step reports what it was doing. */
 import { cacheGet, cacheSet } from './store.js';
 
-const APP_ID = '3587dcbb-7f81-457c-9781-0e3f29f6f56a';       /* public Ubisoft web app id used by community tools */
-const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+/* Ubisoft's bot wall blocks browser-looking requests from servers. Identifying as the Ubisoft Connect
+   client (its app id + the UbiServices SDK user agent) gets through. Verified 2026-09-06. */
+const APP_ID = 'e3d5ea9e-50bd-43b7-88bf-39794f4e3d40';
+const UA = 'UbiServices_SDK_2020.Release.58_PC64_ansi_static';
 
 export const PLATFORMS = {
   PC:          { type: 'uplay', space: '5172a557-50b5-4665-b7db-e3f2e8c5041d', sandbox: 'OSBOR_PC_LNCH_A',      family: 'pc' },

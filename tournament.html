@@ -145,7 +145,7 @@
 
     /* Sub nav */
     .subnav { position: sticky; top: var(--nav-h); z-index: 40; background: rgba(10,10,10,.85); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    .subnav .container { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    .subnav .container { display: flex; gap: 4px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; touch-action: pan-x; white-space: nowrap; }
     .subnav .container::-webkit-scrollbar { display: none; }
     .subnav a { flex: 0 0 auto; padding: 14px; font-size: 14px; font-weight: 600; color: var(--fg-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .2s var(--ease), border-color .2s var(--ease); }
     .subnav a:hover, .subnav a.is-active { color: var(--fg); border-bottom-color: var(--accent); }

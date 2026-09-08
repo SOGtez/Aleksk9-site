@@ -1,7 +1,7 @@
 import { setSession, cookieHeader, getSession } from '../session.js';
 import { baseUrl } from '../http.js';
 import { followsChannel } from '../twitch.js';
-import { cacheSet } from '../store.js';
+import { cacheSet, recordLogin } from '../store.js';
 
 export default async function handler(req, res) {
   const { code, state, error } = req.query;
@@ -52,6 +52,7 @@ export default async function handler(req, res) {
     }).catch(() => {});
   }
 
+  try { await recordLogin({ id: u.id, login: u.login, name: u.display_name, avatar: u.profile_image_url }, wantChat); } catch { /* never block login on bookkeeping */ }
   setSession(res, { id: u.id, login: u.login.toLowerCase(), name: u.display_name, avatar: u.profile_image_url, ...follow });
   res.setHeader('Set-Cookie', [res.getHeader('Set-Cookie'), ...clear]);
   res.redirect(302, `${back}?login=ok`);

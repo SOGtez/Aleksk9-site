@@ -174,6 +174,7 @@
         <button data-tab="settings">Application settings</button>
         <button data-tab="tournament">Tournament</button>
         <button data-tab="roles">Roles</button>
+        <button data-tab="logins">Twitch logins</button>
       </div></nav>
 
       <section class="tab" id="tab-applications">
@@ -239,6 +240,14 @@
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-logins" hidden>
+        <div class="container">
+          <div class="head"><h2>Twitch logins</h2><span class="muted" id="logins-note"></span></div>
+          <div class="card table-wrap" id="logins-table"></div>
+          <p class="small" style="margin-top:10px">Everyone who has logged in with Twitch on the site since this list was added. Use the dropdown to link a login to a player in the pool or a captain: their Twitch picture then shows on the draft board, and a linked captain gets their draft controls automatically.</p>
         </div>
       </section>
 
@@ -357,7 +366,37 @@
       }).catch(function (e) { toast(e.message); });
     }
     document.querySelectorAll('#app-filters .chip').forEach(function (c) { c.onclick = function () { filter = c.dataset.f; document.querySelectorAll('#app-filters .chip').forEach(function (x) { x.classList.toggle('is-on', x === c); }); renderApps(); }; });
-    function loadApps() { return api('/api/admin/applications').then(function (d) { A = d; renderApps(); renderSettings(); renderTournament(); }); }
+    function loadApps() { return api('/api/admin/applications').then(function (d) { A = d; renderApps(); renderSettings(); renderTournament(); renderLogins(); }); }
+
+    /* ---------- Twitch logins ---------- */
+    function renderLogins() {
+      if (!A || !T) return;
+      var list = A.logins || [], links = A.links || {};
+      var people = T.teams.map(function (t) { return { id: t.id, label: t.captain + ' (captain)', twitch: t.twitch }; }).concat(T.pool.map(function (p) { return { id: p.id, label: p.name, twitch: p.twitch }; }));
+      var byLogin = {}; people.forEach(function (p) { if (p.twitch) byLogin[p.twitch.toLowerCase()] = p; });
+      document.getElementById('logins-note').textContent = list.length + ' login' + (list.length === 1 ? '' : 's') + ' recorded';
+      var wrap = document.getElementById('logins-table');
+      if (!list.length) { wrap.innerHTML = '<div class="empty">Nobody has logged in since this list was added. Earlier logins were not recorded.</div>'; return; }
+      var h = '<table><thead><tr><th>Twitch</th><th>Last login</th><th>Logins</th><th>Chat</th><th>Linked to</th></tr></thead><tbody>';
+      list.forEach(function (l) {
+        var cur = byLogin[l.login];
+        var opts = '<option value="">— not linked —</option>' + people.map(function (p) { return '<option value="' + esc(p.id) + '"' + (cur && cur.id === p.id ? ' selected' : '') + (p.twitch && !(cur && cur.id === p.id) ? ' disabled' : '') + '>' + esc(p.label) + (p.twitch && !(cur && cur.id === p.id) ? ' · ' + esc(p.twitch) : '') + '</option>'; }).join('');
+        h += '<tr><td class="who">' + av(l) + '<span><b>' + esc(l.name) + '</b><small>' + esc(l.login) + '</small></span></td>' +
+          '<td>' + esc(fmt(l.lastAt)) + '<span class="sub">first ' + esc(fmt(l.firstAt)) + '</span></td><td>' + (l.count || 1) + '</td><td>' + (l.chat ? 'enabled' : '') + '</td>' +
+          '<td><select class="field" data-link-login="' + esc(l.login) + '" data-prev="' + esc(cur ? cur.id : '') + '">' + opts + '</select></td></tr>';
+      });
+      wrap.innerHTML = h + '</tbody></table>';
+      wrap.querySelectorAll('[data-link-login]').forEach(function (sel) {
+        sel.onchange = function () {
+          var login = sel.dataset.linkLogin, pid = sel.value, prev = sel.dataset.prev;
+          var done = Promise.resolve();
+          if (prev && prev !== pid) done = api('/api/admin/applications', { action: 'link', playerId: prev, login: null });
+          done.then(function () { return pid ? api('/api/admin/applications', { action: 'link', playerId: pid, login: login }) : null; })
+            .then(function () { toast(pid ? 'Linked ' + login : 'Unlinked ' + login); return Promise.all([loadT(), loadApps()]); })
+            .catch(function (e) { toast(e.message); });
+        };
+      });
+    }
 
     /* ---------- Settings ---------- */
     function renderSettings() {
@@ -405,7 +444,7 @@
       };
       function restore() { wrap.innerHTML = '<button class="btn btn-sm btn-ghost' + (btnId === 'undo-btn' ? '' : ' danger') + (btnId === 'build-btn' || btnId === 'fill-btn' ? ' btn-primary' : '') + '" id="' + btnId + '">' + label + '</button>'; twoStep(wrapId, btnId, label, question, go); renderTournament(); }
     }
-    function loadT() { return api('/api/tournament').then(function (d) { T = d; renderTournament(); renderRoles(); }); }
+    function loadT() { return api('/api/tournament').then(function (d) { T = d; renderTournament(); renderRoles(); renderLogins(); }); }
     twoStep('build-wrap', 'build-btn', 'Build from applications', 'Replace the teams and pool and clear the current draft?', function () { return api('/api/admin/applications', { action: 'build', name: document.getElementById('b-name').value }).then(function (r) { toast('Built ' + r.teams + ' teams, ' + r.pool + ' in the pool'); return loadT(); }); });
     twoStep('fill-wrap', 'fill-btn', 'Add accepted applicants to the pool', 'Add them to the current pool?', function () { return api('/api/admin/applications', { action: 'addToPool' }).then(function (r) { toast('Added ' + r.added.join(', ')); return loadT(); }); });
     twoStep('undo-wrap', 'undo-btn', 'Undo last pick', 'Undo the last draft pick?', function () { return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return loadT(); }); });

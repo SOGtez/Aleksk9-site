@@ -360,7 +360,8 @@
     .modal-card h2 { font-size: 24px; margin-bottom: 8px; }
     .modal-card p { color: var(--fg-muted); font-size: 15px; margin-bottom: 18px; }
     .modal-card .actions { display: grid; gap: 8px; }
-    .modal-card .later { font-size: 13px; color: var(--fg-muted); text-decoration: underline; text-underline-offset: 3px; margin-top: 6px; }
+    .modal-card .later { background: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; color: var(--fg-muted); text-decoration: underline; text-underline-offset: 3px; margin-top: 6px; padding: 8px; }
+    .modal-card .later:hover { color: var(--fg); }
     @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
     /* Avatar placeholder — swap the <img> src or drop an <img> inside .avatar */
     .avatar {

@@ -1,5 +1,5 @@
 import { json, requireRole, readBody } from '../http.js';
-import { getSettings, setSettings, getApplications, setApplication, deleteApplication, setConfigOverride, getConfigOverride, setState, getState } from '../store.js';
+import { getSettings, setSettings, getApplications, setApplication, deleteApplication, setConfigOverride, getConfigOverride, setState, getState, getLogins, getPlayerLinks, setPlayerLink } from '../store.js';
 import { DEFAULT_STATE } from '../defaults.js';
 import { STATUSES, suggestTier, infoLine } from '../applications.js';
 
@@ -17,7 +17,8 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     const apps = await getApplications();
     const list = Object.values(apps).sort((a, b) => (a.submittedAt || 0) - (b.submittedAt || 0)).map(a => ({ ...a, suggestedTier: suggestTier(a) }));
-    return json(res, 200, { settings: await getSettings(), applications: list, override: !!(await getConfigOverride()) });
+    const logins = Object.values(await getLogins()).sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0));
+    return json(res, 200, { settings: await getSettings(), applications: list, override: !!(await getConfigOverride()), logins, links: await getPlayerLinks() });
   }
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   const b = readBody(req);
@@ -60,6 +61,14 @@ export default async function handler(req, res) {
     const cfg = { teams: state.teams.map(({ avatar, ...t }) => t), pool: state.pool.map(({ avatar, ...p }) => p).concat(added), tiers: state.tiers, name: state.name, builtAt: Date.now(), by: me.user.login, addedFromApplications: true };
     await setConfigOverride(cfg);
     return json(res, 200, { ok: true, added: added.map(a => a.name), pool: cfg.pool.length });
+  }
+
+  if (b.action === 'link') {
+    const state = await getState();
+    const pid = String(b.playerId || '');
+    if (!state.pool.some(p => p.id === pid) && !state.teams.some(t => t.id === pid)) return json(res, 400, { error: 'Unknown player' });
+    await setPlayerLink(pid, b.login ? String(b.login).toLowerCase().replace(/^@/, '') : null);
+    return json(res, 200, { ok: true, links: await getPlayerLinks() });
   }
 
   if (b.action === 'revert') {

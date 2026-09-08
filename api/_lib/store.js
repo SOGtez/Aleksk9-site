@@ -19,6 +19,8 @@ function redis() {
 const KEY_SETTINGS = 't:settings';
 const KEY_APPS = 't:applications';
 const KEY_OVERRIDE = 't:config_override';
+const KEY_LOGINS = 'tw:logins';          /* hash login → { id, login, name, avatar, firstAt, lastAt, count, chat } */
+const KEY_PLAYER_TWITCH = 't:player_twitch'; /* hash playerId/teamId → twitch login, set from the admin page */
 
 export async function getState() {
   const s = await redis().get(KEY_STATE);
@@ -31,6 +33,10 @@ export async function getState() {
     state.teams = ov.teams; state.pool = ov.pool || []; if (ov.tiers) state.tiers = ov.tiers; if (ov.name) state.name = ov.name;
     state.fromApplications = true;
   }
+  /* Twitch logins linked to players from the admin page (pictures + captain roles follow). */
+  const links = (await redis().hgetall(KEY_PLAYER_TWITCH)) || {};
+  for (const p of state.pool) if (links[p.id]) p.twitch = links[p.id];
+  for (const t of state.teams) if (links[t.id]) t.twitch = links[t.id];
   if (s && Array.isArray(s.teams)) {
     state.picks = Array.isArray(s.picks) ? s.picks : [];
     state.matches = Array.isArray(s.matches) ? s.matches : [];
@@ -63,7 +69,8 @@ export async function roleFor(login) {
   /* Captains named in the active config (defaults.js, or the override built from applications) get their team's role. */
   const ov = await redis().get(KEY_OVERRIDE);
   const teams = ov && Array.isArray(ov.teams) && ov.teams.length >= 2 ? ov.teams : DEFAULT_STATE.teams;
-  const t = teams.find(t => t.twitch && t.twitch.toLowerCase() === login);
+  const links = (await redis().hgetall(KEY_PLAYER_TWITCH)) || {};
+  const t = teams.find(t => (links[t.id] || t.twitch || '').toLowerCase() === login);
   if (t) return 'captain:' + t.id;
   if ((DEFAULT_STATE.helpers || []).some(h => h.toLowerCase() === login)) return 'helper';
   const roles = await getRoles();
@@ -83,3 +90,17 @@ export async function setApplication(login, app) { return redis().hset(KEY_APPS,
 export async function deleteApplication(login) { return redis().hdel(KEY_APPS, String(login).toLowerCase()); }
 export async function setConfigOverride(cfg) { return cfg ? redis().set(KEY_OVERRIDE, cfg) : redis().del(KEY_OVERRIDE); }
 export async function getConfigOverride() { return redis().get(KEY_OVERRIDE); }
+
+/* ---------- Twitch login log + player links ---------- */
+export async function recordLogin(u, chat) {
+  const key = u.login.toLowerCase();
+  const prev = (await redis().hget(KEY_LOGINS, key)) || {};
+  const now = Date.now();
+  await redis().hset(KEY_LOGINS, { [key]: { id: u.id, login: key, name: u.name, avatar: u.avatar, firstAt: prev.firstAt || now, lastAt: now, count: (prev.count || 0) + 1, chat: !!(prev.chat || chat) } });
+}
+export async function getLogins() { return (await redis().hgetall(KEY_LOGINS)) || {}; }
+export async function getPlayerLinks() { return (await redis().hgetall(KEY_PLAYER_TWITCH)) || {}; }
+export async function setPlayerLink(playerId, login) {
+  if (!login) return redis().hdel(KEY_PLAYER_TWITCH, playerId);
+  return redis().hset(KEY_PLAYER_TWITCH, { [playerId]: String(login).toLowerCase() });
+}

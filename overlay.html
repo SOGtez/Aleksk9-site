@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Draft Overlay — AleksK9</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    /* Stream overlay: no buttons, big type. Add ?bg=transparent for OBS browser sources, ?scale=1.2 to enlarge. */
+    :root { --fg: #fff; --muted: rgba(255,255,255,.65); --line: rgba(255,255,255,.14); --accent: #E10600; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0a0a0a; color: var(--fg); font-family: "Inter", system-ui, sans-serif; padding: 24px; }
+    body.transparent { background: transparent; }
+    .wrap { transform-origin: top left; }
+    .top { display: flex; align-items: center; gap: 18px; margin-bottom: 16px; }
+    .top img { height: 64px; }
+    .top h1 { margin: 0; font-size: 28px; letter-spacing: -0.03em; }
+    .top .clock { margin-left: auto; font-size: 44px; font-weight: 900; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; padding: 4px 18px; border-radius: 14px; background: rgba(255,255,255,.06); border: 1px solid var(--line); }
+    .top .clock.low { color: var(--accent); border-color: var(--accent); }
+    .banner { display: flex; align-items: center; gap: 16px; padding: 14px 18px; border-radius: 16px; background: rgba(225,6,0,.16); border: 1px solid rgba(225,6,0,.6); margin-bottom: 16px; font-size: 22px; font-weight: 800; }
+    .banner.done, .banner.locked { background: rgba(255,255,255,.05); border-color: var(--line); }
+    .banner .av { width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent); display: grid; place-items: center; background: #1a1a1a; font-size: 16px; }
+    .banner .av img { width: 100%; height: 100%; object-fit: cover; }
+    .banner small { display: block; font-size: 14px; color: var(--muted); font-weight: 600; }
+    .grid { display: grid; gap: 10px; }
+    .team { border-radius: 14px; border: 1px solid var(--line); background: rgba(17,17,17,.92); overflow: hidden; }
+    .team.on { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(225,6,0,.35); }
+    .th { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+    .th .av { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #1a1a1a; border: 1px solid rgba(225,6,0,.6); font-size: 12px; font-weight: 800; }
+    .th .av img { width: 100%; height: 100%; object-fit: cover; }
+    .th b { display: block; font-size: 15px; line-height: 1.1; }
+    .th small { color: var(--muted); font-size: 12px; }
+    .team ul { list-style: none; margin: 0; padding: 0; }
+    .team li { display: flex; align-items: center; gap: 8px; padding: 7px 12px; border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+    .team li:last-child { border-bottom: 0; }
+    .team li.empty { color: rgba(255,255,255,.3); font-weight: 600; }
+    .team li.clock { color: var(--accent); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; font-weight: 900; }
+    .team li .n { color: rgba(255,255,255,.35); font-size: 11px; width: 26px; }
+    .team li .av { width: 22px; height: 22px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; background: #1a1a1a; font-size: 9px; }
+    .team li .av img { width: 100%; height: 100%; object-fit: cover; }
+    .team li small { color: var(--muted); font-weight: 500; font-size: 11px; margin-left: auto; white-space: nowrap; }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="top"><img src="/assets/ak9-logo-nav.png" alt=""><h1 id="title">Draft</h1><span class="clock" id="clock" hidden></span></div>
+    <div class="banner" id="banner"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+  <script>
+    var q = new URLSearchParams(location.search);
+    if (q.get('bg') === 'transparent') document.body.classList.add('transparent');
+    var scale = parseFloat(q.get('scale') || '1'); if (scale && scale !== 1) document.getElementById('wrap').style.transform = 'scale(' + scale + ')';
+    var D = null;
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function ini(n) { return String(n || '?').slice(0, 2).toUpperCase(); }
+    function av(x) { return '<span class="av">' + (x.avatar ? '<img src="' + esc(x.avatar) + '" alt="">' : esc(ini(x.captain || x.name))) + '</span>'; }
+    function team(id) { return D.teams.filter(function (t) { return t.id === id; })[0]; }
+    function player(id) { return D.pool.filter(function (p) { return p.id === id; })[0]; }
+    function order(r) { var ids = D.teams.map(function (t) { return t.id; }); return r % 2 ? ids : ids.slice().reverse(); }
+    function pickAt(r, tid) { var n = (r - 1) * D.teams.length + order(r).indexOf(tid); return D.picks[n] ? { p: D.picks[n], no: n + 1 } : null; }
+    function fmtClock(ms) { var s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+    function render() {
+      var slot = D.next, T = D.teams.length;
+      document.getElementById('title').textContent = D.name + ' · Draft';
+      document.getElementById('grid').style.gridTemplateColumns = 'repeat(' + Math.min(T, 6) + ', minmax(0, 1fr))';
+      var b = document.getElementById('banner');
+      if (!slot) { b.className = 'banner done'; b.innerHTML = '<span>Draft complete</span>'; }
+      else { var t = team(slot.team); var open = D.draft && D.draft.open;
+        b.className = 'banner' + (open ? '' : ' locked');
+        b.innerHTML = av(t) + '<span>' + (open ? esc(t.captain) + ' is on the clock' : 'Draft opens soon · ' + esc(t.captain) + ' picks first') + '<small>Pick ' + slot.pickNo + ' of ' + slot.total + ' · Round ' + slot.round + '</small></span>'; }
+      var html = '';
+      D.teams.forEach(function (t) {
+        var on = slot && slot.team === t.id && D.draft && D.draft.open;
+        html += '<div class="team' + (on ? ' on' : '') + '"><div class="th">' + av(t) + '<span><b>' + esc(t.name) + '</b><small>' + esc(t.captain) + '</small></span></div><ul>';
+        for (var r = 1; r <= D.rounds; r++) {
+          var got = pickAt(r, t.id), no = (r - 1) * T + order(r).indexOf(t.id) + 1;
+          if (got) { var pl = player(got.p.player) || { name: got.p.player }; html += '<li><span class="n">#' + got.no + '</span>' + av(pl) + esc(pl.name) + (pl.info ? '<small>' + esc(pl.info.split(' · ')[0]) + '</small>' : '') + '</li>'; }
+          else if (on && slot.round === r) html += '<li class="clock"><span class="n">#' + no + '</span>On the clock</li>';
+          else html += '<li class="empty"><span class="n">#' + no + '</span>' + (no > slot_total() ? '—' : 'Round ' + r) + '</li>';
+        }
+        html += '</ul></div>';
+      });
+      document.getElementById('grid').innerHTML = html;
+    }
+    function slot_total() { return Math.min(D.rounds * D.teams.length, D.pool.length); }
+    function tick() {
+      var c = document.getElementById('clock'); if (!D || !D.draft || !D.draft.open || !D.draft.turnStartedAt || !D.next) { c.hidden = true; return; }
+      var left = D.draft.turnStartedAt + (D.draft.pickSeconds || 90) * 1000 - Date.now();
+      c.hidden = false; c.textContent = fmtClock(left); c.classList.toggle('low', left <= 15000);
+    }
+    function load() { fetch('/api/tournament', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { D = d; render(); tick(); }).catch(function () {}); }
+    load(); setInterval(load, 4000); setInterval(tick, 1000);
+  </script>
+</body>
+</html>

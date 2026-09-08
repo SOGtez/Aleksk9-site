@@ -174,6 +174,14 @@
     .turn .tx b { display: block; font-size: 18px; letter-spacing: -0.02em; font-weight: 800; line-height: 1.2; }
     .turn .tx span { font-size: 14px; color: var(--fg-muted); }
     .turn .tx span b { display: inline; font-size: inherit; color: var(--fg); }
+    .turn .clock { font-variant-numeric: tabular-nums; font-weight: 900; font-size: 26px; letter-spacing: -0.03em; padding: 6px 14px; border-radius: 12px; background: rgba(255,255,255,.06); border: 1px solid var(--line-strong); }
+    .turn .clock.low { color: var(--accent); border-color: rgba(225,6,0,.6); animation: blink 1s ease-in-out infinite; }
+    .turn .clock.over { color: var(--fg-dim); }
+    .turn.is-locked { border-style: dashed; }
+    .rename { display: inline-flex; align-items: center; gap: 6px; }
+    .rename button { font-size: 11px; color: var(--fg-dim); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); }
+    .rename button:hover { color: var(--fg); border-color: var(--line-strong); }
+    .rename input { width: 150px; padding: 4px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--accent); font-size: 13px; font-weight: 700; }
     .turn .next { flex-basis: 100%; font-size: 12px; color: var(--fg-muted); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
     .turn .next em { font-style: normal; font-weight: 700; color: var(--fg); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-strong); }
     .turn.is-you { border-color: rgba(225,6,0,.6); background: linear-gradient(90deg, rgba(225,6,0,.16), var(--bg-elev) 60%); animation: turnpulse 2s var(--ease) infinite; }
@@ -557,6 +565,7 @@
         { id: 'mxlly', name: 'Mxlly', tier: 2, info: '202 hrs · lvl 90 · Bronze' }, { id: 'aleksk9', name: 'AleksK9', tier: 2, info: '205 hrs · lvl 89 · Silver' }, { id: 'angel', name: 'Angel', tier: 2, info: '98 hrs · lvl 66 · Silver' },
         { id: 'niko2', name: 'Niko', tier: 2, info: '86 hrs · lvl 42 · Unranked' }, { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' }
       ],
+      draft: { open: true, pickSeconds: 90, turnStartedAt: Date.now() }, eventAt: '', teamNames: {},
       picks: [], matches: [], stats: {}, updatedAt: 0
     };
 
@@ -614,7 +623,38 @@
     }
     function takenBy(pid) { for (var i = 0; i < D.picks.length; i++) if (D.picks[i].player === pid) return D.picks[i].team; return null; }
     function myTeam() { return role.indexOf('captain:') === 0 ? role.slice(8) : null; }
-    function canDraftNow() { var s = nextSlot(); if (!s) return false; return role === 'admin' || myTeam() === s.team; }
+    function draftOpen() { return !!(D.draft && D.draft.open); }
+    function canDraftNow() { var s = nextSlot(); if (!s) return false; if (role === 'admin') return true; return draftOpen() && myTeam() === s.team; }
+    function fmtPT(iso) { var d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT'; }
+    function fmtLeft(ms) { if (ms <= 0) return 'now'; var s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); if (d) return d + 'd ' + h + 'h'; if (h) return h + 'h ' + m + 'm'; return m + 'm ' + (s % 60) + 's'; }
+    function tickEvent() {
+      var el = document.getElementById('event-pill'); if (!el || !D.eventAt) return;
+      var left = Date.parse(D.eventAt) - Date.now();
+      el.textContent = (draftDone() ? 'Played ' : left > 0 ? 'Draft ' + fmtPT(D.eventAt) + ' · in ' + fmtLeft(left) : (draftOpen() ? 'Draft is live' : 'Draft ' + fmtPT(D.eventAt)));
+    }
+    function clockLeft() { var d = D.draft || {}; if (!d.open || !d.turnStartedAt) return null; return d.turnStartedAt + (d.pickSeconds || 90) * 1000 - Date.now(); }
+    function fmtClock(ms) { var s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
+    function tickClock() {
+      var el = document.getElementById('pick-clock'); if (!el) return;
+      var left = clockLeft(); if (left == null) return;
+      el.textContent = fmtClock(left); el.classList.toggle('low', left > 0 && left <= 15000); el.classList.toggle('over', left <= 0);
+      var sk = document.getElementById('skip-btn'); if (sk) sk.hidden = left > 0;
+    }
+    setInterval(function () { tickClock(); tickEvent(); }, 1000);
+
+    /* "Your turn" alert: a short beep and a flashing tab title until the pick is made or the tab is focused. */
+    var lastTurnKey = null, titleFlash = null, baseTitle = document.title;
+    function turnAlert() {
+      var slot = nextSlot(), key = slot ? slot.pickNo + ':' + slot.team : 'done';
+      var mine = !!(slot && draftOpen() && myTeam() && myTeam() === slot.team);
+      if (key !== lastTurnKey && lastTurnKey !== null && mine) {
+        try { var ac = new (window.AudioContext || window.webkitAudioContext)(); var o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = 0.15; o.start(); o.frequency.setValueAtTime(1175, ac.currentTime + 0.15); o.stop(ac.currentTime + 0.35); } catch (e) {}
+        if (!titleFlash) { var on = false; titleFlash = setInterval(function () { on = !on; document.title = on ? '🔴 YOUR PICK!' : baseTitle; }, 900); }
+      }
+      if (!mine && titleFlash) { clearInterval(titleFlash); titleFlash = null; document.title = baseTitle; }
+      lastTurnKey = key;
+    }
+    window.addEventListener('focus', function () { if (titleFlash) { clearInterval(titleFlash); titleFlash = null; document.title = baseTitle; } });
     function canEdit() { return role === 'helper' || role === 'admin'; }
     function roster(tid) {
       var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info, avatar: t.avatar }];
@@ -662,13 +702,14 @@
 
       var st = overallStatus();
       document.getElementById('status-pill').dataset.status = st;
-      document.getElementById('status-text').textContent = st === 'draft' ? 'Draft in progress' : st === 'live' ? 'Match live now' : 'Draft complete · matches';
+      document.getElementById('status-text').textContent = st === 'draft' ? (draftOpen() ? 'Draft in progress' : 'Draft not open yet') : st === 'live' ? 'Match live now' : 'Draft complete · matches';
       var mr = document.getElementById('meta-row');
       mr.querySelectorAll('.pill:not(.pill-status)').forEach(function (p) { p.remove(); });
       var totalPlayers = D.teams.length * (D.rounds + 1), playersIn = D.teams.length + D.pool.length;
       [D.teams.length + ' teams', D.format.teamSize + 'v' + D.format.teamSize, 'First to ' + D.format.firstTo, 'Snake draft', playersIn + ' of ' + totalPlayers + ' players'].forEach(function (t) {
         var s = document.createElement('span'); s.className = 'pill'; s.textContent = t; mr.appendChild(s);
       });
+      if (D.eventAt) { var ev = document.createElement('span'); ev.className = 'pill'; ev.id = 'event-pill'; ev.style.color = 'var(--fg)'; ev.style.borderColor = 'rgba(225,6,0,.5)'; mr.appendChild(ev); tickEvent(); }
 
       var auth = document.getElementById('auth');
       if (LIVE) {
@@ -716,17 +757,28 @@
       }
       var t = team(slot.team);
       var who = av({ captain: t.captain, avatar: t.avatar }, 'cap');
+      var clockHtml = draftOpen() && clockLeft() != null ? '<span class="clock" id="pick-clock">' + fmtClock(clockLeft()) + '</span>' : '';
+      var skipHtml = role === 'admin' && draftOpen() ? '<button class="btn btn-sm btn-ghost" id="skip-btn" hidden>Time\'s up · auto-pick</button>' : '';
+      if (!draftOpen() && role !== 'admin') {
+        el.classList.add('is-locked');
+        el.innerHTML = '<span class="avatar">🔒</span><span class="tx"><b>Draft not open yet</b><span>' + (D.eventAt ? 'Scheduled for ' + esc(fmtPT(D.eventAt)) + '. ' : '') + esc(t.captain) + ' has the first pick when it opens.' + (myTeam() ? ' Keep this page open, you will get a sound and a flashing tab when it is your turn.' : '') + '</span></span>';
+        document.getElementById('draft-sub').innerHTML = '<b>Draft locked.</b> Pick <b>' + slot.pickNo + ' of ' + tot + '</b> is next.';
+        return;
+      }
       if (canDraftNow()) {
         el.classList.add('is-you');
         el.innerHTML = who + '<span class="tx"><b>Your pick, ' + esc(t.captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Tap <b>Draft</b> next to a player below, then confirm.</span></span>' +
-          '<button class="btn btn-primary btn-sm" id="goto-pool">Choose a player</button>';
+          clockHtml + '<button class="btn btn-primary btn-sm" id="goto-pool">Choose a player</button>' + skipHtml;
       } else if (myTeam()) {
         var order = pickOrder(slot.round), mine = order.indexOf(myTeam()), cur = order.indexOf(slot.team);
         var away = mine > cur ? mine - cur : (order.length - cur) + pickOrder(slot.round + 1).indexOf(myTeam());
-        el.innerHTML = who + '<span class="tx"><b>Waiting on ' + esc(t.captain) + '</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. You pick in ' + away + ' turn' + (away === 1 ? '' : 's') + '. This page updates on its own.</span></span>';
+        el.innerHTML = who + '<span class="tx"><b>Waiting on ' + esc(t.captain) + '</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. You pick in ' + away + ' turn' + (away === 1 ? '' : 's') + '. This page updates on its own.</span></span>' + clockHtml;
       } else {
-        el.innerHTML = who + '<span class="tx"><b>' + esc(t.captain) + ' is on the clock</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Captains take turns, and the order flips every round.</span></span>';
+        el.innerHTML = who + '<span class="tx"><b>' + esc(t.captain) + ' is on the clock</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Captains take turns, and the order flips every round.' + (!draftOpen() ? ' The draft is not open yet.' : '') + '</span></span>' + clockHtml + skipHtml;
       }
+      var sk = document.getElementById('skip-btn');
+      if (sk) sk.onclick = function () { api('/api/draft', { action: 'skip' }).then(function () { toast('Auto-picked for ' + t.captain); return refresh(true); }).catch(function (e) { toast(e.message); }); };
+      tickClock();
       document.getElementById('draft-sub').innerHTML = 'Round <b>' + slot.round + '</b> · Pick <b>' + slot.pickNo + ' of ' + tot + '</b> · <span class="clock">' + esc(t.captain) + ' is on the clock</span>';
       /* Up next: the following three picks */
       var T = D.teams.length, upcoming = [];
@@ -741,13 +793,32 @@
       };
     }
 
+    function teamNameHtml(t) {
+      var can = LIVE && (role === 'admin' || myTeam() === t.id);
+      if (!can) return '<div class="tn">' + esc(t.name) + '</div>';
+      return '<div class="tn rename"><span>' + esc(t.name) + '</span><button type="button" data-rename="' + esc(t.id) + '" title="Rename team">✎</button></div>';
+    }
+    function wireRename(root) {
+      root.querySelectorAll('[data-rename]').forEach(function (b) {
+        b.onclick = function () {
+          var tid = b.dataset.rename, wrap = b.parentNode, t = team(tid);
+          wrap.innerHTML = '<input type="text" maxlength="32" value="' + esc(t.name) + '" aria-label="Team name">';
+          var inp = wrap.querySelector('input'); inp.focus(); inp.select();
+          var done = false;
+          function save() { if (done) return; done = true; var name = inp.value.trim(); if (!name || name === t.name) { renderAll(); return; }
+            api('/api/draft', { action: 'rename', name: name, teamId: tid }).then(function () { toast('Team renamed'); return refresh(true); }).catch(function (e) { toast(e.message); renderAll(); }); }
+          inp.onkeydown = function (e) { if (e.key === 'Enter') save(); if (e.key === 'Escape') { done = true; renderAll(); } };
+          inp.onblur = save;
+        };
+      });
+    }
     function renderBoard(newPickNo) {
       var slot = nextSlot(), T = D.teams.length, R = D.rounds;
       var g = document.getElementById('board');
       g.style.gridTemplateColumns = '48px repeat(' + T + ', minmax(150px, 1fr))';
       var html = '<div class="corner"></div>';
       D.teams.forEach(function (t) {
-        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
+        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
       });
       for (var r = 1; r <= R; r++) {
         var order = pickOrder(r), lastRow = r === R ? ' last-row' : '';
@@ -765,13 +836,14 @@
         });
       }
       g.innerHTML = html;
+      wireRename(g);
     }
 
     function renderRosters() {
       var slot = nextSlot(), T = D.teams.length, html = '';
       D.teams.forEach(function (t) {
         var on = slot && slot.team === t.id;
-        html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0"><div class="tn">' + esc(t.name) + '</div><div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
+        html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
         for (var r = 1; r <= D.rounds; r++) {
           var got = pickAt(r, t.id), pn = (r - 1) * T + pickOrder(r).indexOf(t.id) + 1;
           if (got) { var pl = player(got.pick.player) || { name: got.pick.player, info: '' }; html += '<li><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span style="min-width:0"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></li>'; }
@@ -781,6 +853,7 @@
         html += '</ul></div>';
       });
       document.getElementById('rosters').innerHTML = html;
+      wireRename(document.getElementById('rosters'));
     }
 
     function renderSnake() {
@@ -826,6 +899,7 @@
       var foot = '';
       if (!slot) foot = '<span>All picks are in.</span>';
       else if (can) foot = '<span>Your pick, <b>' + esc(team(slot.team).captain) + '</b>.</span>';
+      else if (!draftOpen()) foot = '<span>The draft opens ' + (D.eventAt ? esc(fmtPT(D.eventAt)) : 'when the admin starts it') + '.</span>';
       else if (myTeam()) foot = '<span>Waiting on <b>' + esc(team(slot.team).captain) + '</b>.</span>';
       else foot = '<span>Only the captain on the clock can draft. Log in with Twitch if that is you.</span>';
       if (role === 'admin') foot += '<span>' + (D.picks.length ? '<button class="link-btn" id="undo-btn">Undo last pick</button> · ' : '') + '<button class="link-btn" id="reset-btn">Reset draft</button></span>';
@@ -1031,6 +1105,7 @@
        ------------------------------------------------------------ */
     function renderAll(newPickNo) {
       renderHero(); renderTurn(); renderBoard(newPickNo); renderRosters(); renderSnake(); renderPool(); renderMatches(); renderStats(); renderRules(); renderAdmin();
+      if (LIVE) turnAlert();
     }
     document.addEventListener('click', function (e) { if (loginOpen && !e.target.closest('#login-menu') && !e.target.closest('#login-btn')) { loginOpen = false; renderHero(); } });
 

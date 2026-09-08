@@ -211,6 +211,29 @@
       <section class="tab" id="tab-tournament" hidden>
         <div class="container">
           <div class="stats" id="t-stats"></div>
+          <div class="grid2" style="margin-bottom:14px">
+            <div class="card pad">
+              <h3>Draft controls</h3>
+              <p class="d">Captains can only pick while the draft is open. Opening it starts the clock for the first pick.</p>
+              <div class="tools" style="margin-bottom:14px">
+                <span id="draft-state" class="chip"></span>
+                <button class="btn btn-sm btn-primary" id="draft-open">Open the draft</button>
+                <button class="btn btn-sm btn-ghost" id="draft-close">Close the draft</button>
+                <span id="skip-wrap"><button class="btn btn-sm btn-ghost" id="skip-btn">Auto-pick for the captain on the clock</button></span>
+              </div>
+              <label class="f">Seconds per pick<input class="field" type="number" id="pick-seconds" min="15" max="600" step="5"></label>
+              <button class="btn btn-sm btn-ghost" id="clock-save">Save clock</button>
+              <p class="small" style="margin-top:10px">When a captain's time runs out, the auto-pick button appears on the tournament page for admins. Nothing happens on its own.</p>
+            </div>
+            <form class="card pad" id="event-form">
+              <h3>Event date &amp; time</h3>
+              <p class="d">Shown on the tournament page with a countdown, in Pacific time.</p>
+              <label class="f">Draft date &amp; time<input class="field" type="datetime-local" id="event-at"></label>
+              <label class="f">Note (optional)<input class="field" id="event-note" maxlength="120" placeholder="e.g. Matches start right after the draft"></label>
+              <button class="btn btn-sm btn-primary" type="submit">Save date</button>
+              <p class="small" style="margin-top:10px">Enter the time as it is in Los Angeles. Leave the date empty to hide the countdown.</p>
+            </form>
+          </div>
           <div class="grid2">
             <div class="card pad">
               <h3>Build the next tournament</h3>
@@ -229,6 +252,7 @@
               <p class="d" id="t-desc"></p>
               <div class="tools">
                 <a class="btn btn-sm btn-ghost" href="/tournament">Open tournament page</a>
+                <a class="btn btn-sm btn-ghost" href="/overlay" target="_blank" rel="noopener">Stream overlay</a>
                 <span id="undo-wrap"><button class="btn btn-sm btn-ghost" id="undo-btn">Undo last pick</button></span>
               </div>
               <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
@@ -417,8 +441,37 @@
     };
 
     /* ---------- Tournament ---------- */
+    function renderDraftControls() {
+      var d = T.draft || {};
+      var st = document.getElementById('draft-state');
+      st.textContent = d.open ? 'Draft is OPEN' : 'Draft is closed'; st.className = 'chip ' + (d.open ? 'red' : '');
+      document.getElementById('draft-open').disabled = !!d.open; document.getElementById('draft-close').disabled = !d.open;
+      document.getElementById('pick-seconds').value = d.pickSeconds || 90;
+      document.getElementById('skip-btn').disabled = !d.open || !T.next;
+      /* datetime-local wants a local wall-clock string; we store ISO. Show the stored instant as LA time. */
+      var ev = document.getElementById('event-at');
+      if (T.eventAt) { var p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date(T.eventAt)); var g = {}; p.forEach(function (x) { g[x.type] = x.value; }); ev.value = g.year + '-' + g.month + '-' + g.day + 'T' + (g.hour === '24' ? '00' : g.hour) + ':' + g.minute; } else ev.value = '';
+      document.getElementById('event-note').value = T.eventNote || '';
+    }
+    function laToIso(local) {
+      /* local = 'YYYY-MM-DDTHH:MM' meant as Los Angeles time → ISO. Try both PDT and PST offsets and keep the one that round-trips. */
+      if (!local) return '';
+      var cands = ['-07:00', '-08:00'];
+      for (var i = 0; i < cands.length; i++) {
+        var d = new Date(local + ':00' + cands[i]);
+        var back = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Los_Angeles', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(d), g = {}; back.forEach(function (x) { g[x.type] = x.value; });
+        if (g.year + '-' + g.month + '-' + g.day + 'T' + (g.hour === '24' ? '00' : g.hour) + ':' + g.minute === local) return d.toISOString();
+      }
+      return new Date(local).toISOString();
+    }
+    document.getElementById('draft-open').onclick = function () { api('/api/draft', { action: 'open' }).then(function () { toast('Draft opened'); return loadT(); }).catch(function (e) { toast(e.message); }); };
+    document.getElementById('draft-close').onclick = function () { api('/api/draft', { action: 'close' }).then(function () { toast('Draft closed'); return loadT(); }).catch(function (e) { toast(e.message); }); };
+    document.getElementById('clock-save').onclick = function () { api('/api/draft', { action: 'clock', seconds: +document.getElementById('pick-seconds').value }).then(function () { toast('Clock saved'); return loadT(); }).catch(function (e) { toast(e.message); }); };
+    document.getElementById('event-form').onsubmit = function (e) { e.preventDefault(); api('/api/draft', { action: 'event', eventAt: laToIso(document.getElementById('event-at').value), eventNote: document.getElementById('event-note').value }).then(function () { toast('Date saved'); return loadT(); }).catch(function (err) { toast(err.message); }); };
+
     function renderTournament() {
       if (!T) return;
+      renderDraftControls();
       var picks = T.picks.length, total = Math.min(T.rounds * T.teams.length, T.pool.length);
       document.getElementById('t-stats').innerHTML = [['teams', T.teams.length], ['in pool', T.pool.length], ['picks made', picks + ' / ' + total], ['matches', T.matches.length]].map(function (x) { return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join('');
       document.getElementById('t-desc').innerHTML = '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';
@@ -447,6 +500,7 @@
     function loadT() { return api('/api/tournament').then(function (d) { T = d; renderTournament(); renderRoles(); renderLogins(); }); }
     twoStep('build-wrap', 'build-btn', 'Build from applications', 'Replace the teams and pool and clear the current draft?', function () { return api('/api/admin/applications', { action: 'build', name: document.getElementById('b-name').value }).then(function (r) { toast('Built ' + r.teams + ' teams, ' + r.pool + ' in the pool'); return loadT(); }); });
     twoStep('fill-wrap', 'fill-btn', 'Add accepted applicants to the pool', 'Add them to the current pool?', function () { return api('/api/admin/applications', { action: 'addToPool' }).then(function (r) { toast('Added ' + r.added.join(', ')); return loadT(); }); });
+    twoStep('skip-wrap', 'skip-btn', 'Auto-pick for the captain on the clock', 'Pick the best available player for them?', function () { return api('/api/draft', { action: 'skip' }).then(function () { toast('Auto-picked'); return loadT(); }); });
     twoStep('undo-wrap', 'undo-btn', 'Undo last pick', 'Undo the last draft pick?', function () { return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return loadT(); }); });
     twoStep('reset-wrap', 'reset-btn', 'Reset picks, matches, stats', 'Wipe every pick, match, and stat?', function () { return api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); return loadT(); }); });
     twoStep('revert-wrap', 'revert-btn', 'Revert to code config', 'Throw away the roster built from applications?', function () { return api('/api/admin/applications', { action: 'revert' }).then(function () { toast('Reverted to the site config'); return loadT(); }); });

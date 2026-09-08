@@ -51,7 +51,11 @@ export const DEFAULT_STATE = {
     { id: 'niko2',      name: 'Niko',       tier: 2, info: '86 hrs · lvl 42 · Unranked' },
     { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' }
   ],
-  picks: [],            /* [{ team, player, by, at }] in order */
+  draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */
+  eventAt: '',          /* ISO date-time of the draft / event, set from the admin page */
+  eventNote: '',
+  teamNames: {},        /* teamId → name chosen by the captain */
+  picks: [],            /* [{ team, player, by, at, auto? }] in order */
   matches: [],          /* [{ id, teams:[tid, tid], map, status:'upcoming'|'live'|'final', score:[n, n] }] */
   stats: {},            /* { playerId or teamId(captain): [kills, deaths, assists] } */
   updatedAt: 0

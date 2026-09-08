@@ -38,6 +38,10 @@ export async function getState() {
   for (const p of state.pool) if (links[p.id]) p.twitch = links[p.id];
   for (const t of state.teams) if (links[t.id]) t.twitch = links[t.id];
   if (s && Array.isArray(s.teams)) {
+    state.draft = { ...state.draft, ...(s.draft || {}) };
+    state.eventAt = s.eventAt || ''; state.eventNote = s.eventNote || '';
+    state.teamNames = s.teamNames && typeof s.teamNames === 'object' ? s.teamNames : {};
+    for (const t of state.teams) if (state.teamNames[t.id]) t.name = String(state.teamNames[t.id]).slice(0, 32);
     state.picks = Array.isArray(s.picks) ? s.picks : [];
     state.matches = Array.isArray(s.matches) ? s.matches : [];
     state.stats = s.stats && typeof s.stats === 'object' ? s.stats : {};

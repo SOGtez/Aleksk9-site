@@ -226,7 +226,29 @@
     @media (max-width: 480px) {
       .nav-links a { padding: 8px 8px; font-size: 13px; }
       .nav-links .nav-cta { display: none; }
+      .nav-user span { display: none; }
+      .nav-login span { display: none; }
+      .nav-login { padding: 8px 10px !important; }
     }
+
+    /* Twitch login / profile in the nav */
+    .nav-auth { position: relative; margin-left: 4px; }
+    .nav-links .nav-login { display: inline-flex; align-items: center; gap: 7px; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); color: var(--fg); font-weight: 600; }
+    .nav-links .nav-login:hover { border-color: var(--accent); }
+    .nav-links .nav-login::after { display: none; }
+    .nav-links .nav-login svg { width: 15px; height: 15px; }
+    .nav-links .nav-user { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px 4px 4px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: var(--bg-elev); color: var(--fg); font-weight: 600; cursor: pointer; }
+    .nav-links .nav-user::after { display: none; }
+    .nav-user img { width: 28px; height: 28px; border-radius: 50%; display: block; border: 1px solid rgba(225,6,0,.6); }
+    .nav-user .dot { width: 7px; height: 7px; border-radius: 50%; background: #3fd26f; box-shadow: 0 0 8px #3fd26f; }
+    .nav-menu { position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; background: #171717; border: 1px solid rgba(255,255,255,.18); border-radius: 14px; padding: 8px; box-shadow: 0 24px 60px -20px rgba(0,0,0,.9); z-index: 60; }
+    .nav-menu .who { display: flex; align-items: center; gap: 10px; padding: 8px 10px 10px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+    .nav-menu .who img { width: 36px; height: 36px; border-radius: 50%; }
+    .nav-menu .who b { display: block; font-size: 14px; }
+    .nav-menu .who small { font-size: 12px; color: var(--fg-muted); }
+    .nav-menu a { display: block; padding: 9px 10px; border-radius: 10px; font-size: 14px; color: var(--fg); }
+    .nav-menu a:hover { background: rgba(255,255,255,.06); }
+    .nav-menu a.out { color: var(--fg-muted); }
 
     /* ============================================================
        HERO
@@ -646,6 +668,7 @@
           <li><a href="/" aria-current="page">Home</a></li>
           <li><a href="/tournament">Tournament</a></li>
           <li><a href="/apply">Apply</a></li>
+          <li class="nav-auth" id="nav-auth"></li>
           <li><a class="nav-cta" href="#" data-link="twitch" target="_blank" rel="noopener">Twitch</a></li>
         </ul>
       </nav>
@@ -971,6 +994,29 @@
     } else {
       setLiveState('offline', 'twitch.tv/aleksk9_');
     }
+
+    /* ---------- Twitch login / profile in the nav ---------- */
+    var TW_SMALL = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>';
+    var navMenuOpen = false;
+    function renderNavAuth(me) {
+      var el = document.getElementById('nav-auth'); if (!el) return;
+      if (!me || !me.user) {
+        el.innerHTML = '<a class="nav-login" href="/api/auth/login?scope=chat&next=/">' + TW_SMALL + '<span>Log in with Twitch</span></a>';
+        return;
+      }
+      var u = me.user, roleLabel = me.role === 'admin' ? 'Admin' : me.role === 'helper' ? 'Helper' : (me.role || '').indexOf('captain:') === 0 ? 'Captain' : 'Logged in with Twitch';
+      el.innerHTML = '<button class="nav-user" type="button" aria-haspopup="true" aria-expanded="' + navMenuOpen + '">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="">' : '') + '<span>' + esc(u.name || u.login) + '</span><span class="dot" title="Logged in"></span></button>' +
+        (navMenuOpen ? '<div class="nav-menu"><div class="who">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="">' : '') + '<span><b>' + esc(u.name || u.login) + '</b><small>' + esc(roleLabel) + '</small></span></div>' +
+          '<a href="https://twitch.tv/' + esc(u.login) + '" target="_blank" rel="noopener">My Twitch channel</a>' +
+          (me.role === 'admin' ? '<a href="/admin">Admin panel</a>' : '') +
+          ((me.role || '').indexOf('captain:') === 0 || me.role === 'helper' ? '<a href="/tournament">Tournament page</a>' : '') +
+          '<a class="out" href="/api/auth/logout?next=/">Log out</a></div>' : '');
+      el.querySelector('.nav-user').onclick = function (e) { e.stopPropagation(); navMenuOpen = !navMenuOpen; renderNavAuth(me); };
+    }
+    document.addEventListener('click', function (e) { if (navMenuOpen && !e.target.closest('#nav-auth')) { navMenuOpen = false; renderNavAuth(window.__me); } });
+    if (location.protocol !== 'file:') {
+      fetch('/api/me', { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (m) { window.__me = m; renderNavAuth(m); }).catch(function () { renderNavAuth(null); });
+    } else renderNavAuth(null);
 
     var CHAT = { user: null, canChat: false, count: 0 };
     var POPUP_AT = 5;

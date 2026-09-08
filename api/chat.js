@@ -1,6 +1,6 @@
 import { json, whoami, readBody } from './_lib/http.js';
 import { cacheGet, cacheSet } from './_lib/store.js';
-import { broadcasterId } from './_lib/twitch.js';
+import { broadcasterId, appToken } from './_lib/twitch.js';
 
 /* Homepage chat box.
    GET  → { user, canChat, count }        canChat = we hold a chat token for this user
@@ -23,7 +23,26 @@ async function userToken(uid) {
   return n.access_token;
 }
 
+/* Badge images (global + channel) as { "set/version": url }. Cached 12h. */
+async function badges() {
+  const cached = await cacheGet('twitch:badges');
+  if (cached) return cached;
+  const token = await appToken(), bid = await broadcasterId(token);
+  const H = { 'Client-Id': CID(), Authorization: 'Bearer ' + token };
+  const out = {};
+  for (const url of ['https://api.twitch.tv/helix/chat/badges/global', 'https://api.twitch.tv/helix/chat/badges?broadcaster_id=' + bid]) {
+    const r = await fetch(url, { headers: H }); if (!r.ok) continue;
+    for (const set of (await r.json()).data || []) for (const v of set.versions || []) out[set.set_id + '/' + v.id] = { url: v.image_url_2x || v.image_url_1x, title: v.title };
+  }
+  await cacheSet('twitch:badges', out, 60 * 60 * 12);
+  return out;
+}
+
 export default async function handler(req, res) {
+  if (req.method === 'GET' && req.query.badges) {
+    try { res.setHeader('Cache-Control', 'public, max-age=3600'); return res.status(200).json(await badges()); }
+    catch { return json(res, 200, {}); }
+  }
   const me = await whoami(req);
   if (req.method === 'GET') {
     const uid = me.user?.id;

@@ -301,10 +301,24 @@
     .chat { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-elev); }
     @media (max-width: 899px) { .chat { min-height: 440px; } }
 
-    /* Twitch's own "Send a message" strip is cropped off the bottom of the embed so the site's box is the only input.
-       --chat-crop is how much of the embed's bottom to hide; bump it if Twitch changes that strip. */
-    .chat-view { flex: 1; position: relative; overflow: hidden; min-height: 360px; --chat-crop: 108px; }
-    .chat-view iframe { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% + var(--chat-crop)); border: 0; }
+    /* Site-rendered chat (read live from Twitch) */
+    .chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; }
+    .chat-head .state { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--fg-muted); }
+    .chat-head .state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); }
+    .chat-head .state.on::before { background: #3fd26f; box-shadow: 0 0 8px #3fd26f; }
+    .chat-view { flex: 1; position: relative; overflow: hidden; min-height: 320px; }
+    .chat-log { position: absolute; inset: 0; overflow-y: auto; padding: 8px 12px; font-size: 14px; line-height: 1.45; overscroll-behavior: contain; scrollbar-width: thin; }
+    .msg { padding: 4px 6px; border-radius: 8px; word-wrap: break-word; overflow-wrap: anywhere; animation: msgin .18s var(--ease); }
+    .msg:hover { background: rgba(255,255,255,.03); }
+    .msg.me { background: rgba(225,6,0,.10); }
+    .msg .badge { width: 18px; height: 18px; vertical-align: -4px; margin-right: 3px; border-radius: 3px; }
+    .msg .name { font-weight: 700; }
+    .msg .emote { height: 28px; vertical-align: middle; margin: -6px 1px; }
+    .msg.action .text { font-style: italic; }
+    .msg.sys { color: var(--fg-muted); font-size: 13px; background: rgba(255,255,255,.03); border-left: 2px solid var(--accent); }
+    .msg.deleted { opacity: .35; }
+    .chat-jump { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 7px 14px; border-radius: 999px; background: #fff; color: #000; font-size: 12px; font-weight: 700; box-shadow: 0 10px 30px -10px rgba(0,0,0,1); }
+    @keyframes msgin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
     .composer { border-top: 1px solid var(--line); padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; background: var(--bg-elev); }
     .composer input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: #171717; color: var(--fg); border: 1px solid rgba(255,255,255,.18); font: inherit; font-size: 14px; }
     .composer input:focus { outline: none; border-color: var(--accent); }
@@ -690,7 +704,11 @@
         <div class="stream-grid">
           <div class="player" id="player"></div>
           <div class="chat">
-            <div class="chat-view"><iframe id="chat-frame" title="Twitch chat"></iframe></div>
+            <div class="chat-head"><span>Stream chat</span><span class="state" id="chat-state">connecting…</span></div>
+            <div class="chat-view">
+              <div class="chat-log" id="chat-log" role="log" aria-live="polite" aria-relevant="additions"></div>
+              <button class="chat-jump" id="chat-jump" type="button" hidden>New messages ↓</button>
+            </div>
             <div class="composer" id="composer"><span class="hint">Loading chat…</span></div>
           </div>
         </div>
@@ -845,7 +863,86 @@
     var host = location.hostname || 'localhost';
     var player = document.getElementById('player');
     player.innerHTML = '<iframe title="AleksK9 live stream" src="https://player.twitch.tv/?channel=' + CHANNEL + '&parent=' + encodeURIComponent(host) + '&muted=true&autoplay=true" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>';
-    document.getElementById('chat-frame').src = 'https://www.twitch.tv/embed/' + CHANNEL + '/chat?parent=' + encodeURIComponent(host) + '&darkpopout';
+
+    /* ==============================================================
+       SITE CHAT — reads the channel's chat straight from Twitch (anonymous IRC over
+       WebSocket) and draws it here. Sending goes through the box below via /api/chat.
+       ============================================================== */
+    var BADGES = {}, chatLog = document.getElementById('chat-log'), chatJump = document.getElementById('chat-jump'), chatState = document.getElementById('chat-state');
+    var MAX_MSGS = 250, pinned = true, ws, wsTries = 0, myLogin = null;
+    var PALETTE = ['#FF0000', '#0000FF', '#008000', '#B22222', '#FF7F50', '#9ACD32', '#FF4500', '#2E8B57', '#DAA520', '#D2691E', '#5F9EA0', '#1E90FF', '#FF69B4', '#8A2BE2', '#00FF7F'];
+    function nameColor(login, c) { if (c) return c; var h = 0; for (var i = 0; i < login.length; i++) h = (h * 31 + login.charCodeAt(i)) >>> 0; return PALETTE[h % PALETTE.length]; }
+    function lighten(hex) { /* keep dark name colours readable on black */
+      var m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return hex; var n = parseInt(m[1], 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+      var lum = 0.299 * r + 0.587 * g + 0.114 * b; if (lum >= 90) return hex; var f = (90 - lum) / 255 + 0.35; return 'rgb(' + Math.min(255, Math.round(r + (255 - r) * f)) + ',' + Math.min(255, Math.round(g + (255 - g) * f)) + ',' + Math.min(255, Math.round(b + (255 - b) * f)) + ')';
+    }
+    function parseIrc(line) {
+      var tags = {}, rest = line, sp, prefix = '';
+      if (rest.charAt(0) === '@') { sp = rest.indexOf(' '); rest.slice(1, sp).split(';').forEach(function (kv) { var i = kv.indexOf('='); tags[kv.slice(0, i)] = kv.slice(i + 1).replace(/\\s/g, ' ').replace(/\\:/g, ';').replace(/\\\\/g, '\\'); }); rest = rest.slice(sp + 1); }
+      if (rest.charAt(0) === ':') { sp = rest.indexOf(' '); prefix = rest.slice(1, sp); rest = rest.slice(sp + 1); }
+      var trailing = null, ti = rest.indexOf(' :'); if (ti >= 0) { trailing = rest.slice(ti + 2); rest = rest.slice(0, ti); }
+      var parts = rest.split(' ');
+      return { tags: tags, prefix: prefix, command: parts[0], params: parts.slice(1), trailing: trailing };
+    }
+    function renderText(text, emotesTag) {
+      var chars = Array.from(text), ranges = [];
+      if (emotesTag) emotesTag.split('/').forEach(function (e) { var p = e.split(':'); if (p.length < 2) return; p[1].split(',').forEach(function (r) { var se = r.split('-'); ranges.push({ id: p[0], s: +se[0], e: +se[1] }); }); });
+      ranges.sort(function (a, b) { return a.s - b.s; });
+      var out = '', i = 0;
+      ranges.forEach(function (r) {
+        if (r.s < i) return;
+        out += esc(chars.slice(i, r.s).join(''));
+        var code = chars.slice(r.s, r.e + 1).join('');
+        out += '<img class="emote" src="https://static-cdn.jtvnw.net/emoticons/v2/' + encodeURIComponent(r.id) + '/default/dark/2.0" alt="' + esc(code) + '" title="' + esc(code) + '">';
+        i = r.e + 1;
+      });
+      return out + esc(chars.slice(i).join(''));
+    }
+    function addMsg(html, cls, attrs) {
+      var el = document.createElement('div'); el.className = 'msg ' + (cls || ''); el.innerHTML = html;
+      if (attrs) Object.keys(attrs).forEach(function (k) { el.dataset[k] = attrs[k]; });
+      chatLog.appendChild(el);
+      while (chatLog.children.length > MAX_MSGS) chatLog.removeChild(chatLog.firstChild);
+      if (pinned) chatLog.scrollTop = chatLog.scrollHeight; else chatJump.hidden = false;
+    }
+    function onPrivmsg(m) {
+      var login = (m.prefix.split('!')[0] || '').toLowerCase(), name = m.tags['display-name'] || login;
+      var text = m.trailing || '', action = false;
+      if (text.charCodeAt(0) === 1 && text.indexOf('ACTION ') === 1) { action = true; text = text.slice(8, -1); }
+      var badges = (m.tags.badges || '').split(',').filter(Boolean).map(function (b) { var bd = BADGES[b]; return bd ? '<img class="badge" src="' + esc(bd.url) + '" alt="" title="' + esc(bd.title || b) + '">' : ''; }).join('');
+      var color = lighten(nameColor(login, m.tags.color));
+      var html = badges + '<span class="name" style="color:' + esc(color) + '">' + esc(name) + '</span>' + (action ? ' ' : ': ') + '<span class="text"' + (action ? ' style="color:' + esc(color) + '"' : '') + '>' + renderText(text, m.tags.emotes) + '</span>';
+      addMsg(html, (action ? 'action' : '') + (myLogin && login === myLogin ? ' me' : ''), { id: m.tags.id || '', user: m.tags['user-id'] || '' });
+    }
+    function onUsernotice(m) {
+      var sys = m.tags['system-msg']; if (!sys) return;
+      addMsg('<span>' + esc(sys) + '</span>' + (m.trailing ? ' <span class="text">' + renderText(m.trailing, m.tags.emotes) + '</span>' : ''), 'sys');
+    }
+    function connectChat() {
+      try { ws = new WebSocket('wss://irc-ws.chat.twitch.tv:443'); } catch (e) { chatState.textContent = 'chat unavailable'; return; }
+      ws.onopen = function () {
+        ws.send('CAP REQ :twitch.tv/tags twitch.tv/commands'); ws.send('PASS SCHMOOPIIE'); ws.send('NICK justinfan' + Math.floor(10000 + Math.random() * 89999)); ws.send('JOIN #' + CHANNEL);
+        wsTries = 0; chatState.textContent = 'live'; chatState.classList.add('on');
+      };
+      ws.onmessage = function (ev) {
+        ev.data.split('\r\n').forEach(function (line) {
+          if (!line) return;
+          var m = parseIrc(line);
+          if (m.command === 'PING') { ws.send('PONG :tmi.twitch.tv'); return; }
+          if (m.command === 'PRIVMSG') onPrivmsg(m);
+          else if (m.command === 'USERNOTICE') onUsernotice(m);
+          else if (m.command === 'CLEARMSG') { var t = m.tags['target-msg-id']; chatLog.querySelectorAll('.msg').forEach(function (el) { if (el.dataset.id === t) el.classList.add('deleted'); }); }
+          else if (m.command === 'CLEARCHAT') { var u = m.tags['target-user-id']; chatLog.querySelectorAll('.msg').forEach(function (el) { if (!u || el.dataset.user === u) el.classList.add('deleted'); }); }
+          else if (m.command === 'NOTICE' && m.trailing) addMsg('<span>' + esc(m.trailing) + '</span>', 'sys');
+        });
+      };
+      ws.onclose = function () { chatState.textContent = 'reconnecting…'; chatState.classList.remove('on'); setTimeout(connectChat, Math.min(30000, 1000 * Math.pow(2, wsTries++))); };
+      ws.onerror = function () { try { ws.close(); } catch (e) {} };
+    }
+    chatLog.addEventListener('scroll', function () { pinned = chatLog.scrollHeight - chatLog.scrollTop - chatLog.clientHeight < 40; if (pinned) chatJump.hidden = true; });
+    chatJump.onclick = function () { pinned = true; chatLog.scrollTop = chatLog.scrollHeight; chatJump.hidden = true; };
+    if (location.protocol !== 'file:') fetch('/api/chat?badges=1').then(function (r) { return r.json(); }).then(function (b) { BADGES = b || {}; }).catch(function () {}).finally(connectChat);
+    else connectChat();
 
     if (location.protocol !== 'file:') {
       fetch('/api/live', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
@@ -901,7 +998,7 @@
       m.onclick = function (e) { if (e.target === m) m.hidden = true; };
     }
     if (location.protocol !== 'file:') {
-      chatApi().then(function (d) { CHAT = d; renderComposer(); }).catch(function () { renderComposer(); });
+      chatApi().then(function (d) { CHAT = d; myLogin = d.user ? d.user.login : null; renderComposer(); }).catch(function () { renderComposer(); });
       var q = new URLSearchParams(location.search).get('login');
       if (q) history.replaceState(null, '', location.pathname + '#stream');
     } else { renderComposer(); }

@@ -19,10 +19,13 @@
   <meta property="og:title" content="R6 5v5 Tournament — AleksK9">
   <meta property="og:description" content="Live snake draft, match scores, standings, and player stats.">
   <meta property="og:url" content="https://aleksk9.com/tournament">
-  <meta property="og:image" content="/og-image.png">
+  <meta property="og:image" content="https://aleksk9-website.vercel.app/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
 
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Inter,Arial,sans-serif' font-weight='800' font-size='34' fill='%23E10600'%3EA%3C/text%3E%3C/svg%3E">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon-64.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -83,6 +86,8 @@
     .nav .container { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; }
     .wordmark { font-weight: 900; font-size: 20px; letter-spacing: -0.04em; display: inline-flex; align-items: center; gap: 8px; }
     .wordmark::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .brand { display: inline-flex; align-items: center; height: 100%; }
+    .brand img { height: 52px; width: auto; display: block; filter: drop-shadow(0 4px 10px rgba(0,0,0,.6)); }
     .nav-links { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
     .nav-links a { display: inline-block; padding: 8px 12px; border-radius: 8px; font-weight: 500; font-size: 14px; color: var(--fg-muted); position: relative; transition: color .2s var(--ease); }
     .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--fg); }
@@ -393,7 +398,7 @@
 
   <header class="nav">
     <div class="container">
-      <a class="wordmark" href="/" aria-label="AleksK9 home">AleksK9</a>
+      <a class="brand" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-nav.png" alt="AleksK9" width="172" height="96"></a>
       <nav aria-label="Primary">
         <ul class="nav-links">
           <li><a href="/">Home</a></li>

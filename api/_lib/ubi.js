@@ -14,11 +14,17 @@ async function call(step, path, params) {
   const key = process.env.ARENYZE_API_KEY;
   if (!key) throw new LookupError('setup', 500, 'ARENYZE_API_KEY is not set in Vercel (get one at r6.arenyze.com)');
   const url = BASE + path + '?' + new URLSearchParams(params).toString();
-  const r = await fetch(url, { headers: { 'api-key': key, Accept: 'application/json' } });
-  const text = await r.text();
-  let body = null; try { body = JSON.parse(text); } catch { /* not json */ }
-  if (!r.ok) throw new LookupError(step, r.status, (body && (body.message || body.error || body.detail)) || text.slice(0, 160));
-  return body;
+  let last;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 1500 * attempt));
+    const r = await fetch(url, { headers: { 'api-key': key, Accept: 'application/json' } });
+    const text = await r.text();
+    let body = null; try { body = JSON.parse(text); } catch { /* not json */ }
+    if (r.ok) return body;
+    last = new LookupError(step, r.status, (body && (body.message || body.error || body.detail)) || text.slice(0, 160));
+    if (r.status < 500 && r.status !== 429) break; /* only retry when their side is struggling */
+  }
+  throw last;
 }
 
 /* Walk any JSON and return the first value found under one of the candidate key names (case-insensitive). */

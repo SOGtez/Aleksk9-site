@@ -80,7 +80,22 @@
     .done-card { padding: 22px; text-align: center; margin: 14px; } .done-card h3 { font-size: 22px; margin-bottom: 6px; } .done-card p { color: var(--fg-muted); font-size: 14px; margin-bottom: 14px; }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .3s, transform .3s; max-width: 90vw; text-align: center; } .toast.show { opacity: 1; transform: translate(-50%, 0); }
     .footer { border-top: 1px solid var(--line); padding: 28px 0; font-size: 14px; color: var(--fg-muted); margin-top: auto; text-align: center; }
-    @media (max-width: 560px) { .board { grid-template-columns: 36px repeat(3, 1fr); } .cell { padding: 6px; font-size: 12px; } .th small { display: none; } .turn { margin: 10px; } .board { margin: 0 10px; } .pool, .order { margin-inline: 10px; } }
+    @media (max-width: 560px) {
+      .board { grid-template-columns: 34px repeat(3, minmax(0, 1fr)); margin: 0 10px; }
+      .th { padding: 8px 6px; gap: 6px; } .th .av { display: none; } .th b { white-space: normal; font-size: 12px; line-height: 1.15; } .th small { display: none; }
+      .th .rn input { width: 90px; }
+      .rl { font-size: 8px; } .rl b { font-size: 14px; }
+      .cell { min-height: 44px; padding: 6px; font-size: 12px; gap: 5px; flex-wrap: wrap; }
+      .cell .pn { position: static; font-size: 9px; color: var(--fg-dim); width: 100%; line-height: 1; }
+      .cell .av { display: none; }
+      .cell.clock { font-size: 9px; letter-spacing: .04em; line-height: 1.2; }
+      .turn { margin: 10px; padding: 12px; gap: 10px; } .turn .tx b { font-size: 15px; } .turn .tx span { font-size: 12px; } .turn .clock { font-size: 18px; padding: 3px 10px; }
+      .coach { padding: 14px; gap: 10px; } .coach p { font-size: 13px; }
+      .pool, .order { margin-inline: 10px; }
+      .pool li { padding: 8px 10px; } .pool li .who b { font-size: 13px; } .pool li .who small { font-size: 11px; }
+      .fake-nav { padding: 8px 10px; font-size: 12px; }
+      .sim-head { padding: 14px 10px 0 !important; } .sim-head h2 { font-size: 20px; }
+    }
   </style>
 </head>
 <body>

@@ -5,7 +5,7 @@
    `twitch` on a pool player is optional and only used to show their Twitch profile picture. */
 export const DEFAULT_STATE = {
   name: 'R6 5v5 Tournament',
-  hosts: ['AleksK9', 'NV30'],
+  hosts: ['AleksK9', 'Notvash30'],
   /* Twitch logins (lowercase) who can enter scores and stats. Admins can add more from the site. */
   helpers: ['pedrosahur', 'a1iy'],
   format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
@@ -35,7 +35,7 @@ export const DEFAULT_STATE = {
     { id: 'iso',        name: 'Iso',        tier: 0, info: '2000 hrs · 1x Champ' },
     { id: 'mrflex',     name: 'MrFlex',     tier: 0, info: '2000 hrs · 1x Champ' },
 
-    { id: 'nv30',       name: 'NV30',       tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor' },
+    { id: 'nv30',       name: 'Notvash30',  tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor', twitch: 'notvash30' },
     { id: 'beebo',      name: 'Beebo',      tier: 1, info: '1409 hrs · Emerald · Intel / Anchor' },
     { id: 'noni',       name: 'Noni',       tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex' },
     { id: 'jake',       name: 'Jake',       tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor' },

@@ -55,7 +55,9 @@ export async function lookup(name, platformLabel) {
   const player = profile && profile.player;
   if (!profile || !player || !(player.nameOnPlatform || player.profileId || player.userId)) throw new LookupError('profile search', 404, `no ${platformLabel} player named "${name}"`);
   let stats = null, statsErr = '';
-  try { stats = await call('stats', '/v2/fullstats', { ...params, modes: 'ranked' }); } catch (e) { statsErr = e.message; }
+  /* Their example passes a seasonYear; try without (current season) first, then with the newest season we know. */
+  try { stats = await call('stats', '/v2/fullstats', { ...params, modes: 'ranked' }); }
+  catch (e) { try { stats = await call('stats (Y11S3)', '/v2/fullstats', { ...params, modes: 'ranked', seasonYear: 'Y11S3' }); } catch (e2) { statsErr = e.message + ' | ' + e2.message; } }
 
   const both = { profile, stats };
   /* Documented layout: profile.account.level, profile.stats.platform_families_full_profiles[].board_ids_full_profiles[] */
@@ -70,8 +72,11 @@ export async function lookup(name, platformLabel) {
     level: (profile.account && typeof profile.account.level === 'number') ? profile.account.level : dig(both, ['level', 'accountLevel', 'clearanceLevel'], 'number'),
     hours: null, rank: '', rankTier: '', peakRank: '', peakRankTier: '', mmr: null, kills: null, deaths: null, kd: null, wins: null, losses: null,
     errors: statsErr ? [statsErr] : [], checkedAt: Date.now(),
-    raw: JSON.stringify(both).slice(0, 4000)
+    raw: '',
   };
+  /* Keep both halves visible in the raw dump so unknown field names can be spotted. */
+  const keysOf = o => (o && typeof o === 'object') ? Object.keys(o).slice(0, 40).join(', ') : String(o);
+  out.raw = 'profile keys: ' + keysOf(profile) + '\nstats keys: ' + keysOf(stats) + '\n\nPROFILE:\n' + JSON.stringify(profile).slice(0, 3000) + '\n\nSTATS:\n' + JSON.stringify(stats).slice(0, 3000);
   const secs = dig(both, ['timePlayed', 'time_played', 'playtime', 'playTime', 'totalTimePlayed', 'total_time_played'], 'number');
   const hrs = dig(both, ['hours', 'hoursPlayed', 'playtimeHours'], 'number');
   if (hrs != null) out.hours = Math.round(hrs); else if (secs != null) out.hours = Math.round(secs > 100000 ? secs / 3600 : secs);

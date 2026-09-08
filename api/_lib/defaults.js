@@ -47,7 +47,7 @@ export const DEFAULT_STATE = {
     { id: 'grape',      name: 'Grape',      tier: 1, info: 'lvl 97 · Plat (PC), Gold roller' },
 
     { id: 'carlos',     name: 'Carlos',     tier: 2, info: '251 hrs · lvl 124 · Bronze' },
-    { id: 'colin',      name: 'Colin',      tier: 2, info: '' },
+    { id: 'colin',      name: 'Colin',      tier: 1, info: '1000 hrs · 4x Plat' },
     { id: 'jimmy',      name: 'Jimmy',      tier: 2, info: '' },
     { id: 'mxlly',      name: 'Mxlly',      tier: 2, info: '202 hrs · lvl 90 · Bronze', twitch: 'darealmxlly' },
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },

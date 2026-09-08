@@ -47,7 +47,7 @@ export function rankTier(name) { const t = String(name || '').split(' ')[0]; ret
 export async function lookup(name, platformLabel) {
   const platformType = PLATFORMS[platformLabel];
   if (!platformType) throw new LookupError('platform', 400, 'unknown platform ' + platformLabel);
-  const ck = 'r6:lookup:' + platformType + ':' + name.toLowerCase();
+  const ck = 'r6:lookup3:' + platformType + ':' + name.toLowerCase();
   const cached = await cacheGet(ck); if (cached) return cached;
 
   const params = { nameOnPlatform: name, platformType };
@@ -93,7 +93,8 @@ export async function lookup(name, platformLabel) {
   out.kd = kd != null ? Math.round(kd * 100) / 100 : (out.kills != null && out.deaths != null ? Math.round((out.kills / Math.max(out.deaths, 1)) * 100) / 100 : null);
   if (out.wins == null) out.wins = dig(both, ['wins', 'matchesWon'], 'number'); if (out.losses == null) out.losses = dig(both, ['losses', 'matchesLost'], 'number');
 
-  await cacheSet(ck, out, 60 * 60 * 6);
+  /* Only remember answers that carried real data, so a bad run never sticks for hours. */
+  if (out.level != null || out.hours != null || out.rank) await cacheSet(ck, out, 60 * 60 * 6);
   return out;
 }
 export async function session() { return { ok: true }; } /* kept so the admin "relogin" action stays harmless */

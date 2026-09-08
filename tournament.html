@@ -169,6 +169,9 @@
     .avatar { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(160deg, #1f1f1f, #0d0d0d); border: 1px solid rgba(255,255,255,.14); font-weight: 800; font-size: 14px; letter-spacing: -0.04em; color: var(--fg); user-select: none; overflow: hidden; }
     .avatar.cap { border-color: rgba(225,6,0,.6); box-shadow: 0 0 0 3px rgba(225,6,0,.12); }
     .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .rank { width: 20px; height: 20px; vertical-align: -5px; margin-left: 4px; display: inline-block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+    .rank.lg { width: 26px; height: 26px; vertical-align: -7px; }
+    .team-head .rank, .roster-head .rank { margin-left: 6px; }
 
     /* Turn banner */
     .turn { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 18px 20px; margin-bottom: 20px; }
@@ -604,6 +607,8 @@
        ------------------------------------------------------------ */
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
     function initials(n) { return String(n || '?').slice(0, 2).toUpperCase(); }
+    /* Rank badge (from the player's info line, or a verified lookup). */
+    function badge(x, lg) { if (!x || !x.rank) return ''; var t = String(x.rank).toLowerCase(); return '<img class="rank' + (lg ? ' lg' : '') + '" src="/assets/ranks/' + esc(t) + '.webp" alt="' + esc(x.rank) + '" title="' + esc(x.rank) + (x.rankVerified ? ' (verified)' : '') + '">'; }
     /* Avatar for a team (uses captain name) or player. Shows the Twitch profile picture when the API supplied one. */
     function av(x, cls) {
       var label = x.captain && !x.id ? x.captain : (x.captain && x.name ? x.name : (x.captain || x.name));
@@ -660,7 +665,7 @@
     window.addEventListener('focus', function () { if (titleFlash) { clearInterval(titleFlash); titleFlash = null; document.title = baseTitle; } });
     function canEdit() { return role === 'helper' || role === 'admin'; }
     function roster(tid) {
-      var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info, avatar: t.avatar }];
+      var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info, avatar: t.avatar, rank: t.rank, rankVerified: t.rankVerified }];
       D.picks.forEach(function (p) { if (p.team === tid) { var pl = player(p.player); if (pl) list.push(pl); } });
       return list;
     }
@@ -821,7 +826,7 @@
       g.style.gridTemplateColumns = '48px repeat(' + T + ', minmax(150px, 1fr))';
       var html = '<div class="corner"></div>';
       D.teams.forEach(function (t) {
-        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
+        html += '<div class="team-head' + (slot && slot.team === t.id ? ' on' : '') + '">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + badge(t) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div>';
       });
       for (var r = 1; r <= R; r++) {
         var order = pickOrder(r), lastRow = r === R ? ' last-row' : '';
@@ -830,7 +835,7 @@
           var got = pickAt(r, t.id), pn = (r - 1) * T + order.indexOf(t.id) + 1;
           if (got) {
             var pl = player(got.pick.player) || { name: got.pick.player, info: '' };
-            html += '<div class="cell' + lastRow + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span class="who"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></div>';
+            html += '<div class="cell' + lastRow + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span class="who"><div class="nm">' + esc(pl.name) + badge(pl) + '</div><div class="inf">' + esc(pl.info) + '</div></span></div>';
           } else if (slot && slot.round === r && slot.team === t.id) {
             html += '<div class="cell is-clock' + lastRow + '"><span class="pn">#' + pn + '</span><span class="who"><div class="ct">On the clock</div><div class="cs">' + (canDraftNow() ? 'Your pick' : esc(t.captain) + ' is picking') + '</div></span></div>';
           } else {
@@ -846,10 +851,10 @@
       var slot = nextSlot(), T = D.teams.length, html = '';
       D.teams.forEach(function (t) {
         var on = slot && slot.team === t.id;
-        html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
+        html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + badge(t) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
         for (var r = 1; r <= D.rounds; r++) {
           var got = pickAt(r, t.id), pn = (r - 1) * T + pickOrder(r).indexOf(t.id) + 1;
-          if (got) { var pl = player(got.pick.player) || { name: got.pick.player, info: '' }; html += '<li><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span style="min-width:0"><div class="nm">' + esc(pl.name) + '</div><div class="inf">' + esc(pl.info) + '</div></span></li>'; }
+          if (got) { var pl = player(got.pick.player) || { name: got.pick.player, info: '' }; html += '<li><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span style="min-width:0"><div class="nm">' + esc(pl.name) + badge(pl) + '</div><div class="inf">' + esc(pl.info) + '</div></span></li>'; }
           else if (on && slot.round === r) html += '<li class="clock"><span class="pn">#' + pn + '</span>' + (canDraftNow() ? 'Your pick' : 'On the clock') + '</li>';
           else html += '<li class="empty"><span class="pn">#' + pn + '</span>' + (pn > totalPicks() ? 'no player left' : 'Round ' + r) + '</li>';
         }
@@ -885,7 +890,7 @@
         list.forEach(function (p) {
           var t = takenBy(p.id); if (!t) open++;
           html += '<li class="pool-item' + (t ? ' is-taken' : '') + (confirming === p.id ? ' is-confirming' : '') + '">' + av(p) +
-            '<span class="who"><div class="nm">' + esc(p.name) + '</div><div class="inf">' + esc(p.info || '—') + '</div></span>';
+            '<span class="who"><div class="nm">' + esc(p.name) + badge(p, true) + '</div><div class="inf">' + esc(p.info || '—') + '</div></span>';
           if (t) html += '<span class="tb">' + esc(team(t).name) + '</span>';
           else if (can && confirming === p.id) html += '<span class="confirm">Draft ' + esc(p.name) + '?<button class="btn btn-sm btn-draft" data-confirm="' + esc(p.id) + '">Yes</button><button class="link-btn" data-cancel-draft>Cancel</button></span>';
           else if (can) html += '<button class="btn btn-sm btn-draft" data-draft="' + esc(p.id) + '">Draft</button>';
@@ -1034,7 +1039,7 @@
       D.teams.forEach(function (t) {
         roster(t.id).forEach(function (p) {
           var s = D.stats[p.id] || [0, 0, 0];
-          rows.push({ id: p.id, name: p.name, avatar: p.avatar, team: t.id, teamName: t.name, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
+          rows.push({ id: p.id, name: p.name, avatar: p.avatar, rank: p.rank, rankVerified: p.rankVerified, team: t.id, teamName: t.name, captain: !!p.captain, k: s[0], d: s[1], a: s[2], kd: s[0] / Math.max(s[1], 1) });
         });
       });
       return rows;
@@ -1084,7 +1089,7 @@
       }
       var html = '<table><thead><tr><th>#</th>' + th('name', 'Player') + th('teamName', 'Team', 0, 'hide-m') + th('k', 'Kills', 1) + th('d', 'Deaths', 1) + th('a', 'Assists', 1, 'hide-m') + th('kd', 'K/D', 1) + '</tr></thead><tbody>';
       rows.forEach(function (r, i) {
-        html += '<tr' + (r.kd === topKd && r.kd > 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who">' + av({ name: r.name, avatar: r.avatar }, r.captain ? 'cap' : '') + esc(r.name) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
+        html += '<tr' + (r.kd === topKd && r.kd > 0 ? ' class="top"' : '') + '><td class="rank">' + (i + 1) + '</td><td class="who">' + av({ name: r.name, avatar: r.avatar }, r.captain ? 'cap' : '') + esc(r.name) + badge(r) + (r.captain ? '<span class="cap-tag">CAPT</span>' : '') + '</td>' +
           '<td class="hide-m"><small style="color:var(--fg-muted)">' + esc(r.teamName) + '</small></td><td class="num">' + r.k + '</td><td class="num">' + r.d + '</td><td class="num hide-m">' + r.a + '</td><td class="num kd">' + r.kd.toFixed(2) + '</td></tr>';
       });
       wrap.innerHTML = html + '</tbody></table>';
@@ -1112,7 +1117,12 @@
     }
     document.addEventListener('click', function (e) { if (loginOpen && !e.target.closest('#login-menu') && !e.target.closest('#login-btn')) { loginOpen = false; renderHero(); } });
 
-    function bootDemo() { LIVE = false; D = JSON.parse(JSON.stringify(DEMO)); document.getElementById('demo-bar').hidden = false; renderAll(); }
+    function bootDemo() {
+      LIVE = false; D = JSON.parse(JSON.stringify(DEMO));
+      var tiers = [['Champion', /champ/i], ['Diamond', /diamond/i], ['Emerald', /emerald/i], ['Platinum', /plat/i], ['Gold', /\bgold\b/i], ['Silver', /silver/i], ['Bronze', /bronze/i], ['Copper', /copper/i], ['Unranked', /unranked/i]];
+      D.teams.concat(D.pool).forEach(function (x) { for (var i = 0; i < tiers.length; i++) if (tiers[i][1].test(x.info || '')) { x.rank = tiers[i][0]; break; } });
+      document.getElementById('demo-bar').hidden = false; renderAll();
+    }
     function boot() {
       if (location.search.indexOf('demo=1') >= 0 || location.protocol === 'file:') return bootDemo();
       Promise.all([api('/api/me'), api('/api/tournament')]).then(function (r) {

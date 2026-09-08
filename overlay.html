@@ -78,7 +78,7 @@
         html += '<div class="team' + (on ? ' on' : '') + '"><div class="th">' + av(t) + '<span><b>' + esc(t.name) + '</b><small>' + esc(t.captain) + '</small></span></div><ul>';
         for (var r = 1; r <= D.rounds; r++) {
           var got = pickAt(r, t.id), no = (r - 1) * T + order(r).indexOf(t.id) + 1;
-          if (got) { var pl = player(got.p.player) || { name: got.p.player }; html += '<li><span class="n">#' + got.no + '</span>' + av(pl) + esc(pl.name) + (pl.info ? '<small>' + esc(pl.info.split(' · ')[0]) + '</small>' : '') + '</li>'; }
+          if (got) { var pl = player(got.p.player) || { name: got.p.player }; html += '<li><span class="n">#' + got.no + '</span>' + av(pl) + esc(pl.name) + (pl.rank ? '<img src="/assets/ranks/' + esc(String(pl.rank).toLowerCase()) + '.webp" alt="" style="width:18px;height:18px;margin-left:4px">' : '') + (pl.info ? '<small>' + esc(pl.info.split(' · ')[0]) + '</small>' : '') + '</li>'; }
           else if (on && slot.round === r) html += '<li class="clock"><span class="n">#' + no + '</span>On the clock</li>';
           else html += '<li class="empty"><span class="n">#' + no + '</span>' + (no > slot_total() ? '—' : 'Round ' + r) + '</li>';
         }

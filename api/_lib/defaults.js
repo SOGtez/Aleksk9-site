@@ -73,3 +73,10 @@ export function nextSlot(state) {
   const round = Math.floor(n / T) + 1;
   return { round, team: pickOrder(state, round)[n % T], pickNo: n + 1, total: Math.min(state.rounds * T, state.pool.length) };
 }
+
+/* Highest rank tier mentioned in a free-text info line ("1366 hrs · Plat (PC), Diamond roller" → "Diamond"). */
+const TIERS = [['Champion', /champ/i], ['Diamond', /diamond/i], ['Emerald', /emerald/i], ['Platinum', /plat/i], ['Gold', /\bgold\b/i], ['Silver', /silver/i], ['Bronze', /bronze/i], ['Copper', /copper/i], ['Unranked', /unranked/i]];
+export function rankFromInfo(text) {
+  for (const [name, re] of TIERS) if (re.test(String(text || ''))) return name;
+  return '';
+}

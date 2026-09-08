@@ -233,11 +233,10 @@
        ============================================================ */
     .hero {
       position: relative;
-      min-height: calc(100svh - var(--nav-h));
       display: grid;
       place-items: center;
       text-align: center;
-      padding: 72px 0 56px;
+      padding: 40px 0 24px;
       overflow: hidden;
       isolation: isolate;
     }
@@ -280,7 +279,41 @@
       margin-inline: auto;
     }
 
-    .hero-logo { width: min(78vw, 420px); height: auto; filter: drop-shadow(0 18px 40px rgba(0,0,0,.7)); margin-bottom: -6px; }
+    .hero-logo { width: min(60vw, 300px); height: auto; filter: drop-shadow(0 18px 40px rgba(0,0,0,.7)); margin-bottom: -10px; }
+    .hero h1 { font-size: clamp(40px, 8vw, 72px) !important; }
+    .btn-sm { min-height: 38px; padding: 0 16px; font-size: 13px; gap: 6px; }
+    .btn-sm svg { width: 14px; height: 14px; }
+
+    /* ============================================================
+       STREAM + CHAT
+       ============================================================ */
+    .stream { padding: 8px 0 64px; }
+    .stream-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+    .stream-grid { display: grid; gap: 14px; }
+    @media (min-width: 900px) { .stream-grid { grid-template-columns: minmax(0, 1fr) 340px; align-items: stretch; } }
+    .player { position: relative; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid var(--line); aspect-ratio: 16 / 9; box-shadow: 0 30px 70px -40px rgba(0,0,0,1); }
+    .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .player .offline-note { position: absolute; left: 12px; bottom: 12px; padding: 8px 12px; border-radius: 999px; background: rgba(10,10,10,.8); border: 1px solid var(--line); font-size: 12px; color: var(--fg-muted); }
+    .chat { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-elev); min-height: 420px; }
+    @media (min-width: 900px) { .chat { min-height: 0; } }
+    .chat iframe { flex: 1; width: 100%; min-height: 360px; border: 0; }
+    .composer { border-top: 1px solid var(--line); padding: 10px; display: flex; gap: 8px; align-items: center; background: var(--bg-elev); }
+    .composer input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: #171717; color: var(--fg); border: 1px solid rgba(255,255,255,.18); font: inherit; font-size: 14px; }
+    .composer input:focus { outline: none; border-color: var(--accent); }
+    .composer .hint { flex: 1; font-size: 13px; color: var(--fg-muted); }
+    .composer .who { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg-muted); white-space: nowrap; }
+    .composer .who img { width: 24px; height: 24px; border-radius: 50%; }
+    .composer .count { font-size: 11px; color: var(--fg-dim); white-space: nowrap; }
+
+    /* Popup nudging people to the Twitch app */
+    .modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.7); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .modal-card { width: 100%; max-width: 420px; padding: 28px 24px; border-radius: 20px; background: var(--bg-elev); border: 1px solid rgba(225,6,0,.4); text-align: center; box-shadow: 0 40px 80px -30px rgba(0,0,0,1); animation: pop .3s var(--ease); }
+    .modal-card img { width: 160px; height: auto; margin: 0 auto 8px; display: block; }
+    .modal-card h2 { font-size: 24px; margin-bottom: 8px; }
+    .modal-card p { color: var(--fg-muted); font-size: 15px; margin-bottom: 18px; }
+    .modal-card .actions { display: grid; gap: 8px; }
+    .modal-card .later { font-size: 13px; color: var(--fg-muted); text-decoration: underline; text-underline-offset: 3px; margin-top: 6px; }
+    @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
     /* Avatar placeholder — swap the <img> src or drop an <img> inside .avatar */
     .avatar {
       width: 160px;
@@ -612,7 +645,7 @@
           </p>
 
           <div class="hero-actions reveal" data-delay="3">
-            <a class="btn btn-primary" href="#" data-link="twitch" target="_blank" rel="noopener">
+            <a class="btn btn-primary" href="#stream">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
               Watch Live
             </a>
@@ -626,22 +659,46 @@
     </section>
 
     <!-- ==============================================================
-         LIVE STATUS CARD
-         data-state: "live" | "offline" | "loading"
+         STREAM + CHAT
          ============================================================== -->
-    <section class="live-wrap" aria-label="Stream status">
-      <div class="container" style="display:flex;justify-content:center">
-        <a id="live-card" class="live-card reveal" data-state="loading" href="#" data-link="twitch" target="_blank" rel="noopener">
-          <span class="live-dot" aria-hidden="true"></span>
-          <span class="live-text">
-            <span class="live-label" data-live-label>Checking stream…</span>
-            <span class="live-meta" data-live-meta>twitch.tv/aleksk9_</span>
-          </span>
-          <span class="live-cta" aria-hidden="true">Watch</span>
-          <span class="sr-only">Open AleksK9 on Twitch</span>
-        </a>
+    <section class="stream" id="stream" aria-label="Live stream">
+      <div class="container">
+        <div class="stream-head">
+          <a id="live-card" class="live-card" data-state="loading" href="#" data-link="twitch" target="_blank" rel="noopener">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span class="live-text">
+              <span class="live-label" data-live-label>Checking stream…</span>
+              <span class="live-meta" data-live-meta>twitch.tv/aleksk9_</span>
+            </span>
+            <span class="live-cta" aria-hidden="true">Open</span>
+            <span class="sr-only">Open AleksK9 on Twitch</span>
+          </a>
+          <a class="btn btn-ghost btn-sm" href="#" data-link="twitch" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>
+            Open in the Twitch app
+          </a>
+        </div>
+        <div class="stream-grid">
+          <div class="player" id="player"></div>
+          <div class="chat">
+            <iframe id="chat-frame" title="Twitch chat"></iframe>
+            <div class="composer" id="composer"><span class="hint">Loading chat…</span></div>
+          </div>
+        </div>
       </div>
     </section>
+
+    <div class="modal" id="app-modal" hidden role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
+      <div class="modal-card">
+        <img src="/assets/ak9-logo-hero.png" alt="">
+        <h2 id="app-modal-title">Enjoying the stream?</h2>
+        <p>You're chatting like a regular. Watch on the Twitch app for the full experience: better quality, emotes, and no missed messages.</p>
+        <div class="actions">
+          <a class="btn btn-primary" id="app-modal-go" href="#" data-link="twitch" target="_blank" rel="noopener">Watch on Twitch</a>
+          <button class="later" id="app-modal-later" type="button">Keep watching here</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ==============================================================
          TOURNAMENT CALLOUT
@@ -772,15 +829,73 @@
     }
     window.setLiveState = setLiveState;
 
-    /* Ask the site's own /api/live (cached Twitch lookup). Falls back to plain link when unavailable. */
+    /* ==============================================================
+       STREAM EMBED + CHAT BOX
+       ============================================================== */
+    var CHANNEL = 'aleksk9_';
+    var host = location.hostname || 'localhost';
+    var player = document.getElementById('player');
+    player.innerHTML = '<iframe title="AleksK9 live stream" src="https://player.twitch.tv/?channel=' + CHANNEL + '&parent=' + encodeURIComponent(host) + '&muted=true&autoplay=true" allowfullscreen allow="autoplay; fullscreen; picture-in-picture"></iframe>';
+    document.getElementById('chat-frame').src = 'https://www.twitch.tv/embed/' + CHANNEL + '/chat?parent=' + encodeURIComponent(host) + '&darkpopout';
+
     if (location.protocol !== 'file:') {
       fetch('/api/live', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
         if (d && d.live) setLiveState('live', d.title ? d.title : 'twitch.tv/aleksk9_');
-        else setLiveState('offline', 'twitch.tv/aleksk9_ · follow to get notified');
+        else { setLiveState('offline', 'twitch.tv/aleksk9_ · follow to get notified'); player.insertAdjacentHTML('beforeend', '<span class="offline-note">Offline right now · chat is still open</span>'); }
       }).catch(function () { setLiveState('offline', 'twitch.tv/aleksk9_'); });
     } else {
       setLiveState('offline', 'twitch.tv/aleksk9_');
     }
+
+    var CHAT = { user: null, canChat: false, count: 0 };
+    var POPUP_AT = 5;
+    var TWITCH_ICON = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" style="width:14px;height:14px"><path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z"/></svg>';
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+    function chatApi(body) {
+      var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { cache: 'no-store', credentials: 'same-origin' };
+      return fetch('/api/chat', o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.message || j.error || 'Failed'); e.code = j.error; throw e; } return j; }); });
+    }
+    function renderComposer(note) {
+      var el = document.getElementById('composer');
+      var loginHref = '/api/auth/login?scope=chat&next=/';
+      if (!CHAT.user) {
+        el.innerHTML = '<span class="hint">Want to chat from here?</span><a class="btn btn-ghost btn-sm" href="' + loginHref + '">' + TWITCH_ICON + 'Log in with Twitch</a>';
+        return;
+      }
+      if (!CHAT.canChat) {
+        el.innerHTML = '<span class="hint">One more step to chat from the site.</span><a class="btn btn-primary btn-sm" href="' + loginHref + '">Enable chat</a>';
+        return;
+      }
+      el.innerHTML = '<span class="who">' + (CHAT.user.avatar ? '<img src="' + esc(CHAT.user.avatar) + '" alt="">' : '') + '</span>' +
+        '<input type="text" id="chat-input" maxlength="500" placeholder="' + esc(note || 'Say something in chat…') + '" autocomplete="off">' +
+        '<button class="btn btn-primary btn-sm" id="chat-send" type="button">Send</button>';
+      var input = document.getElementById('chat-input'), send = document.getElementById('chat-send');
+      function go() {
+        var msg = input.value.trim(); if (!msg) return;
+        send.disabled = true; input.disabled = true;
+        chatApi({ message: msg }).then(function (r) {
+          CHAT.count = r.count; input.value = '';
+          if (r.count >= POPUP_AT && !sessionStorage.getItem('ak9_app_nudge')) showAppModal();
+        }).catch(function (e) {
+          if (e.code === 'relogin') { CHAT.canChat = false; renderComposer(); return; }
+          input.placeholder = e.message;
+        }).finally(function () { send.disabled = false; input.disabled = false; input.focus(); });
+      }
+      send.onclick = go;
+      input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    }
+    function showAppModal() {
+      var m = document.getElementById('app-modal'); m.hidden = false;
+      try { sessionStorage.setItem('ak9_app_nudge', '1'); } catch (e) {}
+      document.getElementById('app-modal-later').onclick = function () { m.hidden = true; };
+      document.getElementById('app-modal-go').onclick = function () { setTimeout(function () { m.hidden = true; }, 300); };
+      m.onclick = function (e) { if (e.target === m) m.hidden = true; };
+    }
+    if (location.protocol !== 'file:') {
+      chatApi().then(function (d) { CHAT = d; renderComposer(); }).catch(function () { renderComposer(); });
+      var q = new URLSearchParams(location.search).get('login');
+      if (q) history.replaceState(null, '', location.pathname + '#stream');
+    } else { renderComposer(); }
   </script>
 </body>
 </html>

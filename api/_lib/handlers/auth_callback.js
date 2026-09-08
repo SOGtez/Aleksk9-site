@@ -1,12 +1,15 @@
 import { setSession, cookieHeader, getSession } from '../session.js';
 import { baseUrl } from '../http.js';
 import { followsChannel } from '../twitch.js';
+import { cacheSet } from '../store.js';
 
 export default async function handler(req, res) {
   const { code, state, error } = req.query;
-  const nextRaw = String(req.cookies?.ak9_oauth_next || 'N/tournament');
-  const wantFollows = nextRaw.charAt(0) === 'F';
-  let back = nextRaw.slice(1) || '/tournament';
+  const nextRaw = String(req.cookies?.ak9_oauth_next || '|/tournament');
+  const bar = nextRaw.indexOf('|');
+  const want = bar >= 0 ? nextRaw.slice(0, bar).split(',') : [];
+  const wantFollows = want.includes('follows'), wantChat = want.includes('chat');
+  let back = (bar >= 0 ? nextRaw.slice(bar + 1) : nextRaw) || '/tournament';
   if (!/^\/[a-z0-9\-\/]*$/i.test(back)) back = '/tournament';
   const clear = [cookieHeader('ak9_oauth_state', '', { maxAge: 0 }), cookieHeader('ak9_oauth_next', '', { maxAge: 0 })];
   const fail = why => { res.setHeader('Set-Cookie', clear); res.redirect(302, `${back}?login=${why}`); };
@@ -38,11 +41,16 @@ export default async function handler(req, res) {
     try { const f = await followsChannel(token.access_token, u.id); follow = { follows: f.follows, followedAt: f.followedAt, followChecked: Date.now() }; } catch { /* keep prev */ }
   }
 
-  fetch('https://id.twitch.tv/oauth2/revoke', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ client_id: process.env.TWITCH_CLIENT_ID, token: token.access_token })
-  }).catch(() => {});
+  if (wantChat && (token.scope || []).includes('user:write:chat')) {
+    /* Keep the token so the homepage chat box can send messages as this user. */
+    await cacheSet('tw:tok:' + u.id, { access: token.access_token, refresh: token.refresh_token, expiresAt: Date.now() + (token.expires_in || 3600) * 1000 }, 60 * 60 * 24 * 30);
+  } else {
+    fetch('https://id.twitch.tv/oauth2/revoke', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ client_id: process.env.TWITCH_CLIENT_ID, token: token.access_token })
+    }).catch(() => {});
+  }
 
   setSession(res, { id: u.id, login: u.login.toLowerCase(), name: u.display_name, avatar: u.profile_image_url, ...follow });
   res.setHeader('Set-Cookie', [res.getHeader('Set-Cookie'), ...clear]);

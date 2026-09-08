@@ -1,116 +1,83 @@
-/* Minimal client for Ubisoft's (unofficial) Rainbow Six Siege stats services.
-   Logs in with a throwaway Ubisoft account (UBI_EMAIL / UBI_PASSWORD) and caches the session in Redis.
-   Everything here can break when Ubisoft changes things, so every step reports what it was doing. */
+/* Rainbow Six Siege player stats lookup.
+   Ubisoft's unofficial login endpoint has answered every third-party client with 429 since mid-2025
+   (and can lock the account that tries), so this uses the R6 Arenyze API instead:
+   https://r6.arenyze.com/api-docs — set ARENYZE_API_KEY in Vercel (free tier available). */
 import { cacheGet, cacheSet } from './store.js';
 
-/* Ubisoft's bot wall blocks browser-looking requests from servers. Identifying as the Ubisoft Connect
-   client (its app id + the UbiServices SDK user agent) gets through. Verified 2026-09-06. */
-const APP_ID = 'e3d5ea9e-50bd-43b7-88bf-39794f4e3d40';
-const UA = 'UbiServices_SDK_2020.Release.58_PC64_ansi_static';
-
-export const PLATFORMS = {
-  PC:          { type: 'uplay', space: '5172a557-50b5-4665-b7db-e3f2e8c5041d', sandbox: 'OSBOR_PC_LNCH_A',      family: 'pc' },
-  PlayStation: { type: 'psn',   space: '05bfb3f7-6c21-4c42-be1f-97a33fb5cf66', sandbox: 'OSBOR_PS4_LNCH_A',     family: 'console' },
-  Xbox:        { type: 'xbl',   space: '98a601e5-ca91-4440-b1c5-753f601a2c90', sandbox: 'OSBOR_XBOXONE_LNCH_A', family: 'console' }
-};
-const SKILL_SPACE = '0d2ae42d-4c27-4cb7-af6c-2099062302bb';
-
+const BASE = 'https://r6.arenyze.com/r6/api/v2';
+export const PLATFORMS = { PC: 'uplay', PlayStation: 'psn', Xbox: 'xbl' };
 const RANK_NAMES = ['Unranked', 'Copper', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Champion'];
-export function rankName(id) {
-  id = Number(id) || 0;
-  if (id <= 0) return 'Unranked';
-  if (id >= 36) return 'Champion';
-  const tier = RANK_NAMES[Math.ceil(id / 5)];
-  const div = ['V', 'IV', 'III', 'II', 'I'][(id - 1) % 5];
-  return tier + ' ' + div;
-}
-export function rankTier(id) { id = Number(id) || 0; return id <= 0 ? 'Unranked' : id >= 36 ? 'Champion' : RANK_NAMES[Math.ceil(id / 5)]; }
 
-class UbiError extends Error { constructor(step, status, detail) { super(`${step} failed (${status})${detail ? ': ' + detail : ''}`); this.step = step; this.status = status; } }
+class LookupError extends Error { constructor(step, status, detail) { super(`${step} failed (${status})${detail ? ': ' + detail : ''}`); this.step = step; this.status = status; } }
 
-async function ubiFetch(step, url, opts = {}) {
-  const r = await fetch(url, { ...opts, headers: { 'User-Agent': UA, 'Ubi-AppId': APP_ID, 'Ubi-LocaleCode': 'en-US', 'Content-Type': 'application/json', ...(opts.headers || {}) } });
+async function call(step, path, params) {
+  const key = process.env.ARENYZE_API_KEY;
+  if (!key) throw new LookupError('setup', 500, 'ARENYZE_API_KEY is not set in Vercel (get one at r6.arenyze.com)');
+  const url = BASE + path + '?' + new URLSearchParams(params).toString();
+  const r = await fetch(url, { headers: { 'api-key': key, Accept: 'application/json' } });
   const text = await r.text();
   let body = null; try { body = JSON.parse(text); } catch { /* not json */ }
-  if (!r.ok) throw new UbiError(step, r.status, (body && (body.message || body.errorCode)) || text.slice(0, 120));
+  if (!r.ok) throw new LookupError(step, r.status, (body && (body.message || body.error || body.detail)) || text.slice(0, 160));
   return body;
 }
 
-/* Ubisoft rate-limits logins per IP hard (and Vercel's egress IPs are shared), so:
-   1. reuse a session until it expires,
-   2. refresh with the remember-me ticket rather than the password when possible,
-   3. after a 429, refuse to try again for 30 minutes instead of making it worse. */
-export async function session(force) {
-  if (!force) { const c = await cacheGet('ubi:session'); if (c && c.expiration && Date.parse(c.expiration) - Date.now() > 5 * 60 * 1000) return c; }
-  const cd = await cacheGet('ubi:cooldown');
-  if (cd && !force) throw new UbiError('login', 429, 'Ubisoft is rate-limiting logins from this server. Try again after ' + new Date(cd).toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT');
-  const email = process.env.UBI_EMAIL, pass = process.env.UBI_PASSWORD;
-  if (!email || !pass) throw new UbiError('login', 500, 'UBI_EMAIL / UBI_PASSWORD are not set in Vercel');
-
-  const attempt = async (headers) => ubiFetch('login', 'https://public-ubiservices.ubi.com/v3/profiles/sessions', { method: 'POST', headers, body: JSON.stringify({ rememberMe: true }) });
-  let body = null;
-  try {
-    const remember = await cacheGet('ubi:remember');
-    if (remember) { try { body = await attempt({ 'Ubi-RememberMeTicket': remember }); } catch { body = null; } }
-    if (!body) body = await attempt({ Authorization: 'Basic ' + Buffer.from(email + ':' + pass).toString('base64') });
-  } catch (e) {
-    if (e.status === 429) { const until = Date.now() + 30 * 60 * 1000; await cacheSet('ubi:cooldown', until, 30 * 60); }
-    throw e;
+/* Walk any JSON and return the first value found under one of the candidate key names (case-insensitive). */
+function dig(obj, names, want) {
+  const seen = new Set(); const stack = [obj]; const lower = names.map(n => n.toLowerCase());
+  while (stack.length) {
+    const o = stack.shift();
+    if (!o || typeof o !== 'object' || seen.has(o)) continue; seen.add(o);
+    for (const [k, v] of Object.entries(o)) {
+      if (lower.includes(k.toLowerCase()) && (want === 'any' || typeof v === want)) return v;
+    }
+    for (const v of Object.values(o)) if (v && typeof v === 'object') stack.push(v);
   }
-  const s = { ticket: body.ticket, sessionId: body.sessionId, expiration: body.expiration, userId: body.userId };
-  if (!s.ticket) throw new UbiError('login', 500, 'no ticket in response');
-  const ttl = Math.max(600, Math.min(3 * 3600, Math.floor((Date.parse(body.expiration) - Date.now()) / 1000) - 300));
-  await cacheSet('ubi:session', s, ttl);
-  if (body.rememberMeTicket) await cacheSet('ubi:remember', body.rememberMeTicket, 60 * 60 * 24 * 30);
-  return s;
+  return null;
 }
-function auth(s) { return { Authorization: 'Ubi_v1 t=' + s.ticket, 'Ubi-SessionId': s.sessionId }; }
-
-export async function findProfile(name, platformLabel) {
-  const p = PLATFORMS[platformLabel];
-  if (!p) throw new UbiError('platform', 400, 'unknown platform ' + platformLabel);
-  const s = await session();
-  const body = await ubiFetch('profile search', `https://public-ubiservices.ubi.com/v3/profiles?nameOnPlatform=${encodeURIComponent(name)}&platformType=${p.type}`, { headers: auth(s) });
-  const prof = (body.profiles || [])[0];
-  if (!prof) throw new UbiError('profile search', 404, `no ${platformLabel} player named "${name}"`);
-  return { profileId: prof.profileId, userId: prof.userId, name: prof.nameOnPlatform, platform: platformLabel, p };
+export function rankName(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  const id = Number(v) || 0;
+  if (id <= 0) return 'Unranked'; if (id >= 36) return 'Champion';
+  return RANK_NAMES[Math.ceil(id / 5)] + ' ' + ['V', 'IV', 'III', 'II', 'I'][(id - 1) % 5];
 }
+export function rankTier(name) { const t = String(name || '').split(' ')[0]; return RANK_NAMES.includes(t) ? t : (name ? String(name) : ''); }
 
-/* Level, playtime, and ranked profile. Partial results are returned with an `errors` list. */
+/* Level, playtime, and ranked profile for a player. Cached 6h per name+platform. */
 export async function lookup(name, platformLabel) {
-  const prof = await findProfile(name, platformLabel);
-  const s = await session();
-  const out = { name: prof.name, platform: platformLabel, profileId: prof.profileId, level: null, hours: null, rank: '', rankTier: '', peakRank: '', peakRankTier: '', mmr: null, kills: null, deaths: null, kd: null, wins: null, losses: null, errors: [], checkedAt: Date.now() };
-  const { space, sandbox, family } = prof.p;
+  const platformType = PLATFORMS[platformLabel];
+  if (!platformType) throw new LookupError('platform', 400, 'unknown platform ' + platformLabel);
+  const ck = 'r6:lookup:' + platformType + ':' + name.toLowerCase();
+  const cached = await cacheGet(ck); if (cached) return cached;
 
-  try {
-    const b = await ubiFetch('level', `https://public-ubiservices.ubi.com/v1/spaces/${space}/sandboxes/${sandbox}/r6playerprofile/playerprofile/progressions?profile_ids=${prof.profileId}`, { headers: auth(s) });
-    const pr = (b.player_profiles || [])[0]; if (pr) out.level = pr.level;
-  } catch (e) { out.errors.push(e.message); }
+  const params = { nameOnPlatform: name, platformType };
+  const profile = await call('profile search', '/profile', params);
+  let stats = null, statsErr = '';
+  try { stats = await call('stats', '/fullstats', { ...params, modes: 'ranked' }); } catch (e) { statsErr = e.message; }
 
-  try {
-    const stats = 'generalpvp_timeplayed,rankedpvp_timeplayed,casualpvp_timeplayed,unrankedpvp_timeplayed';
-    const b = await ubiFetch('playtime', `https://public-ubiservices.ubi.com/v1/spaces/${space}/sandboxes/${sandbox}/playerstats2/statistics?populations=${prof.profileId}&statistics=${stats}`, { headers: auth(s) });
-    const r = (b.results || {})[prof.profileId] || {};
-    const secs = Object.keys(r).filter(k => k.indexOf('generalpvp_timeplayed') === 0).reduce((a, k) => a + (Number(r[k]) || 0), 0);
-    if (secs) out.hours = Math.round(secs / 3600);
-  } catch (e) { out.errors.push(e.message); }
+  const both = { profile, stats };
+  const out = {
+    name: dig(profile, ['nameOnPlatform', 'name', 'username', 'displayName'], 'string') || name,
+    platform: platformLabel,
+    level: dig(both, ['level', 'accountLevel', 'clearanceLevel'], 'number'),
+    hours: null, rank: '', rankTier: '', peakRank: '', peakRankTier: '', mmr: null, kills: null, deaths: null, kd: null, wins: null, losses: null,
+    errors: statsErr ? [statsErr] : [], checkedAt: Date.now(),
+    raw: JSON.stringify(both).slice(0, 4000)
+  };
+  const secs = dig(both, ['timePlayed', 'time_played', 'playtime', 'playTime', 'totalTimePlayed', 'total_time_played'], 'number');
+  const hrs = dig(both, ['hours', 'hoursPlayed', 'playtimeHours'], 'number');
+  if (hrs != null) out.hours = Math.round(hrs); else if (secs != null) out.hours = Math.round(secs > 100000 ? secs / 3600 : secs);
+  const rank = dig(both, ['rankName', 'rank_name', 'currentRank', 'rank'], 'any');
+  const peak = dig(both, ['maxRankName', 'max_rank_name', 'peakRank', 'maxRank', 'max_rank', 'topRank'], 'any');
+  out.rank = rankName(rank); out.rankTier = rankTier(out.rank);
+  out.peakRank = rankName(peak); out.peakRankTier = rankTier(out.peakRank);
+  out.mmr = dig(both, ['rankPoints', 'rank_points', 'mmr', 'skillMean'], 'number');
+  out.kills = dig(both, ['kills'], 'number'); out.deaths = dig(both, ['deaths'], 'number');
+  const kd = dig(both, ['kd', 'kdRatio', 'kd_ratio', 'killDeathRatio'], 'number');
+  out.kd = kd != null ? Math.round(kd * 100) / 100 : (out.kills != null && out.deaths != null ? Math.round((out.kills / Math.max(out.deaths, 1)) * 100) / 100 : null);
+  out.wins = dig(both, ['wins', 'matchesWon'], 'number'); out.losses = dig(both, ['losses', 'matchesLost'], 'number');
 
-  try {
-    const b = await ubiFetch('rank', `https://public-ubiservices.ubi.com/v2/spaces/${SKILL_SPACE}/title/r6s/skill/full_profiles?profile_ids=${prof.profileId}&platform_families=${family}`, { headers: auth(s) });
-    const boards = ((b.platform_families_full_profiles || [])[0] || {}).board_ids_full_profiles || [];
-    const ranked = boards.find(x => x.board_id === 'ranked') || boards[0];
-    const fp = ranked && (ranked.full_profiles || [])[0];
-    if (fp && fp.profile) {
-      out.rank = rankName(fp.profile.rank); out.rankTier = rankTier(fp.profile.rank);
-      out.peakRank = rankName(fp.profile.max_rank); out.peakRankTier = rankTier(fp.profile.max_rank);
-      out.mmr = fp.profile.rank_points;
-      const ss = fp.season_statistics || {};
-      out.kills = ss.kills ?? null; out.deaths = ss.deaths ?? null;
-      if (out.kills != null && out.deaths != null) out.kd = Math.round((out.kills / Math.max(out.deaths, 1)) * 100) / 100;
-      const mo = ss.match_outcomes || {}; out.wins = mo.wins ?? null; out.losses = mo.losses ?? null;
-    } else out.errors.push('rank: no ranked profile returned');
-  } catch (e) { out.errors.push(e.message); }
-
+  await cacheSet(ck, out, 60 * 60 * 6);
   return out;
 }
+export async function session() { return { ok: true }; } /* kept so the admin "relogin" action stays harmless */

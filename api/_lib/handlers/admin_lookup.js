@@ -1,10 +1,9 @@
 import { json, requireRole, readBody } from '../http.js';
 import { getApplication, setApplication } from '../store.js';
-import { lookup, session } from '../ubi.js';
+import { lookup } from '../ubi.js';
 
-/* POST { login }                 → look up the applicant's Ubisoft stats, store on the application as `verified`
+/* POST { login }                 → look up the applicant's R6 stats (R6 Arenyze API), store on the application as `verified`
    POST { name, platform }        → ad-hoc lookup (no storage)
-   POST { action:'relogin' }      → force a fresh Ubisoft session
    Admin only. */
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
@@ -12,7 +11,6 @@ export default async function handler(req, res) {
   if (!me) return;
   const b = readBody(req);
   try {
-    if (b.action === 'relogin') { await session(true); return json(res, 200, { ok: true }); }
     if (b.login) {
       const app = await getApplication(String(b.login).toLowerCase());
       if (!app) return json(res, 400, { error: 'Unknown applicant' });

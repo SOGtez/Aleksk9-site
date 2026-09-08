@@ -135,6 +135,10 @@
     .danger { border-color: rgba(225,6,0,.35); }
     .confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
     .empty { padding: 28px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+    .lk-card { margin-top: 6px; }
+    .lk-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 16px; }
+    .lk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+    .lk-grid .stat b { font-size: 18px; }
     .ver { display: block; margin-top: 4px; font-size: 11px; line-height: 1.5; }
     .ver.ok { color: var(--fg-muted); }
     .ver.bad { color: var(--accent); }
@@ -258,7 +262,7 @@
               <select class="field" id="lk-platform"><option>PlayStation</option><option>Xbox</option><option>PC</option></select>
               <button class="btn btn-sm btn-primary" type="submit">Look up</button>
             </form>
-            <pre id="lk-out" class="small" style="white-space:pre-wrap;margin:0"></pre>
+            <div id="lk-out"></div>
           </div>
           <div class="card pad">
             <h3>Tip</h3>
@@ -423,10 +427,18 @@
         list.querySelectorAll('[data-remove-role]').forEach(function (b) { b.onclick = function () { api('/api/admin/roles', { login: b.dataset.removeRole, role: null }).then(function () { toast('Removed ' + b.dataset.removeRole); renderRoles(); }).catch(function (e) { toast(e.message); }); }; });
       }).catch(function (e) { toast(e.message); });
     }
+    function statsCard(v) {
+      var n = function (x, suffix) { return x == null || x === '' ? '<span class="lock">n/a</span>' : esc(x) + (suffix || ''); };
+      var cells = [['Level', n(v.level)], ['Hours', n(v.hours)], ['Rank', n(v.rank)], ['Peak rank', n(v.peakRank)], ['MMR', n(v.mmr)], ['K/D', n(v.kd)], ['Kills / Deaths', v.kills == null ? n(null) : esc(v.kills) + ' / ' + esc(v.deaths)], ['Wins / Losses', v.wins == null ? n(null) : esc(v.wins) + ' / ' + esc(v.losses)]];
+      return '<div class="lk-card"><div class="lk-head"><b>' + esc(v.name) + '</b><span class="chip">' + esc(v.platform) + '</span></div>' +
+        '<div class="lk-grid">' + cells.map(function (c) { return '<div class="stat"><b>' + c[1] + '</b><span>' + c[0] + '</span></div>'; }).join('') + '</div>' +
+        (v.errors && v.errors.length ? '<p class="small" style="margin-top:10px;color:var(--accent)">' + esc(v.errors.join(' · ')) + '</p>' : '') +
+        '<details style="margin-top:10px"><summary class="small" style="cursor:pointer">Raw reply</summary><pre class="small" style="white-space:pre-wrap;margin:8px 0 0;max-height:240px;overflow:auto">' + esc(v.raw || '') + '</pre></details></div>';
+    }
     document.getElementById('lk-form').onsubmit = function (e) {
       e.preventDefault(); var out = document.getElementById('lk-out'); out.textContent = 'Looking up…';
       api('/api/admin/lookup', { name: document.getElementById('lk-name').value.trim(), platform: document.getElementById('lk-platform').value })
-        .then(function (r) { out.textContent = JSON.stringify(r.verified, null, 2); }).catch(function (err) { out.textContent = 'Failed: ' + err.message; });
+        .then(function (r) { out.innerHTML = statsCard(r.verified); }).catch(function (err) { out.innerHTML = '<p class="muted" style="color:var(--accent)">' + esc(err.message) + '</p>'; });
     };
     document.getElementById('role-form').onsubmit = function (e) {
       e.preventDefault();

@@ -4,7 +4,7 @@
    https://r6.arenyze.com/api-docs — set ARENYZE_API_KEY in Vercel (free tier available). */
 import { cacheGet, cacheSet } from './store.js';
 
-const BASE = 'https://r6.arenyze.com/r6/api/v2';
+const BASE = 'https://public-api.arenyze.com/r6/api';
 export const PLATFORMS = { PC: 'uplay', PlayStation: 'psn', Xbox: 'xbl' };
 const RANK_NAMES = ['Unranked', 'Copper', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Champion'];
 
@@ -51,15 +51,23 @@ export async function lookup(name, platformLabel) {
   const cached = await cacheGet(ck); if (cached) return cached;
 
   const params = { nameOnPlatform: name, platformType };
-  const profile = await call('profile search', '/profile', params);
+  const profile = await call('profile search', '/v2/profile', params);
+  const player = profile && profile.player;
+  if (!profile || !player || !(player.nameOnPlatform || player.profileId || player.userId)) throw new LookupError('profile search', 404, `no ${platformLabel} player named "${name}"`);
   let stats = null, statsErr = '';
-  try { stats = await call('stats', '/fullstats', { ...params, modes: 'ranked' }); } catch (e) { statsErr = e.message; }
+  try { stats = await call('stats', '/v2/fullstats', { ...params, modes: 'ranked' }); } catch (e) { statsErr = e.message; }
 
   const both = { profile, stats };
+  /* Documented layout: profile.account.level, profile.stats.platform_families_full_profiles[].board_ids_full_profiles[] */
+  let ranked = null;
+  try {
+    const fams = (profile.stats && profile.stats.platform_families_full_profiles) || [];
+    for (const f of fams) for (const b of f.board_ids_full_profiles || []) if (!ranked && (b.board_id === 'ranked' || !ranked)) { const fp = (b.full_profiles || [])[0]; if (fp && b.board_id === 'ranked') ranked = fp; else if (fp && !ranked) ranked = fp; }
+  } catch { /* fall through to heuristics */ }
   const out = {
-    name: dig(profile, ['nameOnPlatform', 'name', 'username', 'displayName'], 'string') || name,
+    name: player.nameOnPlatform || name,
     platform: platformLabel,
-    level: dig(both, ['level', 'accountLevel', 'clearanceLevel'], 'number'),
+    level: (profile.account && typeof profile.account.level === 'number') ? profile.account.level : dig(both, ['level', 'accountLevel', 'clearanceLevel'], 'number'),
     hours: null, rank: '', rankTier: '', peakRank: '', peakRankTier: '', mmr: null, kills: null, deaths: null, kd: null, wins: null, losses: null,
     errors: statsErr ? [statsErr] : [], checkedAt: Date.now(),
     raw: JSON.stringify(both).slice(0, 4000)
@@ -67,15 +75,18 @@ export async function lookup(name, platformLabel) {
   const secs = dig(both, ['timePlayed', 'time_played', 'playtime', 'playTime', 'totalTimePlayed', 'total_time_played'], 'number');
   const hrs = dig(both, ['hours', 'hoursPlayed', 'playtimeHours'], 'number');
   if (hrs != null) out.hours = Math.round(hrs); else if (secs != null) out.hours = Math.round(secs > 100000 ? secs / 3600 : secs);
-  const rank = dig(both, ['rankName', 'rank_name', 'currentRank', 'rank'], 'any');
-  const peak = dig(both, ['maxRankName', 'max_rank_name', 'peakRank', 'maxRank', 'max_rank', 'topRank'], 'any');
+  const rp = ranked && ranked.profile, ss = ranked && ranked.season_statistics;
+  const rank = rp ? rp.rank : dig(both, ['rankName', 'rank_name', 'currentRank', 'rank'], 'any');
+  const peak = rp ? rp.max_rank : dig(both, ['maxRankName', 'max_rank_name', 'peakRank', 'maxRank', 'max_rank', 'topRank'], 'any');
   out.rank = rankName(rank); out.rankTier = rankTier(out.rank);
   out.peakRank = rankName(peak); out.peakRankTier = rankTier(out.peakRank);
-  out.mmr = dig(both, ['rankPoints', 'rank_points', 'mmr', 'skillMean'], 'number');
-  out.kills = dig(both, ['kills'], 'number'); out.deaths = dig(both, ['deaths'], 'number');
+  out.mmr = rp && typeof rp.rank_points === 'number' ? rp.rank_points : dig(both, ['rankPoints', 'rank_points', 'mmr', 'skillMean'], 'number');
+  out.kills = ss && typeof ss.kills === 'number' ? ss.kills : dig(both, ['kills'], 'number');
+  out.deaths = ss && typeof ss.deaths === 'number' ? ss.deaths : dig(both, ['deaths'], 'number');
+  if (ss && ss.match_outcomes) { out.wins = ss.match_outcomes.wins ?? null; out.losses = ss.match_outcomes.losses ?? null; }
   const kd = dig(both, ['kd', 'kdRatio', 'kd_ratio', 'killDeathRatio'], 'number');
   out.kd = kd != null ? Math.round(kd * 100) / 100 : (out.kills != null && out.deaths != null ? Math.round((out.kills / Math.max(out.deaths, 1)) * 100) / 100 : null);
-  out.wins = dig(both, ['wins', 'matchesWon'], 'number'); out.losses = dig(both, ['losses', 'matchesLost'], 'number');
+  if (out.wins == null) out.wins = dig(both, ['wins', 'matchesWon'], 'number'); if (out.losses == null) out.losses = dig(both, ['losses', 'matchesLost'], 'number');
 
   await cacheSet(ck, out, 60 * 60 * 6);
   return out;

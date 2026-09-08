@@ -33,6 +33,7 @@ export const DEFAULT_STATE = {
     { id: 'mycern',     name: 'MyCern',     tier: 0, info: '4000+ hrs · 10x Champ' },
     { id: 'vexjng',     name: 'Vexjng',     tier: 0, info: '1400+ hrs · 2x Champ' },
     { id: 'iso',        name: 'Iso',        tier: 0, info: '2000 hrs · 1x Champ' },
+    { id: 'mrflex',     name: 'MrFlex',     tier: 0, info: '2000 hrs · 1x Champ' },
 
     { id: 'nv30',       name: 'NV30',       tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor' },
     { id: 'beebo',      name: 'Beebo',      tier: 1, info: '1409 hrs · Emerald · Intel / Anchor' },
@@ -40,16 +41,19 @@ export const DEFAULT_STATE = {
     { id: 'jake',       name: 'Jake',       tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor' },
     { id: 'halo',       name: 'Halo',       tier: 1, info: '4000+ hrs · 2x Diamond · Flex / Support' },
     { id: 'tubs',       name: 'Tubs',       tier: 1, info: '962 hrs · 2x Emerald (PC) · Flex' },
+    { id: 'clovs',      name: 'Clovs',      tier: 1, info: '1500 hrs · lvl 230 · Gold' },
+    { id: 'nix',        name: 'Nix',        tier: 1, info: '870 hrs · lvl 140 · Gold' },
+    { id: 'cash',       name: 'Cash',       tier: 1, info: '860 hrs · lvl 203 · Gold' },
+    { id: 'grape',      name: 'Grape',      tier: 1, info: 'lvl 97 · Plat (PC), Gold roller' },
 
     { id: 'carlos',     name: 'Carlos',     tier: 2, info: '251 hrs · lvl 124 · Bronze' },
     { id: 'colin',      name: 'Colin',      tier: 2, info: '' },
-    { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
     { id: 'jimmy',      name: 'Jimmy',      tier: 2, info: '' },
     { id: 'mxlly',      name: 'Mxlly',      tier: 2, info: '202 hrs · lvl 90 · Bronze', twitch: 'darealmxlly' },
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
-    { id: 'angel',      name: 'Angel',      tier: 2, info: '98 hrs · lvl 66 · Silver' },
-    { id: 'niko2',      name: 'Niko',       tier: 2, info: '86 hrs · lvl 42 · Unranked' },
-    { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' }
+    { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' },
+    { id: 'abstract',   name: 'Abstract',   tier: 2, info: '300 hrs · lvl 100 · Silver' },
+    { id: 'jalen',      name: 'Jalen',      tier: 2, info: '1000 hrs · lvl 112 · Silver' }
   ],
   draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */
   eventAt: '',          /* ISO date-time of the draft / event, set from the admin page */

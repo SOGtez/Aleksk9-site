@@ -301,7 +301,10 @@
     .chat { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-elev); }
     @media (max-width: 899px) { .chat { min-height: 440px; } }
 
-    .chat iframe { flex: 1; width: 100%; min-height: 360px; border: 0; }
+    /* Twitch's own "Send a message" strip is cropped off the bottom of the embed so the site's box is the only input.
+       --chat-crop is how much of the embed's bottom to hide; bump it if Twitch changes that strip. */
+    .chat-view { flex: 1; position: relative; overflow: hidden; min-height: 360px; --chat-crop: 108px; }
+    .chat-view iframe { position: absolute; left: 0; top: 0; width: 100%; height: calc(100% + var(--chat-crop)); border: 0; }
     .composer { border-top: 1px solid var(--line); padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; background: var(--bg-elev); }
     .composer input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: #171717; color: var(--fg); border: 1px solid rgba(255,255,255,.18); font: inherit; font-size: 14px; }
     .composer input:focus { outline: none; border-color: var(--accent); }
@@ -687,7 +690,7 @@
         <div class="stream-grid">
           <div class="player" id="player"></div>
           <div class="chat">
-            <iframe id="chat-frame" title="Twitch chat"></iframe>
+            <div class="chat-view"><iframe id="chat-frame" title="Twitch chat"></iframe></div>
             <div class="composer" id="composer"><span class="hint">Loading chat…</span></div>
           </div>
         </div>

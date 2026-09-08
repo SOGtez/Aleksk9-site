@@ -298,7 +298,8 @@
     @media (min-width: 900px) { .player { aspect-ratio: auto; height: 100%; min-height: 420px; } .chat { min-height: 520px; } }
     .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
     .player .offline-note { position: absolute; left: 12px; bottom: 12px; padding: 8px 12px; border-radius: 999px; background: rgba(10,10,10,.8); border: 1px solid var(--line); font-size: 12px; color: var(--fg-muted); }
-    .chat { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-elev); min-height: 420px; }
+    .chat { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-elev); }
+    @media (max-width: 899px) { .chat { min-height: 440px; } }
 
     .chat iframe { flex: 1; width: 100%; min-height: 360px; border: 0; }
     .composer { border-top: 1px solid var(--line); padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; background: var(--bg-elev); }

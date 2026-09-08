@@ -158,6 +158,9 @@
     .section-head .sub { color: var(--fg-muted); font-size: 15px; }
     .section-head .sub b { color: var(--fg); font-weight: 700; }
     .section-head .sub .clock { color: var(--accent); font-weight: 700; }
+    .howto { display: inline-block; vertical-align: middle; margin-left: 12px; font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--fg-muted); padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-strong); transition: color .2s, border-color .2s; }
+    .howto:hover { color: var(--fg); border-color: var(--accent); }
+    @media (max-width: 759px) { .howto { display: inline-flex; margin: 6px 0 0; } }
     .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
     .card { background: var(--bg-elev); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 20px 50px -30px rgba(0,0,0,.9); }
     .empty-note { padding: 32px 20px; text-align: center; color: var(--fg-muted); font-size: 14px; }
@@ -452,7 +455,7 @@
     <section class="block" id="draft" aria-labelledby="draft-title">
       <div class="container">
         <div class="section-head">
-          <h2 id="draft-title">Draft Board</h2>
+          <h2 id="draft-title">Draft Board <a class="howto" href="/how-to-draft">How to draft →</a></h2>
           <p class="sub" id="draft-sub"></p>
         </div>
         <div class="card turn" id="turn" aria-live="polite"></div>

@@ -16,7 +16,7 @@ export const DEFAULT_STATE = {
     'Shields allowed. Roaming allowed. Spawn peeks allowed.',
     'Snake draft. Round 1 goes worst captain to best, then the order flips every round.'
   ],
-  maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Consulate', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
+  maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Villa', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
   teams: [
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
     { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlediddlemiddle' },

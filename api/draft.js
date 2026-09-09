@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     if (body.action === 'open') { state.draft.open = true; state.draft.turnStartedAt = Date.now(); }
     if (body.action === 'close') state.draft.open = false;
     if (body.action === 'clock') state.draft.pickSeconds = Math.max(15, Math.min(600, Number(body.seconds) || 90));
-    if (body.action === 'event') { state.eventAt = body.eventAt ? String(body.eventAt).slice(0, 40) : ''; state.eventNote = String(body.eventNote || '').slice(0, 120); }
+    if (body.action === 'event') { state.eventAt = body.eventAt ? String(body.eventAt).slice(0, 40) : ''; state.eventNote = String(body.eventNote || '').slice(0, 120); state.eventSet = true; }
     if (body.action === 'undo') { state.picks.pop(); state.draft.turnStartedAt = Date.now(); }
     if (body.action === 'reset') { state.picks = []; state.draft.turnStartedAt = Date.now(); }
     if (body.action === 'skip') {

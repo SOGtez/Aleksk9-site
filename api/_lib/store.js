@@ -39,7 +39,7 @@ export async function getState() {
   for (const t of state.teams) if (links[t.id]) t.twitch = links[t.id];
   if (s && Array.isArray(s.teams)) {
     state.draft = { ...state.draft, ...(s.draft || {}) };
-    state.eventAt = s.eventAt || ''; state.eventNote = s.eventNote || '';
+    if (s.eventAt !== undefined && s.eventSet) { state.eventAt = s.eventAt; state.eventNote = s.eventNote || ''; } /* admin-set date wins; otherwise the code default */
     state.teamNames = s.teamNames && typeof s.teamNames === 'object' ? s.teamNames : {};
     for (const t of state.teams) if (state.teamNames[t.id]) t.name = String(state.teamNames[t.id]).slice(0, 32);
     state.picks = Array.isArray(s.picks) ? s.picks : [];

@@ -10,11 +10,16 @@ export const DEFAULT_STATE = {
   helpers: ['pedrosahur', 'a1iy'],
   format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
   rules: [
-    'First to 7 rounds wins. If it goes 6-6, overtime is first to 8.',
-    'Sides swap every 3 rounds.',
-    'Pro League operator bans.',
-    'Shields allowed. Roaming allowed. Spawn peeks allowed.',
-    'Snake draft. Round 1 goes worst captain to best, then the order flips every round.'
+    { h: 'Game', t: 'First to 7 rounds wins. Sides swap every 3 rounds. If it goes 6-6, overtime is first to 8.' },
+    { h: 'Map bans', t: 'Captains ban maps until one is left. The last 3 maps standing are used for the finals.' },
+    { h: 'Draft', t: 'Snake draft. Round 1 goes in the listed captain order, then the order flips every round.' },
+    { h: 'Teams', t: 'Each team has 1 Champ and 1 ranked player from Notvash30\'s community, plus 3 newer players from Aleks\'s community.' },
+    { h: 'Streaming', t: 'You cannot be watching the stream while your own game is being played. If you are, your team is disqualified.' },
+    { h: 'PC players', t: 'Moss is required for every PC player (you will be told who to send it to). PC players must cap at 144 fps, nothing higher.' },
+    { h: 'Conduct', t: 'No team-killing or throwing games on purpose. Everyone must be in their own team\'s voice call.' },
+    { h: 'Subs', t: 'A sub has to be a similar skill level to the player they replace, to keep teams fair.' },
+    { h: 'Rehosts & timeouts', t: 'A disconnect before the first kill means a rehost. After the first kill the round carries on. Intentional disconnects are punishable. Each captain may request 2 timeouts per game.' },
+    { h: 'Disputes', t: 'Every dispute needs proof. No proof, no punishment. The hosts\' decisions are final.' }
   ],
   maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Villa', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
   teams: [
@@ -56,8 +61,8 @@ export const DEFAULT_STATE = {
     { id: 'jalen',      name: 'Jalen',      tier: 2, info: '1000 hrs · lvl 112 · Silver' }
   ],
   draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */
-  eventAt: '',          /* ISO date-time of the draft / event, set from the admin page */
-  eventNote: '',
+  eventAt: '2026-09-19T22:30:00Z',   /* Sep 19, 3:30 PM Pacific. Admins can change it from the admin page */
+  eventNote: '3:30 PM PT · 6:30 PM CT · 7:30 PM ET',
   teamNames: {},        /* teamId → name chosen by the captain */
   picks: [],            /* [{ team, player, by, at, auto? }] in order */
   matches: [],          /* [{ id, teams:[tid, tid], map, status:'upcoming'|'live'|'final', score:[n, n] }] */

@@ -61,7 +61,7 @@ export const DEFAULT_STATE = {
     { id: 'jalen',      name: 'Jalen',      tier: 2, info: '1000 hrs · lvl 112 · Silver' }
   ],
   draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */
-  eventAt: '2026-09-19T22:30:00Z',   /* Sep 19, 3:30 PM Pacific. Admins can change it from the admin page */
+  eventAt: '2026-09-19T22:30:00Z',   /* Tournament start: Sep 19, 3:30 PM Pacific. The draft is opened by an admin before then. */
   eventNote: '3:30 PM PT · 6:30 PM CT · 7:30 PM ET',
   teamNames: {},        /* teamId → name chosen by the captain */
   picks: [],            /* [{ team, player, by, at, auto? }] in order */

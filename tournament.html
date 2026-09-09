@@ -655,7 +655,7 @@
     function tickEvent() {
       var el = document.getElementById('event-pill'); if (!el || !D.eventAt) return;
       var left = Date.parse(D.eventAt) - Date.now();
-      el.textContent = (draftDone() ? 'Played ' : left > 0 ? 'Draft ' + fmtPT(D.eventAt) + ' · in ' + fmtLeft(left) : (draftOpen() ? 'Draft is live' : 'Draft ' + fmtPT(D.eventAt)));
+      el.textContent = left > 0 ? 'Tournament ' + fmtPT(D.eventAt) + ' · in ' + fmtLeft(left) : 'Tournament ' + fmtPT(D.eventAt);
     }
     function clockLeft() { var d = D.draft || {}; if (!d.open || !d.turnStartedAt) return null; return d.turnStartedAt + (d.pickSeconds || 90) * 1000 - Date.now(); }
     function fmtClock(ms) { var s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + ('0' + s % 60).slice(-2); }
@@ -786,7 +786,7 @@
       var skipHtml = role === 'admin' && draftOpen() ? '<button class="btn btn-sm btn-ghost" id="skip-btn" hidden>Time\'s up · auto-pick</button>' : '';
       if (!draftOpen() && role !== 'admin') {
         el.classList.add('is-locked');
-        el.innerHTML = '<span class="avatar">🔒</span><span class="tx"><b>Draft not open yet</b><span>' + (D.eventAt ? 'Scheduled for ' + esc(fmtPT(D.eventAt)) + '. ' : '') + esc(t.captain) + ' has the first pick when it opens.' + (myTeam() ? ' Keep this page open, you will get a sound and a flashing tab when it is your turn.' : '') + '</span></span>';
+        el.innerHTML = '<span class="avatar">🔒</span><span class="tx"><b>Draft not open yet</b><span>The admin opens the draft before the tournament' + (D.eventAt ? ' on ' + esc(fmtPT(D.eventAt)) : '') + '. ' + esc(t.captain) + ' has the first pick when it opens.' + (myTeam() ? ' Keep this page open, you will get a sound and a flashing tab when it is your turn.' : '') + '</span></span>';
         document.getElementById('draft-sub').innerHTML = '<b>Draft locked.</b> Pick <b>' + slot.pickNo + ' of ' + tot + '</b> is next.';
         return;
       }
@@ -924,7 +924,7 @@
       var foot = '';
       if (!slot) foot = '<span>All picks are in.</span>';
       else if (can) foot = '<span>Your pick, <b>' + esc(team(slot.team).captain) + '</b>.</span>';
-      else if (!draftOpen()) foot = '<span>The draft opens ' + (D.eventAt ? esc(fmtPT(D.eventAt)) : 'when the admin starts it') + '.</span>';
+      else if (!draftOpen()) foot = '<span>The draft opens when the admin starts it, before the tournament' + (D.eventAt ? ' on ' + esc(fmtPT(D.eventAt)) : '') + '.</span>';
       else if (myTeam()) foot = '<span>Waiting on <b>' + esc(team(slot.team).captain) + '</b>.</span>';
       else foot = '<span>Only the captain on the clock can draft. Log in with Twitch if that is you.</span>';
       if (role === 'admin') foot += '<span>' + (D.picks.length ? '<button class="link-btn" id="undo-btn">Undo last pick</button> · ' : '') + '<button class="link-btn" id="reset-btn">Reset draft</button></span>';

@@ -34,6 +34,7 @@ export const DEFAULT_STATE = {
   ],
   rounds: 4,
   tiers: ['Champs', 'Ranked', 'Rookies'],
+  quota: [1, 1, 2],     /* max picks per team from each tier (captain not counted). If nothing legal is left, any pick is allowed. */
   pool: [
     { id: 'duke',       name: 'Duke',       tier: 0, info: '4000+ hrs · 3x Champ' },
     { id: 'zynjto',     name: 'Zynjto',     tier: 0, info: '8000+ hrs · 6x Champ · Flex / Support', twitch: 'zynjto' },
@@ -72,6 +73,20 @@ export const DEFAULT_STATE = {
   updatedAt: 0
 };
 
+/* Team make-up rule. Returns '' when the pick is allowed, otherwise the reason. */
+export function pickBlockReason(state, teamId, playerId) {
+  const q = state.quota; if (!Array.isArray(q) || !q.length) return '';
+  const pl = state.pool.find(p => p.id === playerId); if (!pl) return 'Unknown player';
+  const taken = new Set(state.picks.map(p => p.player));
+  const have = state.picks.filter(p => p.team === teamId).map(p => (state.pool.find(x => x.id === p.player) || {}).tier || 0);
+  const count = t => have.filter(x => x === t).length;
+  const legal = p => q[p.tier || 0] == null || count(p.tier || 0) < q[p.tier || 0];
+  if (legal(pl)) return '';
+  const anyLegal = state.pool.some(p => !taken.has(p.id) && legal(p));
+  if (!anyLegal) return ''; /* nothing legal left in the pool → let them pick anyway so the draft can finish */
+  const tierName = (state.tiers || [])[pl.tier || 0] || 'that tier';
+  return `Team already has ${q[pl.tier || 0]} from ${tierName}`;
+}
 /* Snake order: odd rounds use the team list order, even rounds reverse it. */
 export function pickOrder(state, round) {
   const ids = state.teams.map(t => t.id);

@@ -566,7 +566,7 @@
         { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver' },
         { id: 'niko', name: 'Team Niko', captain: 'Niko', info: '263 hrs · lvl 65 · Bronze' }
       ],
-      rounds: 4, tiers: ['Champs', 'Ranked', 'Rookies'],
+      rounds: 4, tiers: ['Champs', 'Ranked', 'Rookies'], quota: [1, 1, 2],
       pool: [
         { id: 'duke', name: 'Duke', tier: 0, info: '4000+ hrs · 3x Champ' },
         { id: 'zynjto', name: 'Zynjto', tier: 0, info: '8000+ hrs · 6x Champ · Flex / Support' },
@@ -686,6 +686,25 @@
     }
     window.addEventListener('focus', function () { if (titleFlash) { clearInterval(titleFlash); titleFlash = null; document.title = baseTitle; } });
     function canEdit() { return role === 'helper' || role === 'admin'; }
+    /* Team make-up rule (mirrors the server). '' = allowed, otherwise the reason. */
+    function blockReason(tid, pid) {
+      var q = D.quota; if (!q || !q.length) return '';
+      var pl = player(pid); if (!pl) return '';
+      var have = D.picks.filter(function (p) { return p.team === tid; }).map(function (p) { var x = player(p.player); return x ? (x.tier || 0) : 0; });
+      var count = function (t) { return have.filter(function (x) { return x === t; }).length; };
+      var legal = function (p) { return q[p.tier || 0] == null || count(p.tier || 0) < q[p.tier || 0]; };
+      if (legal(pl)) return '';
+      var anyLegal = D.pool.some(function (p) { return !takenBy(p.id) && legal(p); });
+      if (!anyLegal) return '';
+      return 'Already has ' + q[pl.tier || 0] + ' from ' + ((D.tiers || [])[pl.tier || 0] || 'that tier');
+    }
+    function stillNeeds(tid) {
+      var q = D.quota; if (!q || !q.length) return '';
+      var have = D.picks.filter(function (p) { return p.team === tid; }).map(function (p) { var x = player(p.player); return x ? (x.tier || 0) : 0; });
+      var parts = [];
+      q.forEach(function (n, t) { var left = n - have.filter(function (x) { return x === t; }).length; if (left > 0) parts.push(left + ' ' + (D.tiers[t] || '').replace(/s$/, '') + (left > 1 ? 's' : '')); });
+      return parts.join(', ');
+    }
     function roster(tid) {
       var t = team(tid); var list = [{ id: tid, name: t.captain, captain: true, info: t.info, avatar: t.avatar, rank: t.rank, rankVerified: t.rankVerified }];
       D.picks.forEach(function (p) { if (p.team === tid) { var pl = player(p.player); if (pl) list.push(pl); } });
@@ -797,7 +816,8 @@
       }
       if (canDraftNow()) {
         el.classList.add('is-you');
-        el.innerHTML = who + '<span class="tx"><b>Your pick, ' + esc(t.captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Tap <b>Draft</b> next to a player below, then confirm.</span></span>' +
+        var need = stillNeeds(slot.team);
+        el.innerHTML = who + '<span class="tx"><b>Your pick, ' + esc(t.captain) + '!</b><span>Pick ' + slot.pickNo + ' of ' + tot + ' · Round ' + slot.round + '. Tap <b>Draft</b> next to a player below, then confirm.' + (need ? ' Still needs: <b>' + esc(need) + '</b>.' : '') + '</span></span>' +
           clockHtml + '<button class="btn btn-primary btn-sm" id="goto-pool">Choose a player</button>' + skipHtml;
       } else if (myTeam()) {
         var order = pickOrder(slot.round), mine = order.indexOf(myTeam()), cur = order.indexOf(slot.team);
@@ -911,9 +931,11 @@
         html += '<div class="card tier"><div class="tier-head">' + esc(name) + '<span>' + left + ' of ' + list.length + ' left</span></div><ul class="pool-list">';
         list.forEach(function (p) {
           var t = takenBy(p.id); if (!t) open++;
-          html += '<li class="pool-item' + (t ? ' is-taken' : '') + (confirming === p.id ? ' is-confirming' : '') + '">' + av(p) +
+          var why = (!t && slot) ? blockReason(slot.team, p.id) : '';
+          html += '<li class="pool-item' + (t || (can && why) ? ' is-taken' : '') + (confirming === p.id ? ' is-confirming' : '') + '">' + av(p) +
             '<span class="who"><div class="nm">' + esc(p.name) + badge(p, true) + '</div><div class="inf">' + esc(p.info || '—') + '</div></span>';
           if (t) html += '<span class="tb">' + esc(team(t).name) + '</span>';
+          else if (can && why) html += '<span class="tb" title="' + esc(why) + '">' + esc(why) + '</span>';
           else if (can && confirming === p.id) html += '<span class="confirm">Draft ' + esc(p.name) + '?<button class="btn btn-sm btn-draft" data-confirm="' + esc(p.id) + '">Yes</button><button class="link-btn" data-cancel-draft>Cancel</button></span>';
           else if (can) html += '<button class="btn btn-sm btn-draft" data-draft="' + esc(p.id) + '">Draft</button>';
           html += '</li>';

@@ -1,6 +1,6 @@
 import { json, requireRole, readBody } from './_lib/http.js';
 import { getState, setState } from './_lib/store.js';
-import { nextSlot } from './_lib/defaults.js';
+import { nextSlot, pickBlockReason } from './_lib/defaults.js';
 
 /* POST { action:'pick', player }        — captain on the clock (draft must be open), or admin
    POST { action:'rename', name, teamId? } — captain renames own team; admin any team
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       const slot = nextSlot(state);
       if (!slot) return json(res, 409, { error: 'The draft is already complete' });
       const taken = new Set(state.picks.map(p => p.player));
-      const best = state.pool.slice().sort((a, b) => (a.tier || 0) - (b.tier || 0)).find(p => !taken.has(p.id));
+      const best = state.pool.slice().sort((a, b) => (a.tier || 0) - (b.tier || 0)).find(p => !taken.has(p.id) && !pickBlockReason(state, slot.team, p.id));
       if (!best) return json(res, 409, { error: 'No players left' });
       state.picks.push({ team: slot.team, player: best.id, by: me.user.login, at: Date.now(), auto: true });
       state.draft.turnStartedAt = Date.now();
@@ -58,6 +58,8 @@ export default async function handler(req, res) {
   const pid = String(body.player || '');
   if (!state.pool.some(p => p.id === pid)) return json(res, 400, { error: 'Unknown player' });
   if (state.picks.some(p => p.player === pid)) return json(res, 409, { error: 'That player is already drafted' });
+  const why = pickBlockReason(state, slot.team, pid);
+  if (why) return json(res, 409, { error: why });
   state.picks.push({ team: slot.team, player: pid, by: me.user.login, at: Date.now() });
   state.draft.turnStartedAt = Date.now();
   await setState(state);

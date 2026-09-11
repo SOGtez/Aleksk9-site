@@ -22,6 +22,7 @@ export default async function handler(req, res) {
   if (body.action === 'rename') {
     const tid = isAdmin && body.teamId ? String(body.teamId) : myTeam;
     if (!tid || !state.teams.some(t => t.id === tid)) return json(res, 403, { error: 'You can only rename your own team' });
+    if (!isAdmin && state.eventAt && Date.now() >= Date.parse(state.eventAt) - 24 * 3600 * 1000) return json(res, 403, { error: 'Team names are locked from the day before the tournament' });
     const name = String(body.name || '').trim().replace(/\s+/g, ' ').slice(0, 32);
     if (!name) delete state.teamNames[tid]; else state.teamNames[tid] = name;
     await setState(state);

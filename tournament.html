@@ -184,7 +184,8 @@
     .turn .clock.low { color: var(--accent); border-color: rgba(225,6,0,.6); animation: blink 1s ease-in-out infinite; }
     .turn .clock.over { color: var(--fg-dim); }
     .turn.is-locked { border-style: dashed; }
-    .team-head > span, .roster-head > span { display: block; flex: 1 1 auto; min-width: 0; }
+    .team-head > span:not(.avatar), .roster-head > span:not(.avatar) { display: block; flex: 1 1 auto; min-width: 0; }
+    .team-head .avatar, .roster-head .avatar, .turn .avatar, .cell .avatar, .pool-item .avatar { flex: 0 0 auto; }
     .team-head .tn, .roster-head .tn { min-width: 0; }
     .rename { display: flex; align-items: center; gap: 6px; min-width: 0; }
     .rename > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -843,8 +844,9 @@
       };
     }
 
+    function renameOpen() { return !D.eventAt || Date.now() < Date.parse(D.eventAt) - 24 * 3600 * 1000; }
     function teamNameHtml(t) {
-      var can = LIVE && (role === 'admin' || myTeam() === t.id);
+      var can = LIVE && (role === 'admin' || (myTeam() === t.id && renameOpen()));
       if (!can) return '<div class="tn">' + esc(t.name) + '</div>';
       return '<div class="tn rename"><span>' + esc(t.name) + '</span><button type="button" data-rename="' + esc(t.id) + '" title="Rename team">✎</button></div>';
     }
@@ -953,6 +955,7 @@
       else if (can) foot = '<span>Your pick, <b>' + esc(team(slot.team).captain) + '</b>.</span>';
       else if (!draftOpen()) foot = '<span>The draft opens when the admin starts it, before the tournament' + (D.eventAt ? ' on ' + esc(fmtPT(D.eventAt)) : '') + '.</span>';
       else if (myTeam()) foot = '<span>Waiting on <b>' + esc(team(slot.team).captain) + '</b>.</span>';
+      if (myTeam() && role !== 'admin') foot += '<span>' + (renameOpen() ? 'You can rename your team until the day before the tournament.' : 'Team names are locked.') + '</span>';
       else foot = '<span>Only the captain on the clock can draft. Log in with Twitch if that is you.</span>';
       if (role === 'admin') foot += '<span>' + (D.picks.length ? '<button class="link-btn" id="undo-btn">Undo last pick</button> · ' : '') + '<button class="link-btn" id="reset-btn">Reset draft</button></span>';
       document.getElementById('pool-foot').innerHTML = foot;

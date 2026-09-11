@@ -1,0 +1,263 @@
+{
+  "savedAt": "2026-09-11T22:44:54.294025Z",
+  "tournament": "R6 5v5 Tournament",
+  "eventAt": "2026-09-19T22:30:00Z",
+  "draftOrderRound1": [
+    "Frankie",
+    "Leo",
+    "Cuzan",
+    "Carlos",
+    "MrOctober",
+    "Niko"
+  ],
+  "picks": [
+    {
+      "no": 1,
+      "team": "diddy playhouse",
+      "captain": "Frankie",
+      "player": "Duke",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 2,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "Zynjto",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 3,
+      "team": "val gf",
+      "captain": "Cuzan",
+      "player": "MyCern",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 4,
+      "team": "Team Carlos",
+      "captain": "Carlos",
+      "player": "Vexjng",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 5,
+      "team": "Galaxy",
+      "captain": "MrOctober",
+      "player": "Iso",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 6,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "MrFlex",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 7,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "Notvash30",
+      "tier": "Ranked",
+      "auto": false
+    },
+    {
+      "no": 8,
+      "team": "Galaxy",
+      "captain": "MrOctober",
+      "player": "Halo",
+      "tier": "Ranked",
+      "auto": false
+    },
+    {
+      "no": 9,
+      "team": "Team Carlos",
+      "captain": "Carlos",
+      "player": "Beebo",
+      "tier": "Ranked",
+      "auto": false
+    },
+    {
+      "no": 10,
+      "team": "val gf",
+      "captain": "Cuzan",
+      "player": "Noni",
+      "tier": "Ranked",
+      "auto": false
+    },
+    {
+      "no": 11,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "Jake",
+      "tier": "Ranked",
+      "auto": false
+    },
+    {
+      "no": 12,
+      "team": "diddy playhouse",
+      "captain": "Frankie",
+      "player": "Tubs",
+      "tier": "Ranked",
+      "auto": false
+    },
+    {
+      "no": 13,
+      "team": "diddy playhouse",
+      "captain": "Frankie",
+      "player": "Clovs",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 14,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "AleksK9",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 15,
+      "team": "val gf",
+      "captain": "Cuzan",
+      "player": "Cash",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 16,
+      "team": "Team Carlos",
+      "captain": "Carlos",
+      "player": "Pocket",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 17,
+      "team": "Galaxy",
+      "captain": "MrOctober",
+      "player": "Grape",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 18,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "Jalen",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 19,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "Abstract",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 20,
+      "team": "Galaxy",
+      "captain": "MrOctober",
+      "player": "Nix",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 21,
+      "team": "Team Carlos",
+      "captain": "Carlos",
+      "player": "NewbSlayer",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 22,
+      "team": "val gf",
+      "captain": "Cuzan",
+      "player": "Mxlly",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 23,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "Fiddle",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 24,
+      "team": "diddy playhouse",
+      "captain": "Frankie",
+      "player": "Colin",
+      "tier": "Ranked",
+      "auto": false
+    }
+  ],
+  "rosters": {
+    "diddy playhouse": {
+      "captain": "Frankie",
+      "players": [
+        "Duke",
+        "Tubs",
+        "Clovs",
+        "Colin"
+      ]
+    },
+    "Team Leo": {
+      "captain": "Leo",
+      "players": [
+        "Zynjto",
+        "Jake",
+        "AleksK9",
+        "Fiddle"
+      ]
+    },
+    "val gf": {
+      "captain": "Cuzan",
+      "players": [
+        "MyCern",
+        "Noni",
+        "Cash",
+        "Mxlly"
+      ]
+    },
+    "Team Carlos": {
+      "captain": "Carlos",
+      "players": [
+        "Vexjng",
+        "Beebo",
+        "Pocket",
+        "NewbSlayer"
+      ]
+    },
+    "Galaxy": {
+      "captain": "MrOctober",
+      "players": [
+        "Iso",
+        "Halo",
+        "Grape",
+        "Nix"
+      ]
+    },
+    "Team Niko": {
+      "captain": "Niko",
+      "players": [
+        "MrFlex",
+        "Notvash30",
+        "Jalen",
+        "Abstract"
+      ]
+    }
+  }
+}

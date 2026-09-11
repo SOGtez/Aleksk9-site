@@ -56,6 +56,7 @@ export const DEFAULT_STATE = {
 
     { id: 'colin',      name: 'Colin',      tier: 1, info: '1000 hrs · 4x Plat', twitch: 'colin4423' },
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
+    { id: 'fiddle',     name: 'Fiddle',     tier: 2, info: '52 hrs · lvl 32 · Unranked', twitch: 'fiddlediddlemiddle' },
     { id: 'mxlly',      name: 'Mxlly',      tier: 2, info: '202 hrs · lvl 90 · Bronze', twitch: 'darealmxlly' },
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
     { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' },

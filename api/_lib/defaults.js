@@ -27,7 +27,7 @@ export const DEFAULT_STATE = {
     { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlediddlemiddle' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
     { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' },
-    { id: 'carlos',    name: 'Team Carlos',    captain: 'Carlos',    info: '251 hrs · lvl 124 · Bronze', twitch: 'carcarshaur' },
+    { id: 'cuzan',     name: 'Team Cuzan',     captain: 'Cuzan',     info: '',                           twitch: 'cuz4n' },
     { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' }
   ],
   rounds: 4,
@@ -52,7 +52,7 @@ export const DEFAULT_STATE = {
     { id: 'grape',      name: 'Grape',      tier: 2, info: 'lvl 97 · Plat (PC), Gold roller' },
 
     { id: 'colin',      name: 'Colin',      tier: 1, info: '1000 hrs · 4x Plat', twitch: 'colin4423' },
-    { id: 'cuzan',      name: 'Cuzan',      tier: 2, info: '', twitch: 'cuz4n' },
+    { id: 'carlos',     name: 'Carlos',     tier: 2, info: '251 hrs · lvl 124 · Bronze', twitch: 'carcarshaur' },
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
     { id: 'mxlly',      name: 'Mxlly',      tier: 2, info: '202 hrs · lvl 90 · Bronze', twitch: 'darealmxlly' },
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },

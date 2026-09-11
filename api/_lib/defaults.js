@@ -26,10 +26,10 @@ export const DEFAULT_STATE = {
   maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Villa', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
   teams: [
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
-    { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlediddlemiddle' },
-    { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
     { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' },
     { id: 'cuzan',     name: 'Team Cuzan',     captain: 'Cuzan',     info: '',                           twitch: 'cuz4n' },
+    { id: 'fiddle',    name: 'Team Fiddle',    captain: 'Fiddle',    info: '52 hrs · lvl 32 · Unranked',  twitch: 'fiddlediddlemiddle' },
+    { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
     { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' }
   ],
   rounds: 4,

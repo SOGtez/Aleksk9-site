@@ -8,6 +8,8 @@ export const DEFAULT_STATE = {
   hosts: ['AleksK9', 'Notvash30'],
   /* Twitch logins (lowercase) who can enter scores and stats. Admins can add more from the site. */
   helpers: ['pedrosahur', 'a1iy'],
+  /* Twitch logins (lowercase) who are admins, in addition to ADMIN_LOGINS in Vercel. */
+  admins: ['cuz4n'],
   format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
   rules: [
     { h: 'Game', t: 'First to 7 rounds wins. Sides swap every 3 rounds. If it goes 6-6, overtime is first to 8.' },

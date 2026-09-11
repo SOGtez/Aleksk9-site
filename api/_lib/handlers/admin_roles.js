@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   if (!me) return;
   if (req.method === 'GET') return json(res, 200, {
     roles: await getRoles(),
-    alwaysAdmin: (process.env.ADMIN_LOGINS || '').split(',').map(s => s.trim()).filter(Boolean),
+    alwaysAdmin: (process.env.ADMIN_LOGINS || '').split(',').map(s => s.trim()).filter(Boolean).concat(DEFAULT_STATE.admins || []),
     configCaptains: (await getState()).teams.filter(t => t.twitch).map(t => ({ login: t.twitch, team: t.id })),
     configHelpers: DEFAULT_STATE.helpers || []
   });

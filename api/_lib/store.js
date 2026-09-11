@@ -69,7 +69,7 @@ export async function roleFor(login) {
   if (!login) return 'viewer';
   login = login.toLowerCase();
   const admins = (process.env.ADMIN_LOGINS || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
-  if (admins.includes(login)) return 'admin';
+  if (admins.includes(login) || (DEFAULT_STATE.admins || []).some(a => a.toLowerCase() === login)) return 'admin';
   /* Captains named in the active config (defaults.js, or the override built from applications) get their team's role. */
   const ov = await redis().get(KEY_OVERRIDE);
   const teams = ov && Array.isArray(ov.teams) && ov.teams.length >= 2 ? ov.teams : DEFAULT_STATE.teams;

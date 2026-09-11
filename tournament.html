@@ -184,10 +184,15 @@
     .turn .clock.low { color: var(--accent); border-color: rgba(225,6,0,.6); animation: blink 1s ease-in-out infinite; }
     .turn .clock.over { color: var(--fg-dim); }
     .turn.is-locked { border-style: dashed; }
-    .rename { display: inline-flex; align-items: center; gap: 6px; }
+    .team-head > span, .roster-head > span { display: block; flex: 1 1 auto; min-width: 0; }
+    .team-head .tn, .roster-head .tn { min-width: 0; }
+    .rename { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .rename > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rename button { flex: 0 0 auto; }
+    .rename input { max-width: 100%; width: 100%; }
     .rename button { font-size: 11px; color: var(--fg-dim); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--line); }
     .rename button:hover { color: var(--fg); border-color: var(--line-strong); }
-    .rename input { width: 150px; padding: 4px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--accent); font-size: 13px; font-weight: 700; }
+    .rename input { padding: 4px 8px; border-radius: 8px; background: var(--bg-elev-2); color: var(--fg); border: 1px solid var(--accent); font-size: 13px; font-weight: 700; }
     .turn .next { flex-basis: 100%; font-size: 12px; color: var(--fg-muted); display: flex; flex-wrap: wrap; gap: 4px 6px; align-items: center; }
     .turn .next em { font-style: normal; font-weight: 700; color: var(--fg); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-strong); }
     .turn.is-you { border-color: rgba(225,6,0,.6); background: linear-gradient(90deg, rgba(225,6,0,.16), var(--bg-elev) 60%); animation: turnpulse 2s var(--ease) infinite; }

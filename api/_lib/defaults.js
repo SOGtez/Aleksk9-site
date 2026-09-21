@@ -28,7 +28,7 @@ export const DEFAULT_STATE = {
     { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' },
     { id: 'jullian',   name: 'Team Jullian',   captain: 'Jullian',   info: '',                           twitch: 'starboyjulian' },
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
-    { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '55 hrs · lvl 55 · Unranked',  twitch: 'alfie____8' },
+    { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '1120 hrs · Bronze',           twitch: 'alfie____8' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
     { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' }
   ],
@@ -65,8 +65,8 @@ export const DEFAULT_STATE = {
     { id: 'carlos',     name: 'Carlos',     tier: 3, info: '251 hrs · lvl 124 · Bronze', twitch: 'carcarshaur' }
   ],
   draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */
-  eventAt: '2026-09-19T22:30:00Z',   /* Tournament start: Sep 19, 3:30 PM Pacific. The draft is opened by an admin before then. */
-  eventNote: '3:30 PM PT · 6:30 PM CT · 7:30 PM ET',
+  eventAt: '2026-09-27T00:00:00Z',   /* Tournament start: Sat Sep 26, 8:00 PM Eastern = 5:00 PM Pacific. */
+  eventNote: '5:00 PM PT · 7:00 PM CT · 8:00 PM ET',
   teamNames: {},        /* teamId → name chosen by the captain */
   teamOrder: [],        /* team ids in round-1 draft order, set by an admin (e.g. after a spin wheel); empty = the order listed above */
   picks: [],            /* [{ team, player, by, at, auto? }] in order */

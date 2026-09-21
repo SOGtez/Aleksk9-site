@@ -36,8 +36,9 @@ export function cleanApplication(b, dates) {
 /* Suggested tier from peak rank: 0 champs, 1 ranked high, 2 everyone else. */
 export function suggestTier(app) {
   if (app.peakRank === 'Champion' || app.champs > 0) return 0;
-  if (['Diamond', 'Emerald', 'Platinum'].includes(app.peakRank)) return 1;
-  return 2;
+  if (['Diamond', 'Emerald'].includes(app.peakRank)) return 1;
+  if (['Platinum', 'Gold'].includes(app.peakRank)) return 2;
+  return 3;
 }
 export function infoLine(app) {
   const bits = [];

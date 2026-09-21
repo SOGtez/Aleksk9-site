@@ -42,7 +42,9 @@ export async function getState() {
     if (s.eventAt !== undefined && s.eventSet) { state.eventAt = s.eventAt; state.eventNote = s.eventNote || ''; } /* admin-set date wins; otherwise the code default */
     state.teamNames = s.teamNames && typeof s.teamNames === 'object' ? s.teamNames : {};
     for (const t of state.teams) if (state.teamNames[t.id]) t.name = String(state.teamNames[t.id]).slice(0, 32);
-    state.picks = Array.isArray(s.picks) ? s.picks : [];
+    /* Picks that point at a team or player no longer in the config (pool was changed in code) are dropped. */
+    const teamIds = new Set(state.teams.map(t => t.id)), poolIds = new Set(state.pool.map(p => p.id));
+    state.picks = (Array.isArray(s.picks) ? s.picks : []).filter(p => teamIds.has(p.team) && poolIds.has(p.player));
     state.matches = Array.isArray(s.matches) ? s.matches : [];
     state.stats = s.stats && typeof s.stats === 'object' ? s.stats : {};
     state.updatedAt = s.updatedAt || 0;

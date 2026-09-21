@@ -269,7 +269,8 @@
     .pool-head h3.is-turn { color: var(--accent); }
     .pool-head .count { font-size: 13px; color: var(--fg-muted); font-weight: 600; }
     .tiers { display: grid; gap: 14px; }
-    @media (min-width: 900px) { .tiers { grid-template-columns: repeat(3, 1fr); align-items: start; } }
+    @media (min-width: 700px) { .tiers { grid-template-columns: repeat(2, 1fr); align-items: start; } }
+    @media (min-width: 1100px) { .tiers { grid-template-columns: repeat(4, 1fr); } }
     .tier { overflow: hidden; }
     .tier-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--fg-muted); }
     .tier-head span { font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--fg-dim); }
@@ -560,39 +561,39 @@
       rules: [{ h: 'Game', t: 'First to 7 rounds wins. Sides swap every 3 rounds. If it goes 6-6, overtime is first to 8.' }, { h: 'Map bans', t: 'Captains ban maps until one is left. The last 3 maps standing are used for the finals.' }, { h: 'Draft', t: 'Snake draft. Round 1 goes in the listed captain order, then the order flips every round.' }],
       maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Villa', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
       teams: [
-        { id: 'frankie', name: 'Team Frankie', captain: 'Frankie', info: '32 hrs · lvl 18 · Unranked' },
         { id: 'leo', name: 'Team Leo', captain: 'Leo', info: '102 hrs · lvl 55 · Unranked' },
-        { id: 'cuzan', name: 'Team Cuzan', captain: 'Cuzan', info: '' },
         { id: 'carlos', name: 'Team Carlos', captain: 'Carlos', info: '251 hrs · lvl 124 · Bronze' },
+        { id: 'frankie', name: 'Team Frankie', captain: 'Frankie', info: '32 hrs · lvl 18 · Unranked' },
+        { id: 'alfie', name: 'Team Alfie', captain: 'Alfie', info: '55 hrs · lvl 55 · Unranked' },
         { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver' },
         { id: 'niko', name: 'Team Niko', captain: 'Niko', info: '263 hrs · lvl 65 · Bronze' }
       ],
-      rounds: 4, tiers: ['Champs', 'Ranked', 'Rookies'], quota: [1, 1, 2],
+      rounds: 4, tiers: ['Champs', 'Good', 'Decent', 'Rookies'], quota: [1, 1, 1, 1],
       pool: [
-        { id: 'duke', name: 'Duke', tier: 0, info: '4000+ hrs · 3x Champ' },
-        { id: 'zynjto', name: 'Zynjto', tier: 0, info: '8000+ hrs · 6x Champ · Flex / Support' },
         { id: 'mycern', name: 'MyCern', tier: 0, info: '4000+ hrs · 10x Champ' },
         { id: 'vexjng', name: 'Vexjng', tier: 0, info: '1400+ hrs · 2x Champ' },
-        { id: 'iso', name: 'Iso', tier: 0, info: '2000 hrs · 1x Champ' },
+        { id: 'zynjto', name: 'Zynjto', tier: 0, info: '8000+ hrs · 6x Champ · Flex / Support' },
         { id: 'mrflex', name: 'MrFlex', tier: 0, info: '2000 hrs · 1x Champ' },
+        { id: 'iso', name: 'Iso', tier: 0, info: '2000 hrs · 1x Champ' },
+        { id: 'duke', name: 'Duke', tier: 0, info: '4000+ hrs · 3x Champ' },
         { id: 'nv30', name: 'Notvash30', tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor' },
         { id: 'beebo', name: 'Beebo', tier: 1, info: '1409 hrs · Emerald · Intel / Anchor' },
-        { id: 'noni', name: 'Noni', tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex' },
+        { id: 'fxbm', name: 'Fxbm', tier: 1, info: '' },
         { id: 'jake', name: 'Jake', tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor' },
-        { id: 'halo', name: 'Halo', tier: 1, info: '4000+ hrs · 2x Diamond · Flex / Support' },
-        { id: 'tubs', name: 'Tubs', tier: 1, info: '962 hrs · 2x Emerald (PC) · Flex' },
-        { id: 'clovs', name: 'Clovs', tier: 2, info: '1500 hrs · lvl 230 · Gold' },
-        { id: 'nix', name: 'Nix', tier: 2, info: '870 hrs · lvl 140 · Gold' },
-        { id: 'cash', name: 'Cash', tier: 2, info: '860 hrs · lvl 203 · Gold' },
-        { id: 'grape', name: 'Grape', tier: 2, info: 'lvl 97 · Plat (PC), Gold roller' },
-        { id: 'colin', name: 'Colin', tier: 1, info: '1000 hrs · 4x Plat' },
-        { id: 'pocket', name: 'Pocket', tier: 2, info: 'Plat' },
-        { id: 'fiddle', name: 'Fiddle', tier: 2, info: '52 hrs · lvl 32 · Unranked' },
-        { id: 'mxlly', name: 'Mxlly', tier: 2, info: '202 hrs · lvl 90 · Bronze' },
+        { id: 'noni', name: 'Noni', tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex' },
+        { id: 'lovez', name: 'Lovez', tier: 1, info: '' },
         { id: 'aleksk9', name: 'AleksK9', tier: 2, info: '205 hrs · lvl 89 · Silver' },
-        { id: 'newbslayer', name: 'NewbSlayer', tier: 2, info: '265 hrs · lvl 95 · Silver' },
-        { id: 'abstract', name: 'Abstract', tier: 2, info: '300 hrs · lvl 100 · Silver' },
-        { id: 'jalen', name: 'Jalen', tier: 2, info: '1000 hrs · lvl 112 · Silver' }
+        { id: 'marv', name: 'Marv', tier: 2, info: '' },
+        { id: 'grape', name: 'Grape', tier: 2, info: 'lvl 97 · Plat (PC), Gold roller' },
+        { id: 'klixvy', name: 'Klixvy', tier: 2, info: '' },
+        { id: 'pocket', name: 'Pocket', tier: 2, info: 'Plat' },
+        { id: 'nix', name: 'Nix', tier: 2, info: '870 hrs · lvl 140 · Gold' },
+        { id: 'angel', name: 'Angel', tier: 3, info: '' },
+        { id: 'abstract', name: 'Abstract', tier: 3, info: '300 hrs · lvl 100 · Silver' },
+        { id: 'cash', name: 'Cash', tier: 3, info: '860 hrs · lvl 203 · Gold' },
+        { id: 'nikoirl', name: 'Niko', tier: 3, info: '' },
+        { id: 'jalen', name: 'Jalen', tier: 3, info: '1000 hrs · lvl 112 · Silver' },
+        { id: 'mxlly', name: 'Mxlly', tier: 3, info: '202 hrs · lvl 90 · Bronze' }
       ],
       draft: { open: true, pickSeconds: 90, turnStartedAt: Date.now() }, eventAt: '', teamNames: {},
       picks: [], matches: [], stats: {}, updatedAt: 0

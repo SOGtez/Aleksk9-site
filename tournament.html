@@ -681,7 +681,7 @@
     function takenBy(pid) { for (var i = 0; i < D.picks.length; i++) if (D.picks[i].player === pid) return D.picks[i].team; return null; }
     function myTeam() { return role.indexOf('captain:') === 0 ? role.slice(8) : null; }
     function draftOpen() { return !!(D.draft && D.draft.open); }
-    function canDraftNow() { var s = nextSlot(); if (!s) return false; if (role === 'admin') return true; return draftOpen() && myTeam() === s.team; }
+    function canDraftNow() { var s = nextSlot(); if (!s || orderPending()) return false; if (role === 'admin') return true; return draftOpen() && myTeam() === s.team; }
     function fmtPT(iso) { var d = new Date(iso); return isNaN(d) ? iso : d.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT'; }
     function fmtLeft(ms) { if (ms <= 0) return 'now'; var s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); if (d) return d + 'd ' + h + 'h'; if (h) return h + 'h ' + m + 'm'; return m + 'm ' + (s % 60) + 's'; }
     function tickEvent() {
@@ -953,7 +953,7 @@
           if (got) {
             var pl = player(got.pick.player) || { name: got.pick.player, info: '' };
             html += '<div class="cell' + lastRow + (got.pickNo === newPickNo ? ' is-new' : '') + '"><span class="pn">#' + got.pickNo + '</span>' + av(pl) + '<span class="who"><div class="nm">' + esc(pl.name) + badge(pl) + '</div><div class="inf">' + esc(pl.info) + '</div></span></div>';
-          } else if (slot && slot.round === r && slot.team === t.id) {
+          } else if (slot && slot.round === r && slot.team === t.id && !orderPending()) {
             html += '<div class="cell is-clock' + lastRow + '"><span class="pn">#' + pn + '</span><span class="who"><div class="ct">On the clock</div><div class="cs">' + (canDraftNow() ? 'Your pick' : esc(t.captain) + ' is picking') + '</div></span></div>';
           } else {
             html += '<div class="cell is-empty' + lastRow + '"><span class="pn">#' + pn + '</span><span style="padding-left:4px">' + (pn > totalPicks() ? '<span class="inf">no player left</span>' : '—') + '</span></div>';
@@ -967,7 +967,7 @@
     function renderRosters() {
       var slot = nextSlot(), T = D.teams.length, html = '';
       D.teams.forEach(function (t) {
-        var on = slot && slot.team === t.id;
+        var on = slot && slot.team === t.id && !orderPending();
         html += '<div class="card roster' + (on ? ' on' : '') + '"><div class="roster-head">' + av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span style="min-width:0">' + teamNameHtml(t) + '<div class="tc">' + esc(t.captain) + badge(t) + (t.info ? ' · ' + esc(t.info) : '') + '</div></span></div><ul>';
         for (var r = 1; r <= D.rounds; r++) {
           var got = pickAt(r, t.id), pn = (r - 1) * T + pickOrder(r).indexOf(t.id) + 1;

@@ -45,22 +45,22 @@ export const DEFAULT_STATE = {
 
     { id: 'nv30',       name: 'Notvash30',  tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor', twitch: 'notvash30' },
     { id: 'beebo',      name: 'Beebo',      tier: 1, info: '1409 hrs · Emerald · Intel / Anchor', twitch: 'itsbeebo_3' },
-    { id: 'fxbm',       name: 'Fxbm',       tier: 1, info: '' },
+    { id: 'fxbm',       name: 'Fxbm',       tier: 1, info: '1350 hrs · lvl 193 · Emerald' },
     { id: 'jake',       name: 'Jake',       tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor', twitch: 'xjakex0x' },
     { id: 'noni',       name: 'Noni',       tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex', twitch: 'nonyuhh' },
-    { id: 'lovez',      name: 'Lovez',      tier: 1, info: '' },
+    { id: 'lovez',      name: 'Lovez',      tier: 1, info: '1300+ hrs · lvl 300 · Emerald' },
 
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
-    { id: 'marv',       name: 'Marv',       tier: 2, info: '' },
+    { id: 'marv',       name: 'Marv',       tier: 2, info: '191 hrs · lvl 82 · Silver' },
     { id: 'grape',      name: 'Grape',      tier: 2, info: 'lvl 97 · Plat (PC), Gold roller' },
     { id: 'klixvy',     name: 'Klixvy',     tier: 2, info: '' },
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
     { id: 'nix',        name: 'Nix',        tier: 2, info: '870 hrs · lvl 140 · Gold' },
 
-    { id: 'angel',      name: 'Angel',      tier: 3, info: '' },
+    { id: 'angel',      name: 'Angel',      tier: 3, info: '141 hrs · lvl 80 · Silver' },
     { id: 'abstract',   name: 'Abstract',   tier: 3, info: '300 hrs · lvl 100 · Silver' },
     { id: 'cash',       name: 'Cash',       tier: 3, info: '860 hrs · lvl 203 · Gold' },
-    { id: 'nikoirl',    name: 'Niko',       tier: 3, info: '' },
+    { id: 'nikoirl',    name: 'Niko',       tier: 3, info: '90 hrs · lvl 57 · Bronze' },
     { id: 'jalen',      name: 'Jalen',      tier: 3, info: '1000 hrs · lvl 112 · Silver' },
     { id: 'mxlly',      name: 'Mxlly',      tier: 3, info: '202 hrs · lvl 90 · Bronze', twitch: 'darealmxlly' }
   ],

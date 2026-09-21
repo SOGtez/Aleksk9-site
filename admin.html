@@ -150,6 +150,35 @@
     .ver.ok { color: var(--fg-muted); }
     .ver.bad { color: var(--accent); }
     .ver.err { color: var(--fg-dim); }
+    /* AI assistant */
+    .ai { display: grid; gap: 0; margin-bottom: 14px; }
+    .ai-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 18px 22px 0; }
+    .ai-head h3 { margin: 0; }
+    .ai-head .sp { flex: 1; }
+    .ai-log { display: grid; gap: 10px; padding: 16px 22px; max-height: 460px; overflow: auto; scroll-behavior: smooth; }
+    .ai-msg { max-width: 82%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .ai-msg.user { justify-self: end; background: #fff; color: #000; border-bottom-right-radius: 4px; }
+    .ai-msg.assistant { justify-self: start; background: var(--bg-elev-2); border: 1px solid var(--line-strong); border-bottom-left-radius: 4px; }
+    .ai-msg.assistant small { display: block; margin-top: 6px; font-size: 11px; color: var(--fg-dim); }
+    .ai-msg.system { justify-self: center; max-width: 100%; font-size: 12px; color: var(--fg-dim); text-align: center; padding: 2px 0; }
+    .ai-tool { justify-self: start; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--fg-muted); padding: 5px 10px 5px 8px; border-radius: 999px; border: 1px solid var(--line-strong); }
+    .ai-tool::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; }
+    .ai-tool.bad { color: var(--accent); border-color: rgba(225,6,0,.45); }
+    .ai-tool.bad::before { background: var(--accent); }
+    .ai-confirm { justify-self: stretch; padding: 14px; border-radius: 12px; border: 1px solid rgba(225,6,0,.45); background: var(--accent-soft); font-size: 14px; }
+    .ai-confirm b { display: block; margin-bottom: 6px; }
+    .ai-confirm ol { margin: 6px 0 10px 18px; padding: 0; font-size: 13px; }
+    .ai-confirm .tools { margin-top: 10px; }
+    .ai-empty { color: var(--fg-dim); font-size: 14px; }
+    .ai-quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 22px 12px; }
+    .ai-quick button { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); }
+    .ai-quick button:hover { color: var(--fg); border-color: #fff; }
+    .ai-form { display: flex; gap: 8px; padding: 0 22px 22px; }
+    .ai-form textarea { flex: 1; resize: none; min-height: 44px; max-height: 140px; font: inherit; line-height: 1.4; }
+    .ai-form button[disabled] { opacity: .5; }
+    .ai-typing { justify-self: start; font-size: 12px; color: var(--fg-dim); padding: 2px 4px; }
+    .ai-typing::after { content: "…"; animation: dots 1.2s steps(4, end) infinite; }
+    @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
   </style>
 </head>
 <body>
@@ -218,6 +247,26 @@
       <section class="tab" id="tab-tournament" hidden>
         <div class="container">
           <div class="stats" id="t-stats"></div>
+          <div class="card ai" id="ai">
+            <div class="ai-head">
+              <h3>Tournament assistant</h3>
+              <span class="chip" id="ai-usage" title="Shared by every admin, resets on the 1st">AI: …</span>
+              <span class="sp"></span>
+              <button class="link-btn" id="ai-clear">Clear chat</button>
+            </div>
+            <p class="d" style="padding:6px 22px 0">Chat with the AI to set up the next tournament: it can review and tier applicants, pick captains, build the tournament, set the draft order, the date and the pick clock. Building asks you to confirm first. Reset, revert and undo stay on the buttons below.</p>
+            <div class="ai-log" id="ai-log" role="log" aria-live="polite"></div>
+            <div class="ai-quick" id="ai-quick">
+              <button type="button">Summarise the accepted applicants</button>
+              <button type="button">Tier every accepted applicant</button>
+              <button type="button">Suggest six balanced captains</button>
+              <button type="button">Set up the next tournament</button>
+            </div>
+            <form class="ai-form" id="ai-form">
+              <textarea class="field" id="ai-input" rows="1" maxlength="4000" placeholder="Ask or tell the assistant what to do…"></textarea>
+              <button class="btn btn-sm btn-primary" type="submit" id="ai-send">Send</button>
+            </form>
+          </div>
           <div class="grid2" style="margin-bottom:14px">
             <div class="card pad">
               <h3>Draft controls</h3>
@@ -544,6 +593,81 @@
     twoStep('reset-wrap', 'reset-btn', 'Reset picks, matches, stats', 'Wipe every pick, match, and stat?', function () { return api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); return loadT(); }); });
     twoStep('revert-wrap', 'revert-btn', 'Revert to code config', 'Throw away the roster built from applications?', function () { return api('/api/admin/applications', { action: 'revert' }).then(function () { toast('Reverted to the site config'); return loadT(); }); });
 
+    /* ---------- AI assistant ---------- */
+    var AI = { history: [], log: [], pending: null, busy: false, usage: null };
+    try { var saved = JSON.parse(localStorage.getItem('ak9_ai_chat') || 'null'); if (saved && Array.isArray(saved.history)) { AI.history = saved.history; AI.log = saved.log || []; AI.pending = saved.pending || null; } } catch (e) {}
+    function aiSave() { try { localStorage.setItem('ak9_ai_chat', JSON.stringify({ history: AI.history, log: AI.log.slice(-200), pending: AI.pending })); } catch (e) {} }
+    function aiText(t) {
+      /* plain text with **bold** and "- " bullets */
+      return esc(t).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/^(?:- |• )(.*)$/gm, '&nbsp;&nbsp;• $1');
+    }
+    function aiUsage() {
+      var u = AI.usage, el = document.getElementById('ai-usage');
+      if (!u) { el.textContent = 'AI: …'; el.className = 'chip'; return; }
+      var left = Math.max(0, u.cap - u.used);
+      el.textContent = 'AI: ' + u.used + ' / ' + u.cap + ' this month';
+      el.className = 'chip ' + (left === 0 ? 'red' : left <= 20 ? 'ok' : '');
+      var limit = left === 0;
+      document.getElementById('ai-send').disabled = AI.busy || limit;
+      document.getElementById('ai-input').disabled = limit;
+      document.getElementById('ai-input').placeholder = limit ? 'You have reached the AI limit for this month.' : 'Ask or tell the assistant what to do…';
+    }
+    function aiRender() {
+      var el = document.getElementById('ai-log'), html = '';
+      if (!AI.log.length) html = '<div class="ai-empty">Nothing yet. Try one of the prompts below, or tell it what the next tournament should look like.</div>';
+      AI.log.forEach(function (m) {
+        if (m.role === 'user') html += '<div class="ai-msg user">' + esc(m.text) + '</div>';
+        else if (m.role === 'assistant') html += '<div class="ai-msg assistant">' + aiText(m.text) + (m.model ? '<small>' + esc(m.model.replace(/:free$/, '')) + '</small>' : '') + '</div>';
+        else if (m.role === 'tool') html += '<span class="ai-tool' + (m.ok === false ? ' bad' : '') + '">' + esc(m.text) + '</span>';
+        else html += '<div class="ai-msg system">' + esc(m.text) + '</div>';
+      });
+      if (AI.pending) {
+        var p = AI.pending, pv = p.preview || {}, tiers = (T && T.tiers) || [];
+        var byTier = Object.keys(pv.byTier || {}).sort().map(function (k) { return (tiers[k] || ('tier ' + k)) + ' ' + pv.byTier[k]; }).join(' · ');
+        html += '<div class="ai-confirm"><b>Build "' + esc(p.name) + '"? This replaces the teams and pool and clears every pick, match and stat.</b>' +
+          'Captains in round-1 order:<ol>' + (pv.teams || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
+          '<span class="small">' + (pv.pool || 0) + ' in the pool' + (byTier ? ' · ' + byTier : '') + '</span>' +
+          '<div class="tools"><button class="btn btn-sm btn-primary" id="ai-yes"' + (AI.busy ? ' disabled' : '') + '>Yes, build it</button><button class="link-btn" id="ai-no"' + (AI.busy ? ' disabled' : '') + '>Cancel</button></div></div>';
+      }
+      if (AI.busy) html += '<div class="ai-typing">Thinking</div>';
+      el.innerHTML = html;
+      el.scrollTop = el.scrollHeight;
+      if (AI.pending) {
+        document.getElementById('ai-yes').onclick = function () { aiAnswer('confirm'); };
+        document.getElementById('ai-no').onclick = function () { aiAnswer('cancel'); };
+      }
+      document.getElementById('ai-send').disabled = AI.busy || (AI.usage && AI.usage.used >= AI.usage.cap);
+      document.querySelectorAll('#ai-quick button').forEach(function (b) { b.disabled = AI.busy; });
+    }
+    function aiApply(r) {
+      if (Array.isArray(r.history)) AI.history = r.history;
+      (r.log || []).forEach(function (m) { AI.log.push(m); });
+      if (r.usage) AI.usage = r.usage;
+      AI.pending = r.pending || null;
+      aiSave();
+      var changed = (r.log || []).some(function (m) { return m.role === 'tool' && m.ok !== false; });
+      if (changed) Promise.all([loadT(), loadApps()]).then(aiRender).catch(function () {});
+    }
+    function aiPost(body) {
+      AI.busy = true; aiRender();
+      return api('/api/admin/chat', body).then(function (r) { AI.busy = false; aiApply(r); aiUsage(); aiRender(); })
+        .catch(function (e) { AI.busy = false; AI.log.push({ role: 'system', text: e.message }); aiSave(); aiUsage(); aiRender(); });
+    }
+    function aiSend(text) {
+      text = String(text || '').trim(); if (!text || AI.busy) return;
+      if (AI.pending) { AI.log.push({ role: 'system', text: 'Answer the build question first.' }); aiRender(); return; }
+      AI.log.push({ role: 'user', text: text }); aiSave();
+      document.getElementById('ai-input').value = '';
+      aiPost({ history: AI.history, message: text });
+    }
+    function aiAnswer(action) { if (AI.busy || !AI.pending) return; aiPost({ history: AI.history, action: action, pending: AI.pending }); }
+    document.getElementById('ai-form').onsubmit = function (e) { e.preventDefault(); aiSend(document.getElementById('ai-input').value); };
+    document.getElementById('ai-input').onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(this.value); } };
+    document.getElementById('ai-input').oninput = function () { this.style.height = 'auto'; this.style.height = Math.min(140, this.scrollHeight) + 'px'; };
+    document.querySelectorAll('#ai-quick button').forEach(function (b) { b.onclick = function () { aiSend(b.textContent); }; });
+    document.getElementById('ai-clear').onclick = function () { if (AI.busy) return; AI.history = []; AI.log = []; AI.pending = null; aiSave(); aiRender(); };
+    function loadAI() { return api('/api/admin/chat').then(function (d) { AI.usage = d.usage; if (!d.configured) AI.log.push({ role: 'system', text: 'OPENROUTER_API_KEY is not set in Vercel yet, so the assistant cannot answer.' }); aiUsage(); aiRender(); }).catch(function () { aiRender(); }); }
+
     /* ---------- Roles ---------- */
     function renderRoles() {
       var rs = document.getElementById('role-role');
@@ -590,7 +714,7 @@
       document.getElementById('panel').hidden = false;
       document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
       var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();
-      return Promise.all([loadT(), loadApps()]);
+      return Promise.all([loadT(), loadApps(), loadAI()]);
     }).catch(function (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = 'Could not reach the server: ' + e.message; });
   </script>
 </body>

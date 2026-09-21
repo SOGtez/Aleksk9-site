@@ -1,6 +1,7 @@
 import { json, requireRole, readBody } from './_lib/http.js';
 import { getState, setState } from './_lib/store.js';
 import { nextSlot, pickBlockReason } from './_lib/defaults.js';
+import { setDraftOrder, setEvent, setPickClock } from './_lib/actions.js';
 
 /* POST { action:'pick', player }        — captain on the clock (draft must be open), or admin
    POST { action:'rename', name, teamId? } — captain renames own team; admin any team
@@ -37,14 +38,10 @@ export default async function handler(req, res) {
       state.draft.open = true; state.draft.turnStartedAt = Date.now();
     }
     if (body.action === 'close') state.draft.open = false;
-    if (body.action === 'clock') state.draft.pickSeconds = Math.max(15, Math.min(600, Number(body.seconds) || 90));
-    if (body.action === 'event') { state.eventAt = body.eventAt ? String(body.eventAt).slice(0, 40) : ''; state.eventNote = String(body.eventNote || '').slice(0, 120); state.eventSet = true; }
+    if (body.action === 'clock') await setPickClock(body.seconds, state);
+    if (body.action === 'event') await setEvent(body.eventAt, body.eventNote, state);
     if (body.action === 'order') {
-      if (state.picks.length) return json(res, 409, { error: 'The draft has started. Undo or reset the picks before changing the order' });
-      const ids = state.teams.map(t => t.id);
-      const order = Array.isArray(body.order) ? body.order.map(String).filter((id, i, a) => ids.includes(id) && a.indexOf(id) === i) : [];
-      state.teamOrder = order;
-      state.teams = order.map(id => state.teams.find(t => t.id === id)).concat(state.teams.filter(t => !order.includes(t.id)));
+      try { await setDraftOrder(body.order, state); } catch (e) { return json(res, e.status || 500, { error: e.message }); }
     }
     if (body.action === 'undo') { state.picks.pop(); state.draft.turnStartedAt = Date.now(); }
     if (body.action === 'reset') { state.picks = []; state.draft.turnStartedAt = Date.now(); }

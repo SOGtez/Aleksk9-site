@@ -24,6 +24,10 @@ Project → Settings → Environment Variables. Add for Production and Preview:
 | `SESSION_SECRET` | any long random string, e.g. output of `openssl rand -hex 32` |
 | `ADMIN_LOGINS` | Twitch usernames that are always admin, comma separated, e.g. `aleksk9_` |
 | `TWITCH_CHANNEL` | channel for the homepage live badge, `aleksk9_` |
+| `OPENROUTER_API_KEY` | from https://openrouter.ai/keys, for the tournament assistant on the admin page |
+| `OPENROUTER_MODELS` | optional, comma separated model ids tried in order. Default `z-ai/glm-5.2:free` |
+| `OPENROUTER_FALLBACK` | optional, `1` to also try every free model with tool support after the list above. Off by default |
+| `AI_MONTHLY_CAP` | optional, admin messages to the assistant per month, shared by all admins. Default `200` |
 
 ## 3. Database
 
@@ -55,6 +59,15 @@ Deployments → latest → **Redeploy**, so the new variables are picked up.
 | `GET /api/live` | anyone | is the Twitch channel live (cached 60s) |
 | `GET/POST /api/apply` | logged in + following | read/submit your tournament application |
 | `GET/POST /api/admin/applications` | admin | list, review, settings, build tournament from accepted, revert |
+| `GET/POST /api/admin/chat` | admin | tournament assistant: `GET` usage, `POST {history, message}` one turn, `POST {history, action:'confirm'|'cancel', pending}` answer a build |
 
 Pages: `/` home · `/tournament` draft, matches, stats · `/apply` application form (Twitch login with follow check) · `/admin` control panel.
+
+## Tournament assistant
+
+The Tournament tab on `/admin` has an AI chat through OpenRouter, using the free GLM 5.2 by default. It can review and tier applicants, tick captains, change application settings, build the tournament from accepted applicants, set the round-1 draft order, the event date and the pick clock. Every change runs through `api/_lib/actions.js`, the same code the buttons use. Building always shows a confirm card first. It cannot reset, revert, undo picks or delete applications.
+
+Models that support OpenAI-style tool calls are used natively. The free GLM 5.2 does not, so for it (and any model OpenRouter rejects with a "tool use" error) the tools are described in the prompt and the model writes each call as a fenced ` ```tool ` JSON block that the server parses. The chat shows "(text tools)" after the model name when that path is in use. OpenRouter free models are also rate limited per account (20 requests a minute, and 50 a day unless the account has bought at least $10 of credits, then 1000 a day); one admin message can take two to six requests.
+
+Usage is one shared counter for all admins, `AI_MONTHLY_CAP` messages per calendar month (Redis key `ai:usage:YYYY-MM`). Confirm and cancel clicks are free. When the cap is hit the chat says so and the box is disabled until the 1st. To reset it early, delete that key in the Upstash console.
 The Twitch app must allow the `user:read:follows` scope (all apps do by default); applicants grant it on login.

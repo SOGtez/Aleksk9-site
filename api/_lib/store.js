@@ -88,6 +88,10 @@ export async function roleFor(login) {
 
 export async function cacheGet(key) { return redis().get(key); }
 export async function cacheSet(key, value, ttlSeconds) { return redis().set(key, value, { ex: ttlSeconds }); }
+/* Shared counters (e.g. the AI monthly usage). Returns the new value. */
+export async function counterIncr(key, ttlSeconds) { const n = await redis().incr(key); if (n === 1 && ttlSeconds) await redis().expire(key, ttlSeconds); return n; }
+export async function counterGet(key) { return Number(await redis().get(key)) || 0; }
+export async function counterReset(key) { return redis().del(key); }
 
 /* ---------- Applications ---------- */
 export const DEFAULT_SETTINGS = { open: false, captainsOpen: false, cap: 0, deadline: '', dates: [], note: '' };

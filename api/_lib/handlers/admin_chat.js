@@ -1,5 +1,5 @@
 import { json, requireRole, readBody } from '../http.js';
-import { getState, getSettings, getApplications, counterIncr, counterGet } from '../store.js';
+import { getState, getSettings, getApplications, counterIncr, counterGet, counterDecr } from '../store.js';
 import { nextSlot } from '../defaults.js';
 import { complete, configuredModels } from '../openrouter.js';
 import { updateSettings, reviewApplicant, addAcceptedToPool, planBuild, buildTournament, setDraftOrder, setEvent, setPickClock } from '../actions.js';
@@ -185,7 +185,13 @@ export default async function handler(req, res) {
     if (used >= CAP()) return json(res, 429, { error: 'You have reached the AI limit for this month (' + CAP() + ' messages). It resets on the 1st.', usage: await usage() });
     await counterIncr(monthKey(), 60 * 60 * 24 * 40);
     history.push({ role: 'user', content: text });
-    const pending = await drive(history, me, log);
+    let pending;
+    try { pending = await drive(history, me, log); }
+    catch (e) {
+      /* The model never answered (rate limit, outage): give the message back so failures do not eat the cap. */
+      if (!log.some(m => m.role === 'assistant' || m.role === 'tool')) await counterDecr(monthKey());
+      throw e;
+    }
     return json(res, 200, { history, log, usage: await usage(), pending });
   } catch (e) {
     return json(res, e.status || 500, { error: e.message, history, log, usage: await usage() });

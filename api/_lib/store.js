@@ -91,6 +91,7 @@ export async function cacheSet(key, value, ttlSeconds) { return redis().set(key,
 /* Shared counters (e.g. the AI monthly usage). Returns the new value. */
 export async function counterIncr(key, ttlSeconds) { const n = await redis().incr(key); if (n === 1 && ttlSeconds) await redis().expire(key, ttlSeconds); return n; }
 export async function counterGet(key) { return Number(await redis().get(key)) || 0; }
+export async function counterDecr(key) { const n = await redis().decr(key); if (n < 0) await redis().set(key, 0); return Math.max(0, n); }
 export async function counterReset(key) { return redis().del(key); }
 
 /* ---------- Applications ---------- */

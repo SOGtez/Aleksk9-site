@@ -173,6 +173,25 @@
     .rank.lg { width: 26px; height: 26px; vertical-align: -7px; }
     .team-head .rank, .roster-head .rank { margin-left: 6px; }
 
+    /* Draft order (wheel result) */
+    .order { padding: 16px 20px; margin-bottom: 20px; }
+    .order-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+    .order-head b { font-size: 16px; font-weight: 800; letter-spacing: -0.01em; }
+    .order-head span { font-size: 13px; color: var(--fg-muted); }
+    .order .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .order .oslot { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 10px 12px; border: 1px dashed rgba(255,255,255,.18); border-radius: 12px; }
+    .order .oslot .n { font-weight: 900; font-size: 18px; letter-spacing: -0.03em; color: var(--fg-dim); width: 24px; }
+    .order .oslot .who { font-weight: 700; font-size: 14px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+    .order .oslot .who.dim { color: var(--fg-dim); font-weight: 500; }
+    .order .oslot.filled { border-style: solid; border-color: var(--line-strong); background: var(--bg-elev-2); animation: slotin .4s var(--ease); }
+    .order .oslot.next { border-color: rgba(225,6,0,.6); animation: clockpulse 1.6s var(--ease) infinite; }
+    @keyframes slotin { from { transform: scale(.94); opacity: 0; } }
+    .order .chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+    .order .chips .lbl { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-dim); margin-right: 4px; }
+    .order .chips button.cap { padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-strong); font-weight: 600; font-size: 13px; transition: border-color .2s, box-shadow .2s; }
+    .order .chips button.cap:hover { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+    .order .chips .sp { flex: 1; }
+
     /* Turn banner */
     .turn { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; padding: 18px 20px; margin-bottom: 20px; }
     .turn .avatar { width: 48px; height: 48px; font-size: 16px; }
@@ -469,6 +488,7 @@
           <h2 id="draft-title">Draft Board <a class="howto" href="/how-to-draft">How to draft →</a></h2>
           <p class="sub" id="draft-sub"></p>
         </div>
+        <div class="card order" id="order" aria-live="polite" hidden></div>
         <div class="card turn" id="turn" aria-live="polite"></div>
         <div class="card board"><div class="board-scroll"><div class="board-grid" id="board"></div></div></div>
         <div class="rosters" id="rosters"></div>
@@ -569,6 +589,7 @@
         { id: 'niko', name: 'Team Niko', captain: 'Niko', info: '263 hrs · lvl 65 · Bronze' }
       ],
       rounds: 4, tiers: ['Champs', 'Good', 'Decent', 'Rookies', 'Subs'], quota: [1, 1, 1, 1, 0],
+      teamOrder: ['leo', 'jullian', 'frankie', 'alfie', 'mroctober', 'niko'],
       pool: [
         { id: 'mycern', name: 'MyCern', tier: 0, info: '4000+ hrs · 10x Champ' },
         { id: 'vexjng', name: 'Vexjng', tier: 0, info: '1400+ hrs · 2x Champ' },
@@ -640,7 +661,11 @@
     }
     function team(id) { for (var i = 0; i < D.teams.length; i++) if (D.teams[i].id === id) return D.teams[i]; return null; }
     function player(id) { for (var i = 0; i < D.pool.length; i++) if (D.pool[i].id === id) return D.pool[i]; return null; }
-    function pickOrder(round) { var ids = D.teams.map(function (t) { return t.id; }); return round % 2 === 1 ? ids : ids.slice().reverse(); }
+    function pickOrder(round) {
+      var ids = D.teams.map(function (t) { return t.id; });
+      if (D.teamOrder && D.teamOrder.length >= ids.length) ids = D.teamOrder.slice(); /* wheel result wins */
+      return round % 2 === 1 ? ids : ids.slice().reverse();
+    }
     function totalPicks() { return Math.min(D.rounds * D.teams.length, D.pool.length); }
     function nextSlot() {
       var T = D.teams.length, n = D.picks.length;
@@ -797,6 +822,47 @@
     /* ------------------------------------------------------------
        RENDER: draft
        ------------------------------------------------------------ */
+    function orderReady() { return (D.teamOrder || []).length >= D.teams.length; }
+    function orderPending() { return !orderReady() && !D.picks.length; }
+    function setOrder(o) {
+      if (!LIVE) {
+        D.teamOrder = o;
+        D.teams = o.map(team).concat(D.teams.filter(function (t) { return o.indexOf(t.id) < 0; }));
+        renderAll(); return Promise.resolve();
+      }
+      return api('/api/draft', { action: 'order', order: o }).then(function () { return refresh(true); }).catch(function (e) { toast(e.message); });
+    }
+    function renderOrder() {
+      var el = document.getElementById('order');
+      var order = D.teamOrder || [], N = D.teams.length, ready = order.length >= N;
+      var show = !D.picks.length && !draftOpen();
+      el.hidden = !show; if (!show) { el.innerHTML = ''; return; }
+      var html = '<div class="order-head"><b>Draft order</b><span>' + (ready ? 'Round 1 goes 1 to ' + N + ', then the order flips every round.' : 'The wheel decides who picks first. Slots fill in live as they are set.') + '</span></div><div class="slots">';
+      for (var i = 0; i < N; i++) {
+        var t = order[i] ? team(order[i]) : null;
+        html += '<div class="oslot' + (t ? ' filled' : '') + (!t && i === order.length ? ' next' : '') + '"><span class="n">' + (i + 1) + '</span>' +
+          (t ? av({ captain: t.captain, avatar: t.avatar }, 'cap') + '<span class="who">' + esc(t.captain) + '</span>' : '<span class="who dim">Waiting for the wheel</span>') + '</div>';
+      }
+      html += '</div>';
+      if (role === 'admin') {
+        var left = D.teams.filter(function (t) { return order.indexOf(t.id) < 0; });
+        html += '<div class="chips">' +
+          (left.length ? '<span class="lbl">Slot ' + (order.length + 1) + '</span>' + left.map(function (t) { return '<button class="cap" data-place="' + esc(t.id) + '">' + esc(t.captain) + '</button>'; }).join('') : '<span class="lbl">Order set</span>') +
+          '<span class="sp"></span>' +
+          (order.length ? '<button class="btn btn-sm btn-ghost" id="order-undo">Undo last</button><button class="btn btn-sm btn-ghost" id="order-clear">Clear</button>' : '') +
+          (ready ? '<button class="btn btn-sm btn-primary" id="order-open">Open the draft</button>' : '') + '</div>';
+      }
+      el.innerHTML = html;
+      el.querySelectorAll('[data-place]').forEach(function (b) { b.onclick = function () { setOrder(order.concat([b.dataset.place])); }; });
+      var u = document.getElementById('order-undo'), c = document.getElementById('order-clear'), o = document.getElementById('order-open');
+      if (u) u.onclick = function () { setOrder(order.slice(0, -1)); };
+      if (c) c.onclick = function () { setOrder([]); };
+      if (o) o.onclick = function () {
+        if (!LIVE) { D.draft.open = true; D.draft.turnStartedAt = Date.now(); renderAll(); return; }
+        api('/api/draft', { action: 'open' }).then(function () { toast('Draft opened'); return refresh(true); }).catch(function (e) { toast(e.message); });
+      };
+    }
+
     function renderTurn() {
       var slot = nextSlot(), el = document.getElementById('turn');
       el.className = 'card turn';
@@ -804,6 +870,12 @@
       if (!slot) {
         el.innerHTML = '<span class="avatar">✓</span><span class="tx"><b>Draft complete</b><span>Rosters are locked. Scroll down for matches and standings.</span></span>';
         document.getElementById('draft-sub').innerHTML = '<b>Draft complete.</b>';
+        return;
+      }
+      if (orderPending()) {
+        el.classList.add('is-locked');
+        el.innerHTML = '<span class="avatar">🎡</span><span class="tx"><b>Waiting for the draft order</b><span>The wheel decides who picks first. The slots above fill in live, then the draft opens.' + (D.eventAt ? ' Tournament on ' + esc(fmtPT(D.eventAt)) + '.' : '') + '</span></span>';
+        document.getElementById('draft-sub').innerHTML = '<b>Draft order not set yet.</b> ' + tot + ' picks to make once it is.';
         return;
       }
       var t = team(slot.team);
@@ -916,7 +988,8 @@
         pickOrder(r).forEach(function (tid, i) {
           var no = (r - 1) * T + i + 1, t = team(tid);
           if (no > totalPicks()) return;
-          html += '<span class="slot' + (no <= D.picks.length ? ' done' : '') + (slot && slot.pickNo === no ? ' now' : '') + '"><i>' + no + '</i>' + esc(t.captain) + '</span>';
+          var placed = !orderPending() || (D.teamOrder || []).indexOf(tid) >= 0;
+          html += '<span class="slot' + (no <= D.picks.length ? ' done' : '') + (slot && slot.pickNo === no && !orderPending() ? ' now' : '') + '"><i>' + no + '</i>' + (placed ? esc(t.captain) : '?') + '</span>';
         });
         html += '</div>';
       }
@@ -1160,7 +1233,7 @@
        WIRING + BOOT
        ------------------------------------------------------------ */
     function renderAll(newPickNo) {
-      renderHero(); renderTurn(); renderBoard(newPickNo); renderRosters(); renderSnake(); renderPool(); renderMatches(); renderStats(); renderRules(); renderAdmin();
+      renderHero(); renderOrder(); renderTurn(); renderBoard(newPickNo); renderRosters(); renderSnake(); renderPool(); renderMatches(); renderStats(); renderRules(); renderAdmin();
       if (LIVE) turnAlert();
     }
     document.addEventListener('click', function (e) { if (loginOpen && !e.target.closest('#login-menu') && !e.target.closest('#login-btn')) { loginOpen = false; renderHero(); } });

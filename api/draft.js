@@ -9,7 +9,7 @@ import { nextSlot, pickBlockReason } from './_lib/defaults.js';
    POST { action:'skip' }                 — auto-pick for the captain on the clock (best available)
    POST { action:'clock', seconds }       — seconds per pick
    POST { action:'event', eventAt, eventNote } — event date/time shown on the page
-   POST { action:'order', order:[teamId…] } — round-1 draft order (only before the first pick)
+   POST { action:'order', order:[teamId…] } — round-1 draft order, may be partial while the wheel is being spun (only before the first pick)
    POST { action:'undo' | 'reset' } */
 export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
@@ -32,7 +32,10 @@ export default async function handler(req, res) {
 
   if (['open', 'close', 'skip', 'clock', 'event', 'order', 'undo', 'reset'].includes(body.action)) {
     if (!isAdmin) return json(res, 403, { error: 'Admins only' });
-    if (body.action === 'open') { state.draft.open = true; state.draft.turnStartedAt = Date.now(); }
+    if (body.action === 'open') {
+      if (!state.picks.length && (state.teamOrder || []).length < state.teams.length) return json(res, 409, { error: 'Set the full draft order first (all ' + state.teams.length + ' captains)' });
+      state.draft.open = true; state.draft.turnStartedAt = Date.now();
+    }
     if (body.action === 'close') state.draft.open = false;
     if (body.action === 'clock') state.draft.pickSeconds = Math.max(15, Math.min(600, Number(body.seconds) || 90));
     if (body.action === 'event') { state.eventAt = body.eventAt ? String(body.eventAt).slice(0, 40) : ''; state.eventNote = String(body.eventNote || '').slice(0, 120); state.eventSet = true; }
@@ -40,9 +43,8 @@ export default async function handler(req, res) {
       if (state.picks.length) return json(res, 409, { error: 'The draft has started. Undo or reset the picks before changing the order' });
       const ids = state.teams.map(t => t.id);
       const order = Array.isArray(body.order) ? body.order.map(String).filter((id, i, a) => ids.includes(id) && a.indexOf(id) === i) : [];
-      if (order.length !== ids.length) return json(res, 400, { error: 'The order must list every team exactly once' });
       state.teamOrder = order;
-      state.teams = order.map(id => state.teams.find(t => t.id === id));
+      state.teams = order.map(id => state.teams.find(t => t.id === id)).concat(state.teams.filter(t => !order.includes(t.id)));
     }
     if (body.action === 'undo') { state.picks.pop(); state.draft.turnStartedAt = Date.now(); }
     if (body.action === 'reset') { state.picks = []; state.draft.turnStartedAt = Date.now(); }

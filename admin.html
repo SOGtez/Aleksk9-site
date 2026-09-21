@@ -191,7 +191,7 @@
             <button class="chip is-on" data-f="all">All</button><button class="chip" data-f="pending">Pending</button><button class="chip" data-f="accepted">Accepted</button><button class="chip" data-f="rejected">Rejected</button>
           </div></div>
           <div class="card table-wrap" id="app-table"></div>
-          <p class="small" style="margin-top:10px">Tier: 0 = Champs, 1 = Good, 2 = Decent, 3 = Rookies. Leave it on the suggestion and it is computed from their highest rank. Tick Captain for the people who should draft a team.</p>
+          <p class="small" style="margin-top:10px">Tier: 0 = Champs, 1 = Good, 2 = Decent, 3 = Rookies, 4 = Subs. Leave it on the suggestion and it is computed from their highest rank. Tick Captain for the people who should draft a team.</p>
         </div>
       </section>
 
@@ -358,7 +358,7 @@
       if (!rows.length) { wrap.innerHTML = '<div class="empty">' + (list.length ? 'Nothing in this filter.' : 'No applications yet. Turn applications on in the settings tab and share /apply.') + '</div>'; return; }
       var h = '<table><thead><tr><th>Player</th><th>In-game</th><th>Hours</th><th>Rank</th><th>Roles</th><th>Discord</th><th>Follower since</th><th>Tier</th><th>Captain</th><th>Status</th><th></th></tr></thead><tbody>';
       rows.forEach(function (a) {
-        var tierSel = '<select class="field" data-tier="' + esc(a.login) + '"><option value=""' + (a.tier == null ? ' selected' : '') + '>Auto (' + a.suggestedTier + ')</option>' + [0, 1, 2, 3].map(function (t) { return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + t + ' · ' + ['Champs', 'Good', 'Decent', 'Rookies'][t] + '</option>'; }).join('') + '</select>';
+        var tierSel = '<select class="field" data-tier="' + esc(a.login) + '"><option value=""' + (a.tier == null ? ' selected' : '') + '>Auto (' + a.suggestedTier + ')</option>' + [0, 1, 2, 3, 4].map(function (t) { return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + t + ' · ' + ['Champs', 'Good', 'Decent', 'Rookies', 'Subs'][t] + '</option>'; }).join('') + '</select>';
         h += '<tr><td class="who">' + av(a) + '<span><b>' + esc(a.name) + '</b><small>' + esc(a.login) + '</small></span></td>' +
           '<td>' + esc(a.ign) + '<span class="sub">' + esc(a.platform) + '</span>' + verCell(a, 'ign') + '</td>' +
           '<td>' + (a.hours || 0) + verCell(a, 'hours') + '</td>' +

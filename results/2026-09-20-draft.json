@@ -1,0 +1,207 @@
+{
+  "savedAt": "2026-09-21T01:47:26Z",
+  "tournament": "R6 5v5 Tournament",
+  "eventAt": "2026-09-19T22:30:00Z",
+  "draftOrderRound1": [
+    "Frankie",
+    "Niko",
+    "Leo",
+    "Jullian",
+    "MrOctober",
+    "Alfie"
+  ],
+  "picks": [
+    {
+      "no": 1,
+      "team": "Team Frankie",
+      "captain": "Frankie",
+      "player": "Duke",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 2,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "MyCern",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 3,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "MrFlex",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 4,
+      "team": "Burger Team",
+      "captain": "Jullian",
+      "player": "Zynjto",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 5,
+      "team": "Team MrOctober",
+      "captain": "MrOctober",
+      "player": "Iso",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 6,
+      "team": "Team Alfie",
+      "captain": "Alfie",
+      "player": "Vexjng",
+      "tier": "Champs",
+      "auto": false
+    },
+    {
+      "no": 7,
+      "team": "Team Alfie",
+      "captain": "Alfie",
+      "player": "Beebo",
+      "tier": "Good",
+      "auto": false
+    },
+    {
+      "no": 8,
+      "team": "Team MrOctober",
+      "captain": "MrOctober",
+      "player": "Notvash30",
+      "tier": "Good",
+      "auto": false
+    },
+    {
+      "no": 9,
+      "team": "Burger Team",
+      "captain": "Jullian",
+      "player": "Lovez",
+      "tier": "Good",
+      "auto": false
+    },
+    {
+      "no": 10,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "Jake",
+      "tier": "Good",
+      "auto": false
+    },
+    {
+      "no": 11,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "Fxbm",
+      "tier": "Good",
+      "auto": false
+    },
+    {
+      "no": 12,
+      "team": "Team Frankie",
+      "captain": "Frankie",
+      "player": "Noni",
+      "tier": "Good",
+      "auto": false
+    },
+    {
+      "no": 13,
+      "team": "Team Frankie",
+      "captain": "Frankie",
+      "player": "Nix",
+      "tier": "Decent",
+      "auto": false
+    },
+    {
+      "no": 14,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "Pocket",
+      "tier": "Decent",
+      "auto": false
+    },
+    {
+      "no": 15,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "Marv",
+      "tier": "Decent",
+      "auto": false
+    },
+    {
+      "no": 16,
+      "team": "Burger Team",
+      "captain": "Jullian",
+      "player": "Zack",
+      "tier": "Decent",
+      "auto": false
+    },
+    {
+      "no": 17,
+      "team": "Team MrOctober",
+      "captain": "MrOctober",
+      "player": "AleksK9",
+      "tier": "Decent",
+      "auto": false
+    },
+    {
+      "no": 18,
+      "team": "Team Alfie",
+      "captain": "Alfie",
+      "player": "Klixvy",
+      "tier": "Decent",
+      "auto": false
+    },
+    {
+      "no": 19,
+      "team": "Team Alfie",
+      "captain": "Alfie",
+      "player": "Cash",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 20,
+      "team": "Team MrOctober",
+      "captain": "MrOctober",
+      "player": "Jalen",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 21,
+      "team": "Burger Team",
+      "captain": "Jullian",
+      "player": "Abstract",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 22,
+      "team": "Team Leo",
+      "captain": "Leo",
+      "player": "Angel",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 23,
+      "team": "Team Niko",
+      "captain": "Niko",
+      "player": "Carlos",
+      "tier": "Rookies",
+      "auto": false
+    },
+    {
+      "no": 24,
+      "team": "Team Frankie",
+      "captain": "Frankie",
+      "player": "Niko",
+      "tier": "Rookies",
+      "auto": false
+    }
+  ]
+}

@@ -101,13 +101,19 @@ async function callModel(key, model, messages, tools, mode, opts) {
     signal: AbortSignal.timeout(opts.timeoutMs || 28000)
   });
   const res = await r.json().catch(() => ({}));
-  if (!r.ok || res.error) { const e = new Error((res.error && res.error.message) || ('HTTP ' + r.status)); e.status = r.status; throw e; }
+  if (!r.ok || res.error) {
+    const err = res.error || {};
+    const raw = err.metadata && (err.metadata.raw || err.metadata.provider_name) ? ' [' + [err.metadata.provider_name, typeof err.metadata.raw === 'string' ? err.metadata.raw.slice(0, 200) : JSON.stringify(err.metadata.raw || '').slice(0, 200)].filter(Boolean).join(': ') + ']' : '';
+    const e = new Error((err.message || ('HTTP ' + r.status)) + raw); e.status = err.code || r.status; throw e;
+  }
   const msg = res.choices && res.choices[0] && res.choices[0].message;
   if (!msg) throw new Error('empty reply');
   if (mode === 'text') { const p = parseTextTools(msg.content); return { role: 'assistant', content: p.content, tool_calls: p.tool_calls }; }
   return msg;
 }
-const noToolsError = e => /tool/i.test(e.message || '') && (e.status === 404 || e.status === 400);
+/* Auth and billing problems are not worth a second attempt; anything else on a native-tools call is retried in text mode,
+   because free providers answer a `tools` request with all sorts of errors, not just "no tool support". */
+const retryInText = e => ![401, 402, 403].includes(Number(e.status)) && e.name !== 'TimeoutError';
 
 /* One completion. Tries each model until one answers. Returns { model, mode, message }. Throws when every model fails. */
 export async function complete(messages, tools, opts = {}) {
@@ -121,9 +127,10 @@ export async function complete(messages, tools, opts = {}) {
       let message;
       try { message = await callModel(key, model, messages, tools, mode, opts); }
       catch (e) {
-        if (mode !== 'native' || !noToolsError(e)) throw e;
-        mode = 'text'; await cacheSet('openrouter:mode:' + model, 'text', 3600 * 12);
-        message = await callModel(key, model, messages, tools, mode, opts);
+        if (mode !== 'native' || !retryInText(e)) throw e;
+        mode = 'text';
+        message = await callModel(key, model, messages, tools, mode, opts); /* throws the text-mode error if that fails too */
+        await cacheSet('openrouter:mode:' + model, 'text', 3600 * 12); /* text worked where native did not: remember it */
       }
       return { model, mode, message };
     } catch (e) {

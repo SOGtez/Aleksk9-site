@@ -651,7 +651,7 @@
     function aiPost(body) {
       AI.busy = true; aiRender();
       return api('/api/admin/chat', body).then(function (r) { AI.busy = false; aiApply(r); aiUsage(); aiRender(); })
-        .catch(function (e) { AI.busy = false; AI.log.push({ role: 'system', text: e.message }); aiSave(); aiUsage(); aiRender(); });
+        .catch(function (e) { AI.busy = false; AI.log.push({ role: 'system', text: e.message }); aiSave(); aiRender(); api('/api/admin/chat').then(function (d) { AI.usage = d.usage; aiUsage(); }).catch(function () {}); });
     }
     function aiSend(text) {
       text = String(text || '').trim(); if (!text || AI.busy) return;

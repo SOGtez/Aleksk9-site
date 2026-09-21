@@ -41,6 +41,9 @@ export async function getState() {
     state.draft = { ...state.draft, ...(s.draft || {}) };
     if (s.eventAt !== undefined && s.eventSet) { state.eventAt = s.eventAt; state.eventNote = s.eventNote || ''; } /* admin-set date wins; otherwise the code default */
     state.teamNames = s.teamNames && typeof s.teamNames === 'object' ? s.teamNames : {};
+    /* Admin-set round-1 order: listed teams first in that order, any team not listed keeps its place after them. */
+    state.teamOrder = Array.isArray(s.teamOrder) ? s.teamOrder.filter(id => state.teams.some(t => t.id === id)) : [];
+    if (state.teamOrder.length) state.teams = state.teamOrder.map(id => state.teams.find(t => t.id === id)).concat(state.teams.filter(t => !state.teamOrder.includes(t.id)));
     for (const t of state.teams) if (state.teamNames[t.id]) t.name = String(state.teamNames[t.id]).slice(0, 32);
     /* Picks that point at a team or player no longer in the config (pool was changed in code) are dropped. */
     const teamIds = new Set(state.teams.map(t => t.id)), poolIds = new Set(state.pool.map(p => p.id));

@@ -93,6 +93,13 @@
     .head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 20px; margin-bottom: 16px; }
     .head h2 { font-size: 26px; }
     .tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    ol.order { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 6px; max-width: 520px; }
+    ol.order li { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid var(--line-strong); border-radius: 10px; background: var(--bg-elev-2); }
+    ol.order li b.n { width: 22px; color: var(--fg-dim); font-size: 13px; }
+    ol.order li span.who { flex: 1; font-weight: 600; }
+    ol.order li span.who small { font-weight: 500; color: var(--fg-dim); margin-left: 6px; }
+    ol.order li button { min-height: 30px; padding: 0 10px; font-size: 14px; line-height: 1; }
+    ol.order li button:disabled { opacity: .35; }
     .gate { text-align: center; padding: 48px 22px; }
     .gate h2 { font-size: 24px; margin-bottom: 8px; }
     .gate p { color: var(--fg-muted); margin-bottom: 20px; }
@@ -233,6 +240,16 @@
               <button class="btn btn-sm btn-primary" type="submit">Save date</button>
               <p class="small" style="margin-top:10px">Enter the time as it is in Los Angeles. Leave the date empty to hide the countdown.</p>
             </form>
+          </div>
+          <div class="card pad" style="margin-bottom:14px">
+            <h3>Draft order</h3>
+            <p class="d">Round 1 goes top to bottom, then the order flips every round (snake). Spin the wheel, put the captains in the order it lands on, then save. The order can only be changed before the first pick.</p>
+            <ol class="order" id="order-list"></ol>
+            <div class="tools">
+              <button class="btn btn-sm btn-primary" id="order-save">Save order</button>
+              <button class="btn btn-sm btn-ghost" id="order-cancel">Discard changes</button>
+              <span class="small" id="order-note"></span>
+            </div>
           </div>
           <div class="grid2">
             <div class="card pad">
@@ -469,9 +486,31 @@
     document.getElementById('clock-save').onclick = function () { api('/api/draft', { action: 'clock', seconds: +document.getElementById('pick-seconds').value }).then(function () { toast('Clock saved'); return loadT(); }).catch(function (e) { toast(e.message); }); };
     document.getElementById('event-form').onsubmit = function (e) { e.preventDefault(); api('/api/draft', { action: 'event', eventAt: laToIso(document.getElementById('event-at').value), eventNote: document.getElementById('event-note').value }).then(function () { toast('Date saved'); return loadT(); }).catch(function (err) { toast(err.message); }); };
 
+    var orderDraft = null; /* team ids being edited; null = not edited, mirror T.teams */
+    function renderOrder() {
+      var ids = orderDraft || T.teams.map(function (t) { return t.id; });
+      var locked = T.picks.length > 0;
+      document.getElementById('order-list').innerHTML = ids.map(function (id, i) {
+        var t = T.teams.filter(function (x) { return x.id === id; })[0] || { captain: id, name: '' };
+        return '<li><b class="n">' + (i + 1) + '</b><span class="who">' + esc(t.captain) + (t.name && t.name !== 'Team ' + t.captain ? '<small>' + esc(t.name) + '</small>' : '') + '</span>' +
+          '<button class="btn btn-ghost" data-mv="' + i + ',-1" title="Move up"' + (locked || i === 0 ? ' disabled' : '') + '>&#9650;</button>' +
+          '<button class="btn btn-ghost" data-mv="' + i + ',1" title="Move down"' + (locked || i === ids.length - 1 ? ' disabled' : '') + '>&#9660;</button></li>';
+      }).join('');
+      document.getElementById('order-list').querySelectorAll('[data-mv]').forEach(function (b) {
+        b.onclick = function () { var p = b.dataset.mv.split(',').map(Number), a = (orderDraft || ids).slice(), j = p[0] + p[1]; var x = a[p[0]]; a[p[0]] = a[j]; a[j] = x; orderDraft = a; renderOrder(); };
+      });
+      var dirty = !!orderDraft && orderDraft.join() !== T.teams.map(function (t) { return t.id; }).join();
+      document.getElementById('order-save').disabled = locked || !dirty;
+      document.getElementById('order-cancel').disabled = !dirty;
+      document.getElementById('order-note').textContent = locked ? 'Locked: ' + T.picks.length + ' pick' + (T.picks.length === 1 ? '' : 's') + ' made. Undo or reset them to change the order.' : dirty ? 'Not saved yet.' : '';
+    }
+    document.getElementById('order-save').onclick = function () { api('/api/draft', { action: 'order', order: orderDraft }).then(function () { orderDraft = null; toast('Draft order saved'); return loadT(); }).catch(function (e) { toast(e.message); }); };
+    document.getElementById('order-cancel').onclick = function () { orderDraft = null; renderOrder(); };
+
     function renderTournament() {
       if (!T) return;
       renderDraftControls();
+      renderOrder();
       var picks = T.picks.length, total = Math.min(T.rounds * T.teams.length, T.pool.length);
       document.getElementById('t-stats').innerHTML = [['teams', T.teams.length], ['in pool', T.pool.length], ['picks made', picks + ' / ' + total], ['matches', T.matches.length]].map(function (x) { return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join('');
       document.getElementById('t-desc').innerHTML = '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';

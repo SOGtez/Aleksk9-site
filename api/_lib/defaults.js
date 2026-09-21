@@ -68,6 +68,7 @@ export const DEFAULT_STATE = {
   eventAt: '2026-09-19T22:30:00Z',   /* Tournament start: Sep 19, 3:30 PM Pacific. The draft is opened by an admin before then. */
   eventNote: '3:30 PM PT · 6:30 PM CT · 7:30 PM ET',
   teamNames: {},        /* teamId → name chosen by the captain */
+  teamOrder: [],        /* team ids in round-1 draft order, set by an admin (e.g. after a spin wheel); empty = the order listed above */
   picks: [],            /* [{ team, player, by, at, auto? }] in order */
   matches: [],          /* [{ id, teams:[tid, tid], map, status:'upcoming'|'live'|'final', score:[n, n] }] */
   stats: {},            /* { playerId or teamId(captain): [kills, deaths, assists] } */

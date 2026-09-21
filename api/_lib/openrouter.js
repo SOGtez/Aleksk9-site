@@ -18,21 +18,23 @@ export function configuredModels() {
   return env.length ? env : DEFAULT_MODELS;
 }
 
-async function discoveredModels() {
-  if (!/^(1|true|yes)$/i.test(process.env.OPENROUTER_FALLBACK || '')) return [];
-  const cached = await cacheGet('openrouter:free_tool_models');
+/* OpenRouter's public model list, reduced to { id: supportsTools } for the free models. Cached 1h.
+   Used to skip the native-tools attempt on models that cannot do it (every request counts on a free account). */
+async function catalog() {
+  const cached = await cacheGet('openrouter:catalog');
   if (cached) return cached;
-  let out = [];
+  const out = {};
   try {
     const r = await fetch('https://openrouter.ai/api/v1/models', { signal: AbortSignal.timeout(8000) });
-    if (r.ok) {
-      const list = ((await r.json()).data || []).filter(m => /:free$/.test(m.id) && Array.isArray(m.supported_parameters) && m.supported_parameters.includes('tools'));
-      list.sort((a, b) => (b.context_length || 0) - (a.context_length || 0));
-      out = list.map(m => m.id).slice(0, 12);
-    }
-  } catch { /* offline: just use the configured list */ }
-  await cacheSet('openrouter:free_tool_models', out, 3600);
+    if (r.ok) for (const m of (await r.json()).data || []) if (/:free$/.test(m.id)) out[m.id] = Array.isArray(m.supported_parameters) && m.supported_parameters.includes('tools');
+  } catch { /* offline: assume native and let the error fallback sort it out */ }
+  await cacheSet('openrouter:catalog', out, 3600);
   return out;
+}
+async function discoveredModels() {
+  if (!/^(1|true|yes)$/i.test(process.env.OPENROUTER_FALLBACK || '')) return [];
+  const cat = await catalog();
+  return Object.keys(cat).filter(id => cat[id]).slice(0, 12);
 }
 
 export async function modelList() {
@@ -120,9 +122,10 @@ export async function complete(messages, tools, opts = {}) {
   const key = process.env.OPENROUTER_API_KEY;
   if (!key) { const e = new Error('OPENROUTER_API_KEY is not set in Vercel'); e.status = 500; throw e; }
   const models = opts.models || await modelList();
+  const cat = await catalog();
   const errors = [];
   for (const model of models) {
-    let mode = (await cacheGet('openrouter:mode:' + model)) || 'native';
+    let mode = (await cacheGet('openrouter:mode:' + model)) || (cat[model] === false ? 'text' : 'native');
     try {
       let message;
       try { message = await callModel(key, model, messages, tools, mode, opts); }

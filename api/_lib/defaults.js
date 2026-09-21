@@ -26,7 +26,7 @@ export const DEFAULT_STATE = {
   maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Villa', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
   teams: [
     { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' },
-    { id: 'jullian',   name: 'Team Jullian',   captain: 'Jullian',   info: '' },
+    { id: 'jullian',   name: 'Team Jullian',   captain: 'Jullian',   info: '',                           twitch: 'starboyjulian' },
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
     { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '55 hrs · lvl 55 · Unranked',  twitch: 'alfie____8' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },

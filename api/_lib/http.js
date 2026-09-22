@@ -1,5 +1,5 @@
 import { getSession } from './session.js';
-import { roleFor } from './store.js';
+import { roleFor, withSpace } from './store.js';
 
 export function json(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
@@ -25,4 +25,15 @@ export async function requireRole(req, res, allowed) {
 export function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   try { return JSON.parse(req.body || '{}'); } catch { return {}; }
+}
+
+/* Space for this request: ?space=test (or the JSON body's `space`) selects the sandbox tournament. */
+export function spaceOf(req) {
+  const q = req.query && req.query.space;
+  const b = req.body && typeof req.body === 'object' ? req.body.space : undefined;
+  return String(q || b || '') === 'test' ? 'test' : '';
+}
+/* Wrap a handler so every store call inside it targets the requested space. */
+export function spaced(handler) {
+  return (req, res) => withSpace(spaceOf(req), () => handler(req, res));
 }

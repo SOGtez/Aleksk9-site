@@ -1,5 +1,5 @@
 import { json, requireRole, readBody } from '../http.js';
-import { getState, getSettings, getApplications, counterIncr, counterGet, counterDecr } from '../store.js';
+import { getState, getSettings, getApplications, counterIncr, counterGet, counterDecr, currentSpace, setCurrentSpace, copySpace, clearSpace, spaceHasData } from '../store.js';
 import { nextSlot } from '../defaults.js';
 import { complete, configuredModels } from '../openrouter.js';
 import { updateSettings, reviewApplicant, addAcceptedToPool, planBuild, buildTournament, setDraftOrder, setEvent, setPickClock } from '../actions.js';
@@ -10,7 +10,9 @@ import { updateSettings, reviewApplicant, addAcceptedToPool, planBuild, buildTou
    POST { history, action:'confirm'|'cancel', pending }       → answer a build confirmation (free)
    Replies { history, log:[{role, text, ok?, model?}], usage, pending? }.
    Every write goes through api/_lib/actions.js, the same code the admin buttons use.
-   build_tournament never runs straight away: the server returns `pending` and waits for a confirm call. */
+   build_tournament and promote_test_to_live never run straight away: the server returns `pending` and waits for a confirm call.
+   Spaces: body.space '' (live) or 'test' (sandbox shown at /tournament-test). The assistant can switch mid-turn with
+   switch_mode; the reply carries the space it ended in so the admin page's toggle follows. */
 
 const CAP = () => Math.max(1, Number(process.env.AI_MONTHLY_CAP) || 200);
 const monthKey = () => 'ai:usage:' + new Date().toISOString().slice(0, 7);
@@ -25,7 +27,11 @@ const TOOLS = [
   { name: 'add_accepted_to_pool', description: 'Add every accepted applicant who is not already in the tournament to the current pool. Picks already made stay.', parameters: { type: 'object', properties: {} } },
   { name: 'set_draft_order', description: 'Round-1 draft order as team ids (get them from get_tournament). Only before the first pick.', parameters: { type: 'object', properties: { order: { type: 'array', items: { type: 'string' } } }, required: ['order'] } },
   { name: 'set_event', description: 'Tournament date and time shown with a countdown. eventAt must be ISO 8601 with a UTC offset, e.g. 2026-10-03T17:00:00-07:00 for 5 PM Pacific. Empty string hides the countdown.', parameters: { type: 'object', properties: { eventAt: { type: 'string' }, eventNote: { type: 'string' } }, required: ['eventAt'] } },
-  { name: 'set_pick_clock', description: 'Seconds each captain gets per pick (15 to 600).', parameters: { type: 'object', properties: { seconds: { type: 'integer' } }, required: ['seconds'] } }
+  { name: 'set_pick_clock', description: 'Seconds each captain gets per pick (15 to 600).', parameters: { type: 'object', properties: { seconds: { type: 'integer' } }, required: ['seconds'] } },
+  { name: 'switch_mode', description: 'Choose which tournament the following tools act on: "live" is what the public sees at /tournament; "test" is a sandbox shown at /tournament-test that admins use to rehearse or preview. Call this first whenever the admin says test, preview, sandbox, rehearse, dry run, or asks to go back to live.', parameters: { type: 'object', properties: { mode: { type: 'string', enum: ['live', 'test'] } }, required: ['mode'] } },
+  { name: 'copy_live_to_test', description: 'Overwrite the test tournament with a copy of the live one (teams, pool, picks, matches, stats, applications, settings) so a rehearsal starts from the real data.', parameters: { type: 'object', properties: {} } },
+  { name: 'reset_test', description: 'Wipe the test tournament completely. It goes back to the built-in config with no applications.', parameters: { type: 'object', properties: {} } },
+  { name: 'promote_test_to_live', description: 'Replace the LIVE tournament with the test one (everything: teams, pool, picks, matches, stats, applications, settings). The admin is asked to confirm before it runs.', parameters: { type: 'object', properties: {} } }
 ];
 const toolDefs = TOOLS.map(t => ({ type: 'function', function: t }));
 
@@ -45,6 +51,7 @@ async function tournamentText() {
   const teamLine = t => `${t.id}: "${t.name}" captain ${t.captain}${t.twitch ? ' (@' + t.twitch + ')' : ''}${t.info ? ' · ' + t.info : ''}`;
   const poolLine = p => `${p.id}: ${p.name} · tier ${p.tier} (${s.tiers[p.tier] || '?'})${p.info ? ' · ' + p.info : ''}`;
   return [
+    `Space: ${modeLabel()}${modeLabel() === 'TEST' ? ' (sandbox at /tournament-test)' : ' (public at /tournament)'}.`,
     `Name: ${s.name}. Roster source: ${s.fromApplications ? 'built from applications' : 'site code'}.`,
     `Tiers: ${s.tiers.map((t, i) => i + '=' + t).join(', ')}. Quota per team per tier: ${JSON.stringify(s.quota)}. Rounds: ${s.rounds}. Team size: ${s.format.teamSize}.`,
     `Draft: ${s.draft.open ? 'OPEN' : 'closed'}, ${s.picks.length} picks made, ${s.draft.pickSeconds}s per pick. Next: ${next ? 'round ' + next.round + ', ' + next.team : 'complete'}. Round-1 order ${(s.teamOrder || []).length ? 'set: ' + s.teamOrder.join(' > ') : 'not set'}.`,
@@ -59,6 +66,8 @@ async function systemPrompt(me) {
   const pt = now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', dateStyle: 'full', timeStyle: 'short' });
   return `You are the tournament assistant on the admin panel of AleksK9's site (a Twitch streamer). You help admins set up and run a Rainbow Six Siege 5v5 community tournament: review applications, tier players, choose captains, build the tournament, set the draft order, date and pick clock.
 You are talking to admin "${me.user.login}". Today is ${pt} (Pacific). All times on the site are shown in Pacific.
+
+${modeText()}
 
 How the tournament works: each captain is a team. The pool is drafted in a snake: round 1 in the listed order, then the order flips each round. Each team drafts one player from each tier (see quota), so tiers should be about equal in size and there should be exactly (teams x rounds) players in the pool. Captains are usually mid-strength players who can lead; the six strongest players should be in the top tier of the pool, not captains, so the draft can balance teams. Round-1 order goes weakest captain first.
 
@@ -79,6 +88,13 @@ Rules for you:
 - Keep answers short and concrete. Use plain text with short lines or simple "- " bullets, no headings, no tables.`;
 }
 
+function modeText() {
+  return currentSpace() === 'test'
+    ? 'MODE: TEST. You are working on the sandbox tournament shown at /tournament-test. Nothing you change here is public. If the admin wants the real tournament, call switch_mode("live") first. promote_test_to_live copies this sandbox over the live tournament (needs the admin to confirm).'
+    : 'MODE: LIVE. Every change you make is public straight away on /tournament. If the admin says test, preview, sandbox, rehearse, dry run, or "not for real", call switch_mode("test") BEFORE any other tool, then continue there. copy_live_to_test seeds the sandbox from the live data.';
+}
+const modeLabel = () => currentSpace() === 'test' ? 'TEST' : 'LIVE';
+
 /* ---------- Tool execution ---------- */
 async function runTool(name, args, me) {
   args = args || {};
@@ -98,9 +114,18 @@ async function runTool(name, args, me) {
     case 'set_draft_order': { const r = await setDraftOrder(args.order); return { text: 'Round-1 order: ' + r.order.join(' > '), label: 'Draft order set' }; }
     case 'set_event': { const t = args.eventAt ? Date.parse(args.eventAt) : 0; if (args.eventAt && isNaN(t)) throw Object.assign(new Error('eventAt is not a valid date'), { status: 400 }); const r = await setEvent(args.eventAt ? new Date(t).toISOString() : '', args.eventNote); return { text: 'Event: ' + (r.eventAt || 'cleared') + (r.eventNote ? ' · ' + r.eventNote : ''), label: r.eventAt ? 'Event set to ' + new Date(r.eventAt).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT' : 'Event date cleared' }; }
     case 'set_pick_clock': { const r = await setPickClock(args.seconds); return { text: 'Pick clock: ' + r.pickSeconds + 's', label: 'Pick clock ' + r.pickSeconds + 's' }; }
+    case 'switch_mode': {
+      const mode = args.mode === 'test' ? 'test' : 'live';
+      setCurrentSpace(mode === 'test' ? 'test' : '');
+      const has = mode === 'test' ? await spaceHasData('test') : true;
+      return { text: modeText() + (mode === 'test' && !has ? ' The test tournament is empty (built-in config, no applications); copy_live_to_test fills it from the live data.' : '') + '\n\n' + await tournamentText(), label: 'Switched to ' + mode + ' mode' };
+    }
+    case 'copy_live_to_test': { await copySpace('', 'test'); return { text: 'Test tournament now mirrors the live one.\n' + await withTest(tournamentText), label: 'Copied live into test' }; }
+    case 'reset_test': { await clearSpace('test'); return { text: 'Test tournament wiped.', label: 'Test tournament cleared' }; }
     default: throw Object.assign(new Error('Unknown tool ' + name), { status: 400 });
   }
 }
+async function withTest(fn) { const prev = currentSpace(); setCurrentSpace('test'); try { return await fn(); } finally { setCurrentSpace(prev); } }
 const parseArgs = s => { try { return typeof s === 'string' ? JSON.parse(s || '{}') : (s || {}); } catch { return {}; } };
 
 /* Run the model until it stops calling tools, a build needs confirming, or the step limit hits. */
@@ -120,17 +145,23 @@ async function drive(history, me, log) {
       if (name === 'build_tournament' && !pending) {
         try {
           const plan = await planBuild(args);
-          pending = { id: c.id, name: plan.name, captains: args.captains || [], preview: { teams: plan.teams.map(t => t.captain), pool: plan.pool.length, byTier: plan.pool.reduce((m, p) => { m[p.tier] = (m[p.tier] || 0) + 1; return m; }, {}) } };
+          pending = { kind: 'build', id: c.id, space: currentSpace(), name: plan.name, captains: args.captains || [], preview: { teams: plan.teams.map(t => t.captain), pool: plan.pool.length, byTier: plan.pool.reduce((m, p) => { m[p.tier] = (m[p.tier] || 0) + 1; return m; }, {}) } };
           continue; /* the tool result is added once the admin answers */
-        } catch (e) { history.push({ role: 'tool', tool_call_id: c.id, name, content: 'Error: ' + e.message }); log.push({ role: 'tool', text: e.message, ok: false }); continue; }
+        } catch (e) { history.push({ role: 'tool', tool_call_id: c.id, name, content: 'Error: ' + e.message }); log.push({ role: 'tool', text: e.message, ok: false, space: currentSpace() }); continue; }
+      }
+      if (name === 'promote_test_to_live' && !pending) {
+        if (!(await spaceHasData('test'))) { history.push({ role: 'tool', tool_call_id: c.id, name, content: 'Error: the test tournament is empty, nothing to promote' }); log.push({ role: 'tool', text: 'Test tournament is empty', ok: false, space: currentSpace() }); continue; }
+        const t = await withTest(getState);
+        pending = { kind: 'promote', id: c.id, space: currentSpace(), name: t.name, preview: { teams: t.teams.map(x => x.captain), pool: t.pool.length, picks: t.picks.length, matches: t.matches.length } };
+        continue;
       }
       try {
         const r = await runTool(name, args, me);
         history.push({ role: 'tool', tool_call_id: c.id, name, content: r.text });
-        if (r.label) log.push({ role: 'tool', text: r.label, ok: r.ok !== false });
+        if (r.label) log.push({ role: 'tool', text: r.label, ok: r.ok !== false, space: currentSpace() });
       } catch (e) {
         history.push({ role: 'tool', tool_call_id: c.id, name, content: 'Error: ' + e.message });
-        log.push({ role: 'tool', text: e.message, ok: false });
+        log.push({ role: 'tool', text: e.message, ok: false, space: currentSpace() });
       }
     }
     if (pending) return pending;
@@ -157,7 +188,7 @@ export default async function handler(req, res) {
   const me = await requireRole(req, res, ['admin']);
   if (!me) return;
   const usage = async () => ({ used: await counterGet(monthKey()), cap: CAP(), month: monthKey().slice(9) });
-  if (req.method === 'GET') return json(res, 200, { usage: await usage(), models: configuredModels(), configured: !!process.env.OPENROUTER_API_KEY });
+  if (req.method === 'GET') return json(res, 200, { usage: await usage(), models: configuredModels(), configured: !!process.env.OPENROUTER_API_KEY, space: currentSpace(), testHasData: await spaceHasData('test') });
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   const b = readBody(req);
   const history = cleanHistory(b.history);
@@ -167,16 +198,22 @@ export default async function handler(req, res) {
     if (b.action === 'confirm' || b.action === 'cancel') {
       const p = b.pending || {};
       if (!p.id || !history.some(m => m.role === 'assistant' && (m.tool_calls || []).some(c => c.id === p.id))) return json(res, 400, { error: 'Nothing to confirm' });
-      if (b.action === 'confirm') {
+      const promote = p.kind === 'promote';
+      if (p.space === 'test' || p.space === '') setCurrentSpace(p.space); /* finish in the space the tool was called in */
+      if (b.action === 'confirm' && promote) {
+        await copySpace('test', '');
+        history.push({ role: 'tool', tool_call_id: p.id, name: 'promote_test_to_live', content: 'The live tournament now matches the test one.' });
+        log.push({ role: 'tool', text: 'Test tournament promoted to live', ok: true, space: '' });
+      } else if (b.action === 'confirm') {
         const r = await buildTournament({ name: p.name, captains: p.captains }, me.user.login);
         history.push({ role: 'tool', tool_call_id: p.id, name: 'build_tournament', content: `Built "${r.name}": ${r.teams} teams, ${r.pool} in the pool. Picks, matches and stats were cleared.` });
-        log.push({ role: 'tool', text: 'Built ' + r.teams + ' teams, ' + r.pool + ' in the pool', ok: true });
+        log.push({ role: 'tool', text: 'Built ' + r.teams + ' teams, ' + r.pool + ' in the pool', ok: true, space: currentSpace() });
       } else {
-        history.push({ role: 'tool', tool_call_id: p.id, name: 'build_tournament', content: 'The admin cancelled the build. Nothing changed.' });
-        log.push({ role: 'tool', text: 'Build cancelled', ok: false });
+        history.push({ role: 'tool', tool_call_id: p.id, name: promote ? 'promote_test_to_live' : 'build_tournament', content: 'The admin cancelled. Nothing changed.' });
+        log.push({ role: 'tool', text: (promote ? 'Promotion' : 'Build') + ' cancelled', ok: false, space: currentSpace() });
       }
       const pending = await drive(history, me, log);
-      return json(res, 200, { history, log, usage: await usage(), pending });
+      return json(res, 200, { history, log, usage: await usage(), pending, space: currentSpace() });
     }
     const text = String(b.message || '').trim().slice(0, 4000);
     if (!text) return json(res, 400, { error: 'Type something first' });
@@ -192,8 +229,8 @@ export default async function handler(req, res) {
       if (!log.some(m => m.role === 'assistant' || m.role === 'tool')) await counterDecr(monthKey());
       throw e;
     }
-    return json(res, 200, { history, log, usage: await usage(), pending });
+    return json(res, 200, { history, log, usage: await usage(), pending, space: currentSpace() });
   } catch (e) {
-    return json(res, e.status || 500, { error: e.message, history, log, usage: await usage() });
+    return json(res, e.status || 500, { error: e.message, history, log, usage: await usage(), space: currentSpace() });
   }
 }

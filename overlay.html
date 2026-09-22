@@ -92,7 +92,8 @@
       var left = D.draft.turnStartedAt + (D.draft.pickSeconds || 90) * 1000 - Date.now();
       c.hidden = false; c.textContent = fmtClock(left); c.classList.toggle('low', left <= 15000);
     }
-    function load() { fetch('/api/tournament', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { D = d; render(); tick(); }).catch(function () {}); }
+    /* ?space=test shows the sandbox tournament instead of the live one. */
+    function load() { fetch('/api/tournament' + (q.get('space') === 'test' ? '?space=test' : ''), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { D = d; render(); tick(); }).catch(function () {}); }
     load(); setInterval(load, 4000); setInterval(tick, 1000);
   </script>
 </body>

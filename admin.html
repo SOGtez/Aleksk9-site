@@ -150,6 +150,17 @@
     .ver.ok { color: var(--fg-muted); }
     .ver.bad { color: var(--accent); }
     .ver.err { color: var(--fg-dim); }
+    /* Live / test switch */
+    .space-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 14px; }
+    .space-switch { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line-strong); background: var(--bg-elev); }
+    .space-switch button { padding: 7px 16px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--fg-muted); transition: background-color .25s var(--ease), color .2s var(--ease); }
+    .space-switch button.is-on { background: #fff; color: #000; }
+    .space-switch button.is-on[data-space="test"] { background: #ffb000; }
+    .space-bar { position: sticky; top: calc(var(--nav-h) + 47px); z-index: 39; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 14px; padding: 9px 16px; font-size: 13px; background: repeating-linear-gradient(-45deg, rgba(255,176,0,.18) 0 12px, rgba(255,176,0,.09) 12px 24px), var(--bg); border-bottom: 1px solid rgba(255,176,0,.45); animation: ai-in .35s var(--ease) both; }
+    .space-bar .tag { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: #ffb000; color: #000; }
+    .space-bar .link-btn { color: var(--fg); }
+    body.is-test .ai-head h3::before { background: #ffb000; box-shadow: 0 0 10px #ffb000; }
+    .ai-tool .sp { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 1px 6px; border-radius: 999px; background: #ffb000; color: #000; }
     /* AI assistant */
     .ai { margin-bottom: 14px; overflow: hidden; }
     .ai-head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); }
@@ -235,6 +246,14 @@
         <span class="eyebrow">Admin</span>
         <h1 style="font-size:clamp(30px,5vw,44px)">Tournament <span>control</span></h1>
         <p class="lede" id="whoami"></p>
+        <div class="space-row">
+          <div class="space-switch" role="group" aria-label="Which tournament this page edits">
+            <button type="button" data-space="" class="is-on">Live</button>
+            <button type="button" data-space="test">Test</button>
+          </div>
+          <a class="link-btn" href="/tournament-test" target="_blank" rel="noopener">Open test page ↗</a>
+          <span class="small" id="space-hint">Live: what everyone sees. Test: a sandbox to rehearse or preview in.</span>
+        </div>
       </div>
       <nav class="tabs"><div class="container">
         <button class="is-on" data-tab="applications">Applications</button>
@@ -243,6 +262,13 @@
         <button data-tab="roles">Roles</button>
         <button data-tab="logins">Twitch logins</button>
       </div></nav>
+      <div class="space-bar" id="space-bar" hidden>
+        <span class="tag">Test mode</span>
+        <span>Everything on this page, including the assistant, edits the <b>test tournament</b>. Public pages are untouched.</span>
+        <a class="link-btn" href="/tournament-test" target="_blank" rel="noopener">Open test page ↗</a>
+        <button class="link-btn" id="space-copy">Copy live into test</button>
+        <button class="link-btn" id="space-live">Back to live</button>
+      </div>
 
       <section class="tab" id="tab-applications">
         <div class="container">
@@ -357,8 +383,8 @@
               <h3>Current tournament</h3>
               <p class="d" id="t-desc"></p>
               <div class="tools">
-                <a class="btn btn-sm btn-ghost" href="/tournament">Open tournament page</a>
-                <a class="btn btn-sm btn-ghost" href="/overlay" target="_blank" rel="noopener">Stream overlay</a>
+                <a class="btn btn-sm btn-ghost" id="t-page-link" href="/tournament" target="_blank" rel="noopener">Open tournament page ↗</a>
+                <a class="btn btn-sm btn-ghost" id="t-overlay-link" href="/overlay" target="_blank" rel="noopener">Stream overlay</a>
                 <span id="undo-wrap"><button class="btn btn-sm btn-ghost" id="undo-btn">Undo last pick</button></span>
               </div>
               <hr style="border:0;border-top:1px solid var(--line);margin:18px 0">
@@ -367,6 +393,8 @@
               <div class="tools">
                 <span id="reset-wrap"><button class="btn btn-sm btn-ghost danger" id="reset-btn">Reset picks, matches, stats</button></span>
                 <span id="revert-wrap"><button class="btn btn-sm btn-ghost danger" id="revert-btn">Revert to code config</button></span>
+                <span id="wipe-wrap" hidden><button class="btn btn-sm btn-ghost danger" id="wipe-btn">Wipe the test tournament</button></span>
+                <span id="promote-wrap" hidden><button class="btn btn-sm btn-ghost danger" id="promote-btn">Promote test to live</button></span>
               </div>
             </div>
           </div>
@@ -417,9 +445,12 @@
   <script>
     document.getElementById('y').textContent = new Date().getFullYear();
     var ME = null, A = null, T = null, filter = 'all', toastTimer;
+    /* '' = live tournament, 'test' = sandbox shown at /tournament-test. Every API call from this page carries it. */
+    var SPACE = ''; try { SPACE = localStorage.getItem('ak9_admin_space') === 'test' ? 'test' : ''; } catch (e) {}
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
     function toast(m) { var t = document.getElementById('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 3000); }
     function api(path, body) {
+      if (SPACE) path += (path.indexOf('?') < 0 ? '?' : '&') + 'space=' + SPACE;
       var o = body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' } : { cache: 'no-store', credentials: 'same-origin' };
       return fetch(path, o).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || 'Request failed'); return j; }); });
     }
@@ -427,6 +458,32 @@
     function fmt(ts) { if (!ts) return ''; var d = new Date(ts); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
     function teamById(id) { return (T && T.teams || []).filter(function (t) { return t.id === id; })[0]; }
     function roleLabel(r) { if (r === 'admin') return 'Admin'; if (r === 'helper') return 'Helper'; if (r && r.indexOf('captain:') === 0) { var t = teamById(r.slice(8)); return 'Captain · ' + (t ? t.name : r.slice(8)); } return r; }
+
+    /* Live / test switch */
+    function paintSpace() {
+      document.body.classList.toggle('is-test', SPACE === 'test');
+      document.querySelectorAll('.space-switch button').forEach(function (b) { b.classList.toggle('is-on', b.dataset.space === SPACE); });
+      document.getElementById('space-bar').hidden = SPACE !== 'test';
+      document.getElementById('wipe-wrap').hidden = SPACE !== 'test';
+      document.getElementById('promote-wrap').hidden = SPACE !== 'test';
+      var pl = document.getElementById('t-page-link'), ol = document.getElementById('t-overlay-link');
+      if (pl) { pl.href = SPACE ? '/tournament-test' : '/tournament'; pl.textContent = (SPACE ? 'Open test page' : 'Open tournament page') + ' ↗'; }
+      if (ol) ol.href = SPACE ? '/overlay?space=test' : '/overlay';
+    }
+    function setSpace(sp, silent) {
+      sp = sp === 'test' ? 'test' : '';
+      if (sp === SPACE) { paintSpace(); return Promise.resolve(); }
+      SPACE = sp; try { localStorage.setItem('ak9_admin_space', SPACE); } catch (e) {}
+      orderDraft = null; paintSpace();
+      if (!silent) toast(SPACE ? 'Test mode: editing the sandbox tournament' : 'Back to the live tournament');
+      return Promise.all([loadT(), loadApps(), loadAI()]).catch(function (e) { toast(e.message); });
+    }
+    document.querySelectorAll('.space-switch button').forEach(function (b) { b.onclick = function () { setSpace(b.dataset.space); }; });
+    document.getElementById('space-live').onclick = function () { setSpace(''); };
+    document.getElementById('space-copy').onclick = function () {
+      if (!confirm('Overwrite the test tournament with a copy of the live one?')) return;
+      api('/api/admin/space', { action: 'copy' }).then(function () { toast('Copied the live tournament into test'); return Promise.all([loadT(), loadApps()]); }).catch(function (e) { toast(e.message); });
+    };
 
     /* Tabs */
     document.querySelectorAll('.tabs button').forEach(function (b) {
@@ -602,7 +659,7 @@
       renderOrder();
       var picks = T.picks.length, total = Math.min(T.rounds * T.teams.length, T.pool.length);
       document.getElementById('t-stats').innerHTML = [['teams', T.teams.length], ['in pool', T.pool.length], ['picks made', picks + ' / ' + total], ['matches', T.matches.length]].map(function (x) { return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join('');
-      document.getElementById('t-desc').innerHTML = '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';
+      document.getElementById('t-desc').innerHTML = (SPACE ? '<span class="chip" style="background:#ffb000;color:#000;border-color:#ffb000;margin-right:8px">Test</span>' : '') + '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';
       document.getElementById('b-name').placeholder = T.name;
       var acc = A ? A.applications.filter(function (a) { return a.status === 'accepted'; }) : [];
       var caps = acc.filter(function (a) { return a.captainPick; });
@@ -632,6 +689,8 @@
     twoStep('undo-wrap', 'undo-btn', 'Undo last pick', 'Undo the last draft pick?', function () { return api('/api/draft', { action: 'undo' }).then(function () { toast('Last pick undone'); return loadT(); }); });
     twoStep('reset-wrap', 'reset-btn', 'Reset picks, matches, stats', 'Wipe every pick, match, and stat?', function () { return api('/api/admin/reset', {}).then(function () { toast('Tournament reset'); return loadT(); }); });
     twoStep('revert-wrap', 'revert-btn', 'Revert to code config', 'Throw away the roster built from applications?', function () { return api('/api/admin/applications', { action: 'revert' }).then(function () { toast('Reverted to the site config'); return loadT(); }); });
+    twoStep('wipe-wrap', 'wipe-btn', 'Wipe the test tournament', 'Wipe everything in the test tournament?', function () { return api('/api/admin/space', { action: 'reset' }).then(function () { toast('Test tournament wiped'); return Promise.all([loadT(), loadApps()]); }); });
+    twoStep('promote-wrap', 'promote-btn', 'Promote test to live', 'Replace the LIVE tournament with the test one? Everyone will see it.', function () { return api('/api/admin/space', { action: 'promote' }).then(function () { toast('Test tournament is now live'); return setSpace(''); }); });
 
     /* ---------- AI assistant ---------- */
     var AI = { history: [], log: [], pending: null, busy: false, usage: null };
@@ -661,7 +720,7 @@
     function aiRowHtml(m) {
       if (m.role === 'user') return '<div class="ai-row user"><div class="ai-msg">' + esc(m.text) + '</div></div>';
       if (m.role === 'assistant') return '<div class="ai-row assistant"><div class="ai-msg">' + aiText(m.text) + '</div>' + (m.model ? '<div class="ai-meta">' + esc(m.model.replace(/:free$/, '')) + '</div>' : '') + '</div>';
-      if (m.role === 'tool') return '<div class="ai-row tool"><span class="ai-tool' + (m.ok === false ? ' bad' : '') + '">' + esc(m.text) + '</span></div>';
+      if (m.role === 'tool') return '<div class="ai-row tool"><span class="ai-tool' + (m.ok === false ? ' bad' : '') + '">' + (m.space === 'test' ? '<span class="sp">test</span>' : '') + esc(m.text) + '</span></div>';
       /* system: first sentence up front, the rest behind a toggle */
       var t = String(m.text || ''), cut = t.search(/[.!?]\s|\s\|\s|\s\[/), head = cut > 0 && cut < t.length - 1 ? t.slice(0, cut + 1).trim() : t, rest = head === t ? '' : t.slice(cut + 1).trim();
       return '<div class="ai-row system"><div class="ai-note">' + esc(head) + (rest ? '<details><summary>Details</summary><pre>' + esc(rest) + '</pre></details>' : '') + '</div></div>';
@@ -672,7 +731,7 @@
       var tail = el.querySelector('.ai-tail'); if (tail) tail.remove();
       var empty = el.querySelector('.ai-empty');
       if (!AI.log.length) {
-        if (aiDrawn || !empty) el.innerHTML = '<div class="ai-empty"><b>Nothing yet</b>Try one of the prompts below, or describe the next tournament in your own words.</div>';
+        if (aiDrawn || !empty) el.innerHTML = '<div class="ai-empty"><b>Nothing yet</b>Try one of the prompts below, or describe the next tournament in your own words. Say "in test mode" to rehearse on the test page first.</div>';
         aiDrawn = 0;
       } else {
         if (aiDrawn > AI.log.length || (empty && aiDrawn === 0)) { el.innerHTML = ''; aiDrawn = 0; }
@@ -686,10 +745,17 @@
       if (AI.pending) {
         var p = AI.pending, pv = p.preview || {}, tiers = (T && T.tiers) || [];
         var byTier = Object.keys(pv.byTier || {}).sort().map(function (k) { return (tiers[k] || ('tier ' + k)) + ' ' + pv.byTier[k]; }).join(' · ');
-        t += '<div class="ai-confirm"><b>Build "' + esc(p.name) + '"?</b>This replaces the teams and pool and clears every pick, match and stat. Captains in round-1 order:' +
-          '<ol>' + (pv.teams || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
-          '<span class="small">' + (pv.pool || 0) + ' in the pool' + (byTier ? ' · ' + byTier : '') + '</span>' +
-          '<div class="tools"><button class="btn btn-sm btn-primary" id="ai-yes"' + (AI.busy ? ' disabled' : '') + '>Yes, build it</button><button class="link-btn" id="ai-no"' + (AI.busy ? ' disabled' : '') + '>Cancel</button></div></div>';
+        if (p.kind === 'promote') {
+          t += '<div class="ai-confirm"><b>Make the test tournament live?</b>This replaces the LIVE tournament with "' + esc(p.name) + '" from the sandbox: teams, pool, picks, matches, stats, applications and settings. Everyone will see it.' +
+            '<ol>' + (pv.teams || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
+            '<span class="small">' + (pv.pool || 0) + ' in the pool · ' + (pv.picks || 0) + ' picks · ' + (pv.matches || 0) + ' matches</span>' +
+            '<div class="tools"><button class="btn btn-sm btn-primary" id="ai-yes"' + (AI.busy ? ' disabled' : '') + '>Yes, make it live</button><button class="link-btn" id="ai-no"' + (AI.busy ? ' disabled' : '') + '>Cancel</button></div></div>';
+        } else {
+          t += '<div class="ai-confirm"><b>Build "' + esc(p.name) + '"' + (p.space === 'test' ? ' in the test tournament' : '') + '?</b>This replaces the teams and pool and clears every pick, match and stat' + (p.space === 'test' ? ' in the sandbox' : '') + '. Captains in round-1 order:' +
+            '<ol>' + (pv.teams || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
+            '<span class="small">' + (pv.pool || 0) + ' in the pool' + (byTier ? ' · ' + byTier : '') + '</span>' +
+            '<div class="tools"><button class="btn btn-sm btn-primary" id="ai-yes"' + (AI.busy ? ' disabled' : '') + '>Yes, build it</button><button class="link-btn" id="ai-no"' + (AI.busy ? ' disabled' : '') + '>Cancel</button></div></div>';
+        }
       }
       if (AI.busy) t += '<div class="ai-row typing"><div class="ai-msg"><i></i><i></i><i></i></div></div>';
       if (t) el.insertAdjacentHTML('beforeend', '<div class="ai-tail" style="display:contents">' + t + '</div>');
@@ -707,6 +773,7 @@
       AI.pending = r.pending || null;
       aiSave();
       var changed = (r.log || []).some(function (m) { return m.role === 'tool' && m.ok !== false; });
+      if (r.space != null && r.space !== SPACE) return setSpace(r.space); /* the assistant switched between live and test */
       if (changed) Promise.all([loadT(), loadApps()]).then(aiRender).catch(function () {});
     }
     function aiPost(body) {
@@ -719,9 +786,9 @@
       if (AI.pending) { AI.log.push({ role: 'system', text: 'Answer the build question first.' }); aiRender(); return; }
       AI.log.push({ role: 'user', text: text }); aiSave();
       document.getElementById('ai-input').value = '';
-      aiPost({ history: AI.history, message: text });
+      aiPost({ history: AI.history, message: text, space: SPACE });
     }
-    function aiAnswer(action) { if (AI.busy || !AI.pending) return; aiPost({ history: AI.history, action: action, pending: AI.pending }); }
+    function aiAnswer(action) { if (AI.busy || !AI.pending) return; aiPost({ history: AI.history, action: action, pending: AI.pending, space: SPACE }); }
     document.getElementById('ai-form').onsubmit = function (e) { e.preventDefault(); aiSend(document.getElementById('ai-input').value); };
     document.getElementById('ai-input').onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(this.value); } };
     document.getElementById('ai-input').oninput = function () { this.style.height = 'auto'; this.style.height = Math.min(160, this.scrollHeight) + 'px'; };
@@ -772,7 +839,7 @@
         if (m.user) { document.getElementById('gate-msg').textContent = 'You are logged in as ' + m.user.name + ' but not an admin.'; var b = document.getElementById('gate-btn'); b.textContent = 'Log out'; b.href = '/api/auth/logout?next=/admin'; }
         return;
       }
-      document.getElementById('panel').hidden = false;
+      document.getElementById('panel').hidden = false; paintSpace();
       document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
       var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();
       return Promise.all([loadT(), loadApps(), loadAI()]);

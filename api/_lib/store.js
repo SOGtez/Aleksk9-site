@@ -1,5 +1,19 @@
 import { Redis } from '@upstash/redis';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { DEFAULT_STATE } from './defaults.js';
+
+/* ---------- Spaces ----------
+   Tournament data lives in a "space": '' is the live tournament, 'test' is a sandbox that the admin page
+   and the AI assistant can work in without touching what the public sees. The test tournament is shown
+   at /tournament-test. Only tournament data is per space: state, config override, applications, settings.
+   Roles, Twitch logins, player links and caches are shared. */
+export const SPACES = ['', 'test'];
+const als = new AsyncLocalStorage();
+export function withSpace(space, fn) { return als.run({ space: SPACES.includes(space) ? space : '' }, fn); }
+export function currentSpace() { return (als.getStore() || {}).space || ''; }
+/* Change the space for the rest of the current request (used by the assistant's switch_mode tool). */
+export function setCurrentSpace(space) { const s = als.getStore(); if (s) s.space = SPACES.includes(space) ? space : ''; }
+const spaced = (key, space) => ((space === undefined ? currentSpace() : space) === 'test' ? 'test:' : '') + key;
 
 const KEY_STATE = 't:state';
 const KEY_ROLES = 't:roles';
@@ -23,12 +37,12 @@ const KEY_LOGINS = 'tw:logins';          /* hash login → { id, login, name, av
 const KEY_PLAYER_TWITCH = 't:player_twitch'; /* hash playerId/teamId → twitch login, set from the admin page */
 
 export async function getState() {
-  const s = await redis().get(KEY_STATE);
+  const s = await redis().get(spaced(KEY_STATE));
   /* Config (name, teams, pool, maps, rules…) comes from defaults.js so edits in code go live on deploy,
      unless an admin has built a tournament from applications (config override in the database).
      What people do on the site (picks, matches, stats) is always read from the database. */
   const state = structuredClone(DEFAULT_STATE);
-  const ov = await redis().get(KEY_OVERRIDE);
+  const ov = await redis().get(spaced(KEY_OVERRIDE));
   if (ov && Array.isArray(ov.teams) && ov.teams.length >= 2) {
     state.teams = ov.teams; state.pool = ov.pool || []; if (ov.tiers) state.tiers = ov.tiers; if (ov.name) state.name = ov.name;
     state.fromApplications = true;
@@ -56,7 +70,7 @@ export async function getState() {
 }
 export async function setState(state) {
   state.updatedAt = Date.now();
-  await redis().set(KEY_STATE, state);
+  await redis().set(spaced(KEY_STATE), state);
   return state;
 }
 
@@ -76,7 +90,7 @@ export async function roleFor(login) {
   const admins = (process.env.ADMIN_LOGINS || '').toLowerCase().split(',').map(s => s.trim()).filter(Boolean);
   if (admins.includes(login) || (DEFAULT_STATE.admins || []).some(a => a.toLowerCase() === login)) return 'admin';
   /* Captains named in the active config (defaults.js, or the override built from applications) get their team's role. */
-  const ov = await redis().get(KEY_OVERRIDE);
+  const ov = await redis().get(spaced(KEY_OVERRIDE));
   const teams = ov && Array.isArray(ov.teams) && ov.teams.length >= 2 ? ov.teams : DEFAULT_STATE.teams;
   const links = (await redis().hgetall(KEY_PLAYER_TWITCH)) || {};
   const t = teams.find(t => (links[t.id] || t.twitch || '').toLowerCase() === login);
@@ -96,14 +110,34 @@ export async function counterReset(key) { return redis().del(key); }
 
 /* ---------- Applications ---------- */
 export const DEFAULT_SETTINGS = { open: false, captainsOpen: false, cap: 0, deadline: '', dates: [], note: '' };
-export async function getSettings() { return { ...DEFAULT_SETTINGS, ...((await redis().get(KEY_SETTINGS)) || {}) }; }
-export async function setSettings(patch) { const s = { ...(await getSettings()), ...patch }; await redis().set(KEY_SETTINGS, s); return s; }
-export async function getApplications() { return (await redis().hgetall(KEY_APPS)) || {}; }
-export async function getApplication(login) { return redis().hget(KEY_APPS, String(login).toLowerCase()); }
-export async function setApplication(login, app) { return redis().hset(KEY_APPS, { [String(login).toLowerCase()]: app }); }
-export async function deleteApplication(login) { return redis().hdel(KEY_APPS, String(login).toLowerCase()); }
-export async function setConfigOverride(cfg) { return cfg ? redis().set(KEY_OVERRIDE, cfg) : redis().del(KEY_OVERRIDE); }
-export async function getConfigOverride() { return redis().get(KEY_OVERRIDE); }
+export async function getSettings() { return { ...DEFAULT_SETTINGS, ...((await redis().get(spaced(KEY_SETTINGS))) || {}) }; }
+export async function setSettings(patch) { const s = { ...(await getSettings()), ...patch }; await redis().set(spaced(KEY_SETTINGS), s); return s; }
+export async function getApplications() { return (await redis().hgetall(spaced(KEY_APPS))) || {}; }
+export async function getApplication(login) { return redis().hget(spaced(KEY_APPS), String(login).toLowerCase()); }
+export async function setApplication(login, app) { return redis().hset(spaced(KEY_APPS), { [String(login).toLowerCase()]: app }); }
+export async function deleteApplication(login) { return redis().hdel(spaced(KEY_APPS), String(login).toLowerCase()); }
+export async function setConfigOverride(cfg) { return cfg ? redis().set(spaced(KEY_OVERRIDE), cfg) : redis().del(spaced(KEY_OVERRIDE)); }
+export async function getConfigOverride() { return redis().get(spaced(KEY_OVERRIDE)); }
+
+/* Copy one space's tournament data over another's (live → test to seed a rehearsal, test → live to promote). */
+const SPACE_KEYS = [KEY_STATE, KEY_OVERRIDE, KEY_APPS, KEY_SETTINGS];
+export async function copySpace(from, to) {
+  if (!SPACES.includes(from) || !SPACES.includes(to) || from === to) throw new Error('Bad space copy');
+  for (const k of SPACE_KEYS) {
+    const isHash = k === KEY_APPS;
+    const v = isHash ? await redis().hgetall(spaced(k, from)) : await redis().get(spaced(k, from));
+    await redis().del(spaced(k, to));
+    if (v && (!isHash || Object.keys(v).length)) { if (isHash) await redis().hset(spaced(k, to), v); else await redis().set(spaced(k, to), v); }
+  }
+}
+export async function clearSpace(space) {
+  if (space !== 'test') throw new Error('Only the test space can be cleared this way');
+  for (const k of SPACE_KEYS) await redis().del(spaced(k, space));
+}
+export async function spaceHasData(space) {
+  for (const k of SPACE_KEYS) if (await redis().exists(spaced(k, space))) return true;
+  return false;
+}
 
 /* ---------- Twitch login log + player links ---------- */
 export async function recordLogin(u, chat) {

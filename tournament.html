@@ -104,6 +104,9 @@
     .demo-bar strong { color: var(--fg); }
 
     /* Hero */
+    .test-bar { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 10px 16px; font-size: 13px; color: var(--fg); background: repeating-linear-gradient(-45deg, rgba(255,176,0,.16) 0 12px, rgba(255,176,0,.08) 12px 24px); border-bottom: 1px solid rgba(255,176,0,.45); text-align: center; }
+    .test-bar .tag { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; background: #ffb000; color: #000; }
+    .test-bar a { text-decoration: underline; text-underline-offset: 3px; }
     .t-hero { position: relative; isolation: isolate; z-index: 45; padding: 56px 0 36px; }
     .t-hero .bg { position: absolute; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
     .t-hero .bg::before { content: ""; position: absolute; left: 50%; top: 20%; width: min(80vw, 720px); aspect-ratio: 1; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(225,6,0,.26) 0%, rgba(225,6,0,.10) 32%, transparent 68%); filter: blur(40px); }
@@ -457,6 +460,7 @@
 
   <main id="main">
 
+    <div class="test-bar" id="test-bar" hidden><span class="tag">Test</span><span>This is the <b>test tournament</b>: a sandbox admins use to rehearse. Nothing here is real. The live tournament is at <a href="/tournament">/tournament</a>.</span></div>
     <section class="t-hero" aria-labelledby="page-title">
       <div class="bg" aria-hidden="true"></div>
       <div class="container">
@@ -623,11 +627,16 @@
     /* ------------------------------------------------------------
        STATE
        ------------------------------------------------------------ */
+    /* /tournament-test shows the sandbox tournament that admins rehearse in. Same page, different data. */
+    var SPACE = /^\/tournament-test\/?$/.test(location.pathname) ? 'test' : '';
+    var PAGE = SPACE ? '/tournament-test' : '/tournament';
     var LIVE = false, ME = null, role = 'viewer', D = null, lastUpdated = 0;
+    if (SPACE) { document.getElementById('test-bar').hidden = false; var rb = document.createElement('meta'); rb.name = 'robots'; rb.content = 'noindex'; document.head.appendChild(rb); document.querySelector('nav a[href="/tournament"]').setAttribute('href', PAGE); }
     var confirming = null, editingMatch = null, statsEditing = false, loginOpen = false;
     var teamFilter = 'all', sortKey = 'kd', sortAsc = false;
 
     function api(path, body) {
+      if (SPACE) path += (path.indexOf('?') < 0 ? '?' : '&') + 'space=' + SPACE;
       var opts = body
         ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), credentials: 'same-origin' }
         : { cache: 'no-store', credentials: 'same-origin' };
@@ -771,7 +780,7 @@
       var parts = (D.name || 'Tourney').split(' ');
       var last = parts.pop();
       document.getElementById('page-title').innerHTML = esc(parts.join(' ')) + ' <span>' + esc(last) + '</span>';
-      document.title = D.name + ' — AleksK9';
+      document.title = D.name + (SPACE ? ' (test)' : '') + ' — AleksK9';
       document.getElementById('lede').textContent =
         'Hosted by ' + (D.hosts || []).join(' and ') + '. ' + D.teams.length + ' captains draft their squads live on this page, then it’s ' +
         D.format.teamSize + 'v' + D.format.teamSize + ' first to ' + D.format.firstTo + '. Scores and player stats update here as the maps are played.';
@@ -790,13 +799,13 @@
       var auth = document.getElementById('auth');
       if (LIVE) {
         if (!ME) {
-          auth.innerHTML = '<a class="btn btn-ghost" href="/api/auth/login">' + TWITCH_ICON + 'Log in with Twitch</a>' +
+          auth.innerHTML = '<a class="btn btn-ghost" href="/api/auth/login?next=' + PAGE + '">' + TWITCH_ICON + 'Log in with Twitch</a>' +
             '<span class="auth-hint">Just watching? No login needed. Captains and helpers log in to make changes.</span>';
         } else {
           auth.innerHTML =
             '<span class="auth-chip"><span class="avatar' + (myTeam() ? ' cap' : '') + '">' + (ME.avatar ? '<img src="' + esc(ME.avatar) + '" alt="">' : esc(initials(ME.name || ME.login))) + '</span>' +
             '<span><b>' + esc(ME.name || ME.login) + '</b><br><span class="role">' + esc(roleLabel(role)) + '</span></span>' +
-            (role === 'admin' ? '<a href="/admin">Admin</a>' : '') + '<a href="/api/auth/logout">Log out</a></span>' +
+            (role === 'admin' ? '<a href="/admin">Admin</a>' : '') + '<a href="/api/auth/logout?next=' + PAGE + '">Log out</a></span>' +
             (role === 'viewer' ? '<span class="auth-hint">You are logged in but not on the captain or helper list yet. Ask an admin to add you.</span>' : '');
         }
         return;

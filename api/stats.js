@@ -1,8 +1,8 @@
-import { json, requireRole, readBody } from './_lib/http.js';
+import { json, requireRole, readBody , spaced } from './_lib/http.js';
 import { getState, setState } from './_lib/store.js';
 
 /* POST { player, kills, deaths, assists }  or  POST { bulk: { playerId: [k,d,a], ... } } — helper or admin */
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
   const me = await requireRole(req, res, ['helper', 'admin']);
   if (!me) return;
@@ -24,3 +24,4 @@ export default async function handler(req, res) {
   await setState(state);
   json(res, 200, { ok: true, stats: state.stats });
 }
+export default spaced(handler);

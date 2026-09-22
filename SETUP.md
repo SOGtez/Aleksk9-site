@@ -61,7 +61,13 @@ Deployments → latest → **Redeploy**, so the new variables are picked up.
 | `GET/POST /api/admin/applications` | admin | list, review, settings, build tournament from accepted, revert |
 | `GET/POST /api/admin/chat` | admin | tournament assistant: `GET` usage, `POST {history, message}` one turn, `POST {history, action:'confirm'|'cancel', pending}` answer a build |
 
-Pages: `/` home · `/tournament` draft, matches, stats · `/apply` application form (Twitch login with follow check) · `/admin` control panel.
+Pages: `/` home · `/tournament` draft, matches, stats · `/tournament-test` the same page on the test tournament · `/apply` application form (Twitch login with follow check) · `/admin` control panel · `/overlay` (add `?space=test` for the test tournament).
+
+## Test tournament (sandbox)
+
+There are two tournaments in the database: **live** (what everyone sees on `/tournament`) and **test** (a sandbox shown on `/tournament-test`, marked with a yellow banner and not indexed). Any tournament API call with `?space=test` reads and writes the sandbox instead: state (teams, pool, picks, matches, stats, draft, event), the roster built from applications, applications and application settings. Roles, Twitch logins, player links and caches are shared, so captains and admins are the same people in both. Redis keys for the sandbox are the live ones prefixed with `test:`.
+
+On `/admin` the Live / Test switch at the top puts the whole panel, including the assistant, on one or the other. Test mode shows a yellow bar so nobody edits the sandbox thinking it is live, or the other way round. The assistant switches on its own when an admin says test, preview, rehearse or dry run, and it can copy the live tournament into the sandbox, wipe the sandbox, or, after a confirm, promote the sandbox over the live tournament.
 
 ## Tournament assistant
 

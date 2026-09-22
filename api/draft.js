@@ -1,4 +1,4 @@
-import { json, requireRole, readBody } from './_lib/http.js';
+import { json, requireRole, readBody , spaced } from './_lib/http.js';
 import { getState, setState } from './_lib/store.js';
 import { nextSlot, pickBlockReason } from './_lib/defaults.js';
 import { setDraftOrder, setEvent, setPickClock } from './_lib/actions.js';
@@ -12,7 +12,7 @@ import { setDraftOrder, setEvent, setPickClock } from './_lib/actions.js';
    POST { action:'event', eventAt, eventNote } — event date/time shown on the page
    POST { action:'order', order:[teamId…] } — round-1 draft order, may be partial while the wheel is being spun (only before the first pick)
    POST { action:'undo' | 'reset' } */
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
   const me = await requireRole(req, res, ['captain', 'admin']);
   if (!me) return;
@@ -74,3 +74,4 @@ export default async function handler(req, res) {
   await setState(state);
   json(res, 200, { ok: true, pick: state.picks[state.picks.length - 1], next: nextSlot(state) });
 }
+export default spaced(handler);

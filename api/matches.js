@@ -1,11 +1,11 @@
-import { json, requireRole, readBody } from './_lib/http.js';
+import { json, requireRole, readBody , spaced } from './_lib/http.js';
 import { getState, setState } from './_lib/store.js';
 
 /* helper or admin
    POST { action:'add', teams:[tid, tid], map }
    POST { action:'update', id, score:[a,b], status:'upcoming'|'live'|'final', map }
    POST { action:'remove', id } */
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'POST only' });
   const me = await requireRole(req, res, ['helper', 'admin']);
   if (!me) return;
@@ -39,3 +39,4 @@ export default async function handler(req, res) {
   await setState(state);
   json(res, 200, { ok: true, match: m });
 }
+export default spaced(handler);

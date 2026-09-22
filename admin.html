@@ -151,34 +151,65 @@
     .ver.bad { color: var(--accent); }
     .ver.err { color: var(--fg-dim); }
     /* AI assistant */
-    .ai { display: grid; gap: 0; margin-bottom: 14px; }
-    .ai-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 18px 22px 0; }
-    .ai-head h3 { margin: 0; }
-    .ai-head .sp { flex: 1; }
-    .ai-log { display: grid; gap: 10px; padding: 16px 22px; max-height: 460px; overflow: auto; scroll-behavior: smooth; }
-    .ai-msg { max-width: 82%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
-    .ai-msg.user { justify-self: end; background: #fff; color: #000; border-bottom-right-radius: 4px; }
-    .ai-msg.assistant { justify-self: start; background: var(--bg-elev-2); border: 1px solid var(--line-strong); border-bottom-left-radius: 4px; }
-    .ai-msg.assistant small { display: block; margin-top: 6px; font-size: 11px; color: var(--fg-dim); }
-    .ai-msg.system { justify-self: center; max-width: 100%; font-size: 12px; color: var(--fg-dim); text-align: center; padding: 2px 0; }
-    .ai-tool { justify-self: start; display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--fg-muted); padding: 5px 10px 5px 8px; border-radius: 999px; border: 1px solid var(--line-strong); }
-    .ai-tool::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; }
-    .ai-tool.bad { color: var(--accent); border-color: rgba(225,6,0,.45); }
-    .ai-tool.bad::before { background: var(--accent); }
-    .ai-confirm { justify-self: stretch; padding: 14px; border-radius: 12px; border: 1px solid rgba(225,6,0,.45); background: var(--accent-soft); font-size: 14px; }
-    .ai-confirm b { display: block; margin-bottom: 6px; }
-    .ai-confirm ol { margin: 6px 0 10px 18px; padding: 0; font-size: 13px; }
-    .ai-confirm .tools { margin-top: 10px; }
-    .ai-empty { color: var(--fg-dim); font-size: 14px; }
-    .ai-quick { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 22px 12px; }
-    .ai-quick button { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); }
-    .ai-quick button:hover { color: var(--fg); border-color: #fff; }
-    .ai-form { display: flex; gap: 8px; padding: 0 22px 22px; }
-    .ai-form textarea { flex: 1; resize: none; min-height: 44px; max-height: 140px; font: inherit; line-height: 1.4; }
-    .ai-form button[disabled] { opacity: .5; }
-    .ai-typing { justify-self: start; font-size: 12px; color: var(--fg-dim); padding: 2px 4px; }
-    .ai-typing::after { content: "…"; animation: dots 1.2s steps(4, end) infinite; }
-    @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+    .ai { margin-bottom: 14px; overflow: hidden; }
+    .ai-head { display: flex; align-items: flex-start; gap: 14px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); }
+    .ai-head .ttl { flex: 1; min-width: 0; }
+    .ai-head h3 { margin: 0 0 4px; display: flex; align-items: center; gap: 8px; }
+    .ai-head h3::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); }
+    .ai-head .d { margin: 0; font-size: 13px; }
+    .ai-head .act { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+    .ai-log { display: flex; flex-direction: column; gap: 10px; padding: 18px 22px; min-height: 220px; max-height: 480px; overflow-y: auto; overscroll-behavior: contain; background: linear-gradient(180deg, rgba(255,255,255,.015), transparent 60px); }
+    .ai-log::-webkit-scrollbar { width: 8px; }
+    .ai-log::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 999px; }
+    .ai-empty { margin: auto; text-align: center; color: var(--fg-dim); font-size: 14px; max-width: 360px; line-height: 1.5; animation: ai-in .4s var(--ease) both; }
+    .ai-empty b { display: block; color: var(--fg-muted); font-weight: 600; margin-bottom: 4px; }
+    .ai-row { display: flex; flex-direction: column; animation: ai-in .35s var(--ease) both; }
+    .ai-row.user { align-items: flex-end; }
+    .ai-row.assistant, .ai-row.tool, .ai-row.system, .ai-row.typing { align-items: flex-start; }
+    .ai-msg { max-width: min(82%, 640px); padding: 11px 15px; border-radius: 18px; font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .ai-row.user .ai-msg { background: #fff; color: #000; border-bottom-right-radius: 5px; box-shadow: 0 8px 24px -14px rgba(255,255,255,.35); }
+    .ai-row.assistant .ai-msg, .ai-row.typing .ai-msg { background: var(--bg-elev-2); border: 1px solid var(--line-strong); border-bottom-left-radius: 5px; }
+    .ai-meta { font-size: 11px; color: var(--fg-dim); margin: 5px 6px 0; letter-spacing: .02em; }
+    .ai-tool { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: var(--fg-muted); padding: 6px 12px 6px 9px; border-radius: 999px; border: 1px solid var(--line-strong); background: rgba(255,255,255,.03); }
+    .ai-tool::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px rgba(255,255,255,.6); }
+    .ai-tool.bad { color: var(--accent); border-color: rgba(225,6,0,.45); background: var(--accent-soft); }
+    .ai-tool.bad::before { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .ai-note { max-width: min(92%, 640px); font-size: 12.5px; line-height: 1.5; color: var(--fg-muted); padding: 9px 12px 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.025); border-left: 3px solid var(--accent); }
+    .ai-note details { margin-top: 4px; }
+    .ai-note summary { cursor: pointer; color: var(--fg-dim); font-size: 12px; user-select: none; }
+    .ai-note summary:hover { color: var(--fg); }
+    .ai-note pre { margin: 6px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11.5px; color: var(--fg-dim); }
+    .ai-row.typing .ai-msg { display: inline-flex; gap: 5px; align-items: center; padding: 14px 16px; }
+    .ai-row.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--fg-muted); animation: ai-bounce 1.1s infinite var(--ease); }
+    .ai-row.typing i:nth-child(2) { animation-delay: .15s; } .ai-row.typing i:nth-child(3) { animation-delay: .3s; }
+    .ai-confirm { align-self: stretch; padding: 16px 18px; border-radius: 14px; border: 1px solid rgba(225,6,0,.5); background: linear-gradient(160deg, rgba(225,6,0,.16), rgba(225,6,0,.06)); font-size: 14px; animation: ai-pop .4s var(--ease) both; }
+    .ai-confirm b { display: block; margin-bottom: 8px; font-size: 15px; }
+    .ai-confirm ol { margin: 6px 0 10px 18px; padding: 0; font-size: 13px; columns: 2; column-gap: 24px; }
+    .ai-confirm ol li { break-inside: avoid; padding: 2px 0; }
+    .ai-confirm .tools { margin-top: 12px; }
+    .ai-foot { padding: 14px 22px 20px; border-top: 1px solid var(--line); background: rgba(0,0,0,.18); }
+    .ai-quick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .ai-quick button { padding: 7px 13px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1px solid var(--line-strong); color: var(--fg-muted); background: rgba(255,255,255,.02); transition: color .2s var(--ease), border-color .2s var(--ease), transform .25s var(--ease), background-color .2s var(--ease); }
+    .ai-quick button:hover:not([disabled]) { color: var(--fg); border-color: #fff; transform: translateY(-1px); }
+    .ai-quick button[disabled] { opacity: .4; cursor: default; }
+    .ai-form { display: flex; align-items: flex-end; gap: 8px; }
+    .ai-form .fld { flex: 1; display: flex; align-items: flex-end; border-radius: 14px; background: var(--bg-elev-2); border: 1px solid var(--line-strong); transition: border-color .2s var(--ease), box-shadow .25s var(--ease); }
+    .ai-form .fld:focus-within { border-color: rgba(255,255,255,.5); box-shadow: 0 0 0 4px rgba(255,255,255,.06); }
+    .ai-form textarea { flex: 1; resize: none; min-height: 46px; max-height: 160px; padding: 13px 14px; font: inherit; font-size: 14px; line-height: 1.4; background: none; border: 0; color: var(--fg); outline: none; }
+    .ai-form textarea[disabled] { color: var(--fg-dim); }
+    .ai-send { width: 46px; height: 46px; flex: 0 0 auto; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: #fff; transition: background-color .2s var(--ease), transform .25s var(--ease), opacity .2s; }
+    .ai-send:hover:not([disabled]) { background: var(--accent-hover); transform: scale(1.06); }
+    .ai-send:active:not([disabled]) { transform: scale(.96); }
+    .ai-send[disabled] { opacity: .35; cursor: default; }
+    .ai-send svg { width: 18px; height: 18px; }
+    .ai-send .spin { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: ai-spin .8s linear infinite; }
+    .ai.is-busy .ai-send svg { display: none; } .ai.is-busy .ai-send .spin { display: block; }
+    .ai-limit { font-size: 12px; color: var(--fg-dim); margin-top: 8px; }
+    @keyframes ai-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @keyframes ai-pop { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+    @keyframes ai-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-5px); opacity: 1; } }
+    @keyframes ai-spin { to { transform: rotate(360deg); } }
+    @media (max-width: 640px) { .ai-head { flex-direction: column; } .ai-log { padding: 14px; max-height: 60vh; } .ai-msg { max-width: 92%; } .ai-foot { padding: 12px 14px 16px; } .ai-confirm ol { columns: 1; } }
   </style>
 </head>
 <body>
@@ -249,23 +280,32 @@
           <div class="stats" id="t-stats"></div>
           <div class="card ai" id="ai">
             <div class="ai-head">
-              <h3>Tournament assistant</h3>
-              <span class="chip" id="ai-usage" title="Shared by every admin, resets on the 1st">AI: …</span>
-              <span class="sp"></span>
-              <button class="link-btn" id="ai-clear">Clear chat</button>
+              <div class="ttl">
+                <h3>Tournament assistant</h3>
+                <p class="d">Tell it what the next tournament should look like. It can review and tier applicants, pick captains, build the tournament, and set the draft order, date and pick clock. Building always asks you to confirm.</p>
+              </div>
+              <div class="act">
+                <span class="chip" id="ai-usage" title="Shared by every admin, resets on the 1st">AI: …</span>
+                <button class="link-btn" id="ai-clear">Clear chat</button>
+              </div>
             </div>
-            <p class="d" style="padding:6px 22px 0">Chat with the AI to set up the next tournament: it can review and tier applicants, pick captains, build the tournament, set the draft order, the date and the pick clock. Building asks you to confirm first. Reset, revert and undo stay on the buttons below.</p>
             <div class="ai-log" id="ai-log" role="log" aria-live="polite"></div>
-            <div class="ai-quick" id="ai-quick">
-              <button type="button">Summarise the accepted applicants</button>
-              <button type="button">Tier every accepted applicant</button>
-              <button type="button">Suggest six balanced captains</button>
-              <button type="button">Set up the next tournament</button>
+            <div class="ai-foot">
+              <div class="ai-quick" id="ai-quick">
+                <button type="button">Summarise the accepted applicants</button>
+                <button type="button">Tier every accepted applicant</button>
+                <button type="button">Suggest six balanced captains</button>
+                <button type="button">Set up the next tournament</button>
+              </div>
+              <form class="ai-form" id="ai-form">
+                <div class="fld"><textarea id="ai-input" rows="1" maxlength="4000" placeholder="Ask or tell the assistant what to do…"></textarea></div>
+                <button class="ai-send" type="submit" id="ai-send" aria-label="Send">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                  <span class="spin" aria-hidden="true"></span>
+                </button>
+              </form>
+              <div class="ai-limit" id="ai-limit" hidden></div>
             </div>
-            <form class="ai-form" id="ai-form">
-              <textarea class="field" id="ai-input" rows="1" maxlength="4000" placeholder="Ask or tell the assistant what to do…"></textarea>
-              <button class="btn btn-sm btn-primary" type="submit" id="ai-send">Send</button>
-            </form>
           </div>
           <div class="grid2" style="margin-bottom:14px">
             <div class="card pad">
@@ -602,42 +642,63 @@
       return esc(t).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>').replace(/^(?:- |• )(.*)$/gm, '&nbsp;&nbsp;• $1');
     }
     function aiUsage() {
-      var u = AI.usage, el = document.getElementById('ai-usage');
+      var u = AI.usage, el = document.getElementById('ai-usage'), lim = document.getElementById('ai-limit');
       if (!u) { el.textContent = 'AI: …'; el.className = 'chip'; return; }
-      var left = Math.max(0, u.cap - u.used);
+      var left = Math.max(0, u.cap - u.used), limit = left === 0;
       el.textContent = 'AI: ' + u.used + ' / ' + u.cap + ' this month';
-      el.className = 'chip ' + (left === 0 ? 'red' : left <= 20 ? 'ok' : '');
-      var limit = left === 0;
-      document.getElementById('ai-send').disabled = AI.busy || limit;
+      el.className = 'chip ' + (limit ? 'red' : left <= 20 ? 'ok' : '');
       document.getElementById('ai-input').disabled = limit;
-      document.getElementById('ai-input').placeholder = limit ? 'You have reached the AI limit for this month.' : 'Ask or tell the assistant what to do…';
+      document.getElementById('ai-input').placeholder = limit ? 'The AI limit for this month has been reached.' : 'Ask or tell the assistant what to do…';
+      lim.hidden = !limit; lim.textContent = limit ? 'Every admin shares the ' + u.cap + ' messages a month. It resets on the 1st.' : '';
+      aiButtons();
     }
+    function aiButtons() {
+      var limit = AI.usage && AI.usage.used >= AI.usage.cap;
+      document.getElementById('ai').classList.toggle('is-busy', AI.busy);
+      document.getElementById('ai-send').disabled = AI.busy || !!limit || !!AI.pending;
+      document.querySelectorAll('#ai-quick button').forEach(function (b) { b.disabled = AI.busy || !!limit || !!AI.pending; });
+    }
+    function aiRowHtml(m) {
+      if (m.role === 'user') return '<div class="ai-row user"><div class="ai-msg">' + esc(m.text) + '</div></div>';
+      if (m.role === 'assistant') return '<div class="ai-row assistant"><div class="ai-msg">' + aiText(m.text) + '</div>' + (m.model ? '<div class="ai-meta">' + esc(m.model.replace(/:free$/, '')) + '</div>' : '') + '</div>';
+      if (m.role === 'tool') return '<div class="ai-row tool"><span class="ai-tool' + (m.ok === false ? ' bad' : '') + '">' + esc(m.text) + '</span></div>';
+      /* system: first sentence up front, the rest behind a toggle */
+      var t = String(m.text || ''), cut = t.search(/[.!?]\s|\s\|\s|\s\[/), head = cut > 0 && cut < t.length - 1 ? t.slice(0, cut + 1).trim() : t, rest = head === t ? '' : t.slice(cut + 1).trim();
+      return '<div class="ai-row system"><div class="ai-note">' + esc(head) + (rest ? '<details><summary>Details</summary><pre>' + esc(rest) + '</pre></details>' : '') + '</div></div>';
+    }
+    var aiDrawn = 0;
     function aiRender() {
-      var el = document.getElementById('ai-log'), html = '';
-      if (!AI.log.length) html = '<div class="ai-empty">Nothing yet. Try one of the prompts below, or tell it what the next tournament should look like.</div>';
-      AI.log.forEach(function (m) {
-        if (m.role === 'user') html += '<div class="ai-msg user">' + esc(m.text) + '</div>';
-        else if (m.role === 'assistant') html += '<div class="ai-msg assistant">' + aiText(m.text) + (m.model ? '<small>' + esc(m.model.replace(/:free$/, '')) + '</small>' : '') + '</div>';
-        else if (m.role === 'tool') html += '<span class="ai-tool' + (m.ok === false ? ' bad' : '') + '">' + esc(m.text) + '</span>';
-        else html += '<div class="ai-msg system">' + esc(m.text) + '</div>';
-      });
+      var el = document.getElementById('ai-log');
+      var tail = el.querySelector('.ai-tail'); if (tail) tail.remove();
+      var empty = el.querySelector('.ai-empty');
+      if (!AI.log.length) {
+        if (aiDrawn || !empty) el.innerHTML = '<div class="ai-empty"><b>Nothing yet</b>Try one of the prompts below, or describe the next tournament in your own words.</div>';
+        aiDrawn = 0;
+      } else {
+        if (aiDrawn > AI.log.length || (empty && aiDrawn === 0)) { el.innerHTML = ''; aiDrawn = 0; }
+        if (empty && aiDrawn === 0) { empty.remove(); }
+        var html = '';
+        for (var i = aiDrawn; i < AI.log.length; i++) html += aiRowHtml(AI.log[i]);
+        if (html) el.insertAdjacentHTML('beforeend', html);
+        aiDrawn = AI.log.length;
+      }
+      var t = '';
       if (AI.pending) {
         var p = AI.pending, pv = p.preview || {}, tiers = (T && T.tiers) || [];
         var byTier = Object.keys(pv.byTier || {}).sort().map(function (k) { return (tiers[k] || ('tier ' + k)) + ' ' + pv.byTier[k]; }).join(' · ');
-        html += '<div class="ai-confirm"><b>Build "' + esc(p.name) + '"? This replaces the teams and pool and clears every pick, match and stat.</b>' +
-          'Captains in round-1 order:<ol>' + (pv.teams || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
+        t += '<div class="ai-confirm"><b>Build "' + esc(p.name) + '"?</b>This replaces the teams and pool and clears every pick, match and stat. Captains in round-1 order:' +
+          '<ol>' + (pv.teams || []).map(function (c) { return '<li>' + esc(c) + '</li>'; }).join('') + '</ol>' +
           '<span class="small">' + (pv.pool || 0) + ' in the pool' + (byTier ? ' · ' + byTier : '') + '</span>' +
           '<div class="tools"><button class="btn btn-sm btn-primary" id="ai-yes"' + (AI.busy ? ' disabled' : '') + '>Yes, build it</button><button class="link-btn" id="ai-no"' + (AI.busy ? ' disabled' : '') + '>Cancel</button></div></div>';
       }
-      if (AI.busy) html += '<div class="ai-typing">Thinking</div>';
-      el.innerHTML = html;
-      el.scrollTop = el.scrollHeight;
+      if (AI.busy) t += '<div class="ai-row typing"><div class="ai-msg"><i></i><i></i><i></i></div></div>';
+      if (t) el.insertAdjacentHTML('beforeend', '<div class="ai-tail" style="display:contents">' + t + '</div>');
       if (AI.pending) {
         document.getElementById('ai-yes').onclick = function () { aiAnswer('confirm'); };
         document.getElementById('ai-no').onclick = function () { aiAnswer('cancel'); };
       }
-      document.getElementById('ai-send').disabled = AI.busy || (AI.usage && AI.usage.used >= AI.usage.cap);
-      document.querySelectorAll('#ai-quick button').forEach(function (b) { b.disabled = AI.busy; });
+      aiButtons();
+      requestAnimationFrame(function () { el.scrollTo({ top: el.scrollHeight, behavior: AI.log.length ? 'smooth' : 'auto' }); });
     }
     function aiApply(r) {
       if (Array.isArray(r.history)) AI.history = r.history;
@@ -663,7 +724,7 @@
     function aiAnswer(action) { if (AI.busy || !AI.pending) return; aiPost({ history: AI.history, action: action, pending: AI.pending }); }
     document.getElementById('ai-form').onsubmit = function (e) { e.preventDefault(); aiSend(document.getElementById('ai-input').value); };
     document.getElementById('ai-input').onkeydown = function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); aiSend(this.value); } };
-    document.getElementById('ai-input').oninput = function () { this.style.height = 'auto'; this.style.height = Math.min(140, this.scrollHeight) + 'px'; };
+    document.getElementById('ai-input').oninput = function () { this.style.height = 'auto'; this.style.height = Math.min(160, this.scrollHeight) + 'px'; };
     document.querySelectorAll('#ai-quick button').forEach(function (b) { b.onclick = function () { aiSend(b.textContent); }; });
     document.getElementById('ai-clear').onclick = function () { if (AI.busy) return; AI.history = []; AI.log = []; AI.pending = null; aiSave(); aiRender(); };
     function loadAI() { return api('/api/admin/chat').then(function (d) { AI.usage = d.usage; if (!d.configured) AI.log.push({ role: 'system', text: 'OPENROUTER_API_KEY is not set in Vercel yet, so the assistant cannot answer.' }); aiUsage(); aiRender(); }).catch(function () { aiRender(); }); }

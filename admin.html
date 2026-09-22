@@ -504,7 +504,8 @@
       if (!rows.length) { wrap.innerHTML = '<div class="empty">' + (list.length ? 'Nothing in this filter.' : 'No applications yet. Turn applications on in the settings tab and share /apply.') + '</div>'; return; }
       var h = '<table><thead><tr><th>Player</th><th>In-game</th><th>Hours</th><th>Rank</th><th>Roles</th><th>Discord</th><th>Follower since</th><th>Tier</th><th>Captain</th><th>Status</th><th></th></tr></thead><tbody>';
       rows.forEach(function (a) {
-        var tierSel = '<select class="field" data-tier="' + esc(a.login) + '"><option value=""' + (a.tier == null ? ' selected' : '') + '>Auto (' + a.suggestedTier + ')</option>' + [0, 1, 2, 3, 4].map(function (t) { return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + t + ' · ' + ['Champs', 'Good', 'Decent', 'Rookies', 'Subs'][t] + '</option>'; }).join('') + '</select>';
+        var tierNames = (T && T.tiers && T.tiers.length) ? T.tiers : ['Champs', 'Good', 'Decent', 'Rookies', 'Subs'];
+        var tierSel = '<select class="field" data-tier="' + esc(a.login) + '"><option value=""' + (a.tier == null ? ' selected' : '') + '>Auto (' + Math.min(a.suggestedTier, tierNames.length - 1) + ')</option>' + tierNames.map(function (n, t) { return '<option value="' + t + '"' + (a.tier === t ? ' selected' : '') + '>' + t + ' · ' + esc(n) + '</option>'; }).join('') + '</select>';
         h += '<tr><td class="who">' + av(a) + '<span><b>' + esc(a.name) + '</b><small>' + esc(a.login) + '</small></span></td>' +
           '<td>' + esc(a.ign) + '<span class="sub">' + esc(a.platform) + '</span>' + verCell(a, 'ign') + '</td>' +
           '<td>' + (a.hours || 0) + verCell(a, 'hours') + '</td>' +
@@ -659,7 +660,7 @@
       renderOrder();
       var picks = T.picks.length, total = Math.min(T.rounds * T.teams.length, T.pool.length);
       document.getElementById('t-stats').innerHTML = [['teams', T.teams.length], ['in pool', T.pool.length], ['picks made', picks + ' / ' + total], ['matches', T.matches.length]].map(function (x) { return '<div class="stat"><b>' + x[1] + '</b><span>' + x[0] + '</span></div>'; }).join('');
-      document.getElementById('t-desc').innerHTML = (SPACE ? '<span class="chip" style="background:#ffb000;color:#000;border-color:#ffb000;margin-right:8px">Test</span>' : '') + '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';
+      document.getElementById('t-desc').innerHTML = (SPACE ? '<span class="chip" style="background:#ffb000;color:#000;border-color:#ffb000;margin-right:8px">Test</span>' : '') + '<b>' + esc(T.name) + '</b> · ' + (T.fromApplications ? 'roster built from applications' : 'roster from the site code') + (T.formatSet ? ', format customised' : '') + ' · ' + esc(T.game || 'Rainbow Six Siege') + ' ' + T.format.teamSize + 'v' + T.format.teamSize + '.<br>Captains: ' + T.teams.map(function (t) { return esc(t.captain); }).join(', ') + '.';
       document.getElementById('b-name').placeholder = T.name;
       var acc = A ? A.applications.filter(function (a) { return a.status === 'accepted'; }) : [];
       var caps = acc.filter(function (a) { return a.captainPick; });
@@ -671,7 +672,7 @@
       document.getElementById('fill-note').textContent = (T.teams.length + T.pool.length) + ' of ' + (T.teams.length * (T.rounds + 1)) + ' players in, ' + need + ' spot' + (need === 1 ? '' : 's') + ' open. ' + (fresh.length ? fresh.length + ' accepted applicant' + (fresh.length === 1 ? '' : 's') + ' ready to add: ' + fresh.map(function (a) { return a.name; }).join(', ') + '.' : 'No accepted applicants waiting.');
       document.getElementById('fill-btn').disabled = !fresh.length;
       document.getElementById('undo-btn').disabled = !picks;
-      document.getElementById('revert-btn').disabled = !T.fromApplications;
+      document.getElementById('revert-btn').disabled = !(T.fromApplications || T.formatSet);
     }
     function twoStep(wrapId, btnId, label, question, go) {
       var wrap = document.getElementById(wrapId);

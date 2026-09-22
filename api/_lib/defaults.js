@@ -5,6 +5,7 @@
    `twitch` on a pool player is optional and only used to show their Twitch profile picture. */
 export const DEFAULT_STATE = {
   name: 'R6 5v5 Tournament',
+  game: 'Rainbow Six Siege',
   hosts: ['AleksK9', 'Notvash30'],
   /* Twitch logins (lowercase) who can enter scores and stats. Admins can add more from the site. */
   helpers: ['pedrosahur', 'a1iy'],

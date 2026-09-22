@@ -110,7 +110,7 @@
     .t-hero { position: relative; isolation: isolate; z-index: 45; padding: 56px 0 36px; }
     .t-hero .bg { position: absolute; inset: 0; overflow: hidden; z-index: -1; pointer-events: none; }
     .t-hero .bg::before { content: ""; position: absolute; left: 50%; top: 20%; width: min(80vw, 720px); aspect-ratio: 1; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(225,6,0,.26) 0%, rgba(225,6,0,.10) 32%, transparent 68%); filter: blur(40px); }
-    .t-hero .bg::after { content: "R6"; position: absolute; z-index: -2; right: -0.05em; top: -0.2em; font-weight: 900; font-size: clamp(200px, 30vw, 420px); letter-spacing: -0.08em; line-height: 1; color: rgba(255,255,255,.03); user-select: none; }
+    .t-hero .bg::after { content: attr(data-mark); position: absolute; z-index: -2; right: -0.05em; top: -0.2em; font-weight: 900; font-size: clamp(200px, 30vw, 420px); letter-spacing: -0.08em; line-height: 1; color: rgba(255,255,255,.03); user-select: none; }
     .t-hero .container { display: grid; gap: 22px; }
     @media (min-width: 820px) { .t-hero .container { grid-template-columns: 1fr auto; align-items: end; } }
     .eyebrow { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
@@ -462,10 +462,10 @@
 
     <div class="test-bar" id="test-bar" hidden><span class="tag">Test</span><span>This is the <b>test tournament</b>: a sandbox admins use to rehearse. Nothing here is real. The live tournament is at <a href="/tournament">/tournament</a>.</span></div>
     <section class="t-hero" aria-labelledby="page-title">
-      <div class="bg" aria-hidden="true"></div>
+      <div class="bg" id="hero-bg" data-mark="R6" aria-hidden="true"></div>
       <div class="container">
         <div class="reveal">
-          <span class="eyebrow">R6 Siege · Community Event</span>
+          <span class="eyebrow" id="eyebrow">R6 Siege · Community Event</span>
           <h1 id="page-title">R6 5v5 <span>Tournament</span></h1>
           <p class="lede" id="lede"></p>
           <div class="meta-row" id="meta-row">
@@ -781,6 +781,9 @@
       var last = parts.pop();
       document.getElementById('page-title').innerHTML = esc(parts.join(' ')) + ' <span>' + esc(last) + '</span>';
       document.title = D.name + (SPACE ? ' (test)' : '') + ' — AleksK9';
+      var game = D.game || 'Rainbow Six Siege';
+      document.getElementById('eyebrow').textContent = (game === 'Rainbow Six Siege' ? 'R6 Siege' : game) + ' · Community Event';
+      document.getElementById('hero-bg').setAttribute('data-mark', game === 'Rainbow Six Siege' ? 'R6' : game.split(/\s+/).map(function (w) { return w[0]; }).join('').slice(0, 3).toUpperCase());
       document.getElementById('lede').textContent =
         'Hosted by ' + (D.hosts || []).join(' and ') + '. ' + D.teams.length + ' captains draft their squads live on this page, then it’s ' +
         D.format.teamSize + 'v' + D.format.teamSize + ' first to ' + D.format.firstTo + '. Scores and player stats update here as the maps are played.';

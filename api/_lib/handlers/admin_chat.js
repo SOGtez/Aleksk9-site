@@ -2,7 +2,7 @@ import { json, requireRole, readBody } from '../http.js';
 import { getState, getSettings, getApplications, counterIncr, counterGet, counterDecr, currentSpace, setCurrentSpace, copySpace, clearSpace, spaceHasData } from '../store.js';
 import { nextSlot } from '../defaults.js';
 import { complete, configuredModels } from '../openrouter.js';
-import { updateSettings, reviewApplicant, addAcceptedToPool, planBuild, buildTournament, setDraftOrder, setEvent, setPickClock } from '../actions.js';
+import { updateSettings, reviewApplicant, addAcceptedToPool, planBuild, buildTournament, setDraftOrder, setEvent, setPickClock, setFormat } from '../actions.js';
 
 /* AI assistant for the admin Tournament tab. Admin only.
    GET  → { usage: { used, cap, month }, models }
@@ -28,6 +28,7 @@ const TOOLS = [
   { name: 'set_draft_order', description: 'Round-1 draft order as team ids (get them from get_tournament). Only before the first pick.', parameters: { type: 'object', properties: { order: { type: 'array', items: { type: 'string' } } }, required: ['order'] } },
   { name: 'set_event', description: 'Tournament date and time shown with a countdown. eventAt must be ISO 8601 with a UTC offset, e.g. 2026-10-03T17:00:00-07:00 for 5 PM Pacific. Empty string hides the countdown.', parameters: { type: 'object', properties: { eventAt: { type: 'string' }, eventNote: { type: 'string' } }, required: ['eventAt'] } },
   { name: 'set_pick_clock', description: 'Seconds each captain gets per pick (15 to 600).', parameters: { type: 'object', properties: { seconds: { type: 'integer' } }, required: ['seconds'] } },
+  { name: 'set_tournament_format', description: 'Change what the tournament is: name, game, hosts, team size, picks per team (rounds), tiers and how many picks per tier each team may take (quota; null = no limit), first-to score, overtime, side swap, map pool and rules. Use it to set up a different game, e.g. Rocket League 3v3: teamSize 3, rounds 2, tiers ["Grand Champ","Champ","Diamond","Plat"], quota [1,1,null,null], maps ["DFH Stadium",…], rules [{h:"Game",t:"Best of 5, 5 minute matches"}]. Only send the fields to change. Existing pool players keep their tier index (clamped to the new tier count). The public pages render whatever is set.', parameters: { type: 'object', properties: { name: { type: 'string' }, game: { type: 'string' }, hosts: { type: 'array', items: { type: 'string' } }, teamSize: { type: 'integer', minimum: 1, maximum: 10 }, rounds: { type: 'integer', minimum: 1, maximum: 9, description: 'Picks per team in the draft; normally teamSize minus the captain.' }, firstTo: { type: 'integer' }, otTo: { type: 'integer' }, swapEvery: { type: 'integer' }, tiers: { type: 'array', items: { type: 'string' } }, quota: { type: 'array', items: { type: ['integer', 'null'] } }, maps: { type: 'array', items: { type: 'string' } }, rules: { type: 'array', items: { type: 'object', properties: { h: { type: 'string' }, t: { type: 'string' } }, required: ['t'] } } } } },
   { name: 'switch_mode', description: 'Choose which tournament the following tools act on: "live" is what the public sees at /tournament; "test" is a sandbox shown at /tournament-test that admins use to rehearse or preview. Call this first whenever the admin says test, preview, sandbox, rehearse, dry run, or asks to go back to live.', parameters: { type: 'object', properties: { mode: { type: 'string', enum: ['live', 'test'] } }, required: ['mode'] } },
   { name: 'copy_live_to_test', description: 'Overwrite the test tournament with a copy of the live one (teams, pool, picks, matches, stats, applications, settings) so a rehearsal starts from the real data.', parameters: { type: 'object', properties: {} } },
   { name: 'reset_test', description: 'Wipe the test tournament completely. It goes back to the built-in config with no applications.', parameters: { type: 'object', properties: {} } },
@@ -52,7 +53,8 @@ async function tournamentText() {
   const poolLine = p => `${p.id}: ${p.name} · tier ${p.tier} (${s.tiers[p.tier] || '?'})${p.info ? ' · ' + p.info : ''}`;
   return [
     `Space: ${modeLabel()}${modeLabel() === 'TEST' ? ' (sandbox at /tournament-test)' : ' (public at /tournament)'}.`,
-    `Name: ${s.name}. Roster source: ${s.fromApplications ? 'built from applications' : 'site code'}.`,
+    `Name: ${s.name}. Game: ${s.game}. Hosts: ${(s.hosts || []).join(', ')}. Roster source: ${s.fromApplications ? 'built from applications' : 'site code'}. Format: ${s.formatSet ? 'customised' : 'code defaults'}.`,
+    `Maps: ${s.maps.join(', ') || 'none'}. Rules: ${s.rules.map(r => r.h).join(', ') || 'none'}.`,
     `Tiers: ${s.tiers.map((t, i) => i + '=' + t).join(', ')}. Quota per team per tier: ${JSON.stringify(s.quota)}. Rounds: ${s.rounds}. Team size: ${s.format.teamSize}.`,
     `Draft: ${s.draft.open ? 'OPEN' : 'closed'}, ${s.picks.length} picks made, ${s.draft.pickSeconds}s per pick. Next: ${next ? 'round ' + next.round + ', ' + next.team : 'complete'}. Round-1 order ${(s.teamOrder || []).length ? 'set: ' + s.teamOrder.join(' > ') : 'not set'}.`,
     `Event: ${s.eventAt || 'not set'}${s.eventNote ? ' (' + s.eventNote + ')' : ''}. Matches: ${s.matches.length}.`,
@@ -68,6 +70,8 @@ async function systemPrompt(me) {
 You are talking to admin "${me.user.login}". Today is ${pt} (Pacific). All times on the site are shown in Pacific.
 
 ${modeText()}
+
+The site can host any game: set_tournament_format changes the game, name, hosts, team size, picks per team, tiers, quota, maps, rules and scoring, and the public pages render whatever is set. For a new game, set the format first, then tier the applicants against the new tiers, then build.
 
 How the tournament works: each captain is a team. The pool is drafted in a snake: round 1 in the listed order, then the order flips each round. Each team drafts one player from each tier (see quota), so tiers should be about equal in size and there should be exactly (teams x rounds) players in the pool. Captains are usually mid-strength players who can lead; the six strongest players should be in the top tier of the pool, not captains, so the draft can balance teams. Round-1 order goes weakest captain first.
 
@@ -114,6 +118,10 @@ async function runTool(name, args, me) {
     case 'set_draft_order': { const r = await setDraftOrder(args.order); return { text: 'Round-1 order: ' + r.order.join(' > '), label: 'Draft order set' }; }
     case 'set_event': { const t = args.eventAt ? Date.parse(args.eventAt) : 0; if (args.eventAt && isNaN(t)) throw Object.assign(new Error('eventAt is not a valid date'), { status: 400 }); const r = await setEvent(args.eventAt ? new Date(t).toISOString() : '', args.eventNote); return { text: 'Event: ' + (r.eventAt || 'cleared') + (r.eventNote ? ' · ' + r.eventNote : ''), label: r.eventAt ? 'Event set to ' + new Date(r.eventAt).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' PT' : 'Event date cleared' }; }
     case 'set_pick_clock': { const r = await setPickClock(args.seconds); return { text: 'Pick clock: ' + r.pickSeconds + 's', label: 'Pick clock ' + r.pickSeconds + 's' }; }
+    case 'set_tournament_format': {
+      const r = await setFormat(args);
+      return { text: 'Format now: ' + JSON.stringify(r), label: 'Format: ' + r.game + ' ' + r.format.teamSize + 'v' + r.format.teamSize + ', ' + r.tiers.length + ' tiers, ' + r.maps.length + ' maps' };
+    }
     case 'switch_mode': {
       const mode = args.mode === 'test' ? 'test' : 'live';
       setCurrentSpace(mode === 'test' ? 'test' : '');

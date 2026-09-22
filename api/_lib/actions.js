@@ -1,6 +1,6 @@
 /* Admin actions shared by the admin buttons and the AI assistant, so both run the same code.
    Each returns a plain result or throws an Error with `.status` set to the HTTP code the caller should send. */
-import { getState, setState, getSettings, setSettings, getApplications, setApplication, setConfigOverride } from './store.js';
+import { getState, setState, getSettings, setSettings, getApplications, setApplication, setConfigOverride, getConfigOverride } from './store.js';
 import { DEFAULT_STATE } from './defaults.js';
 import { STATUSES, suggestTier, infoLine } from './applications.js';
 
@@ -42,7 +42,7 @@ export async function addAcceptedToPool(by) {
     let id = a.login.replace(/[^a-z0-9_]/g, '') || 'p'; while (ids.has(id)) id += '_'; ids.add(id);
     return { id, name: a.name, tier: a.tier == null ? suggestTier(a) : a.tier, info: infoLine(a), twitch: a.login };
   });
-  const cfg = { teams: state.teams.map(({ avatar, ...t }) => t), pool: state.pool.map(({ avatar, ...p }) => p).concat(added), tiers: state.tiers, name: state.name, builtAt: Date.now(), by, addedFromApplications: true };
+  const cfg = { ...((await getConfigOverride()) || {}), teams: state.teams.map(({ avatar, ...t }) => t), pool: state.pool.map(({ avatar, ...p }) => p).concat(added), tiers: state.tiers, name: state.name, builtAt: Date.now(), by, addedFromApplications: true };
   await setConfigOverride(cfg);
   return { added: added.map(a => a.name), pool: cfg.pool.length };
 }
@@ -64,17 +64,19 @@ export async function planBuild(b) {
   if (captains.length < 2) throw fail(400, 'Mark at least two accepted applicants as captains first');
   const capLogins = new Set(captains.map(c => c.login));
   const teams = captains.map(c => ({ id: c.login.replace(/[^a-z0-9_]/g, ''), name: 'Team ' + c.name, captain: c.name, info: infoLine(c), twitch: c.login }));
-  const pool = apps.filter(a => !capLogins.has(a.login)).map(a => ({ id: a.login.replace(/[^a-z0-9_]/g, ''), name: a.name, tier: a.tier == null ? suggestTier(a) : a.tier, info: infoLine(a), twitch: a.login }));
-  const name = b.name ? String(b.name).slice(0, 80) : DEFAULT_STATE.name;
-  return { teams, pool, name };
+  const state = await getState();
+  const maxTier = state.tiers.length - 1;
+  const pool = apps.filter(a => !capLogins.has(a.login)).map(a => ({ id: a.login.replace(/[^a-z0-9_]/g, ''), name: a.name, tier: Math.min(maxTier, a.tier == null ? suggestTier(a) : a.tier), info: infoLine(a), twitch: a.login }));
+  const name = b.name ? String(b.name).slice(0, 80) : state.name;
+  return { teams, pool, name, tiers: state.tiers };
 }
 
 /* Replace teams and pool with the plan and start a fresh draft (clears picks, matches, stats). */
 export async function buildTournament(b, by) {
-  const { teams, pool, name } = await planBuild(b);
-  const cfg = { teams, pool, tiers: DEFAULT_STATE.tiers, name, builtAt: Date.now(), by };
+  const { teams, pool, name, tiers } = await planBuild(b);
+  const cfg = { ...((await getConfigOverride()) || {}), teams, pool, tiers, name, builtAt: Date.now(), by };
   await setConfigOverride(cfg);
-  await setState({ ...structuredClone(DEFAULT_STATE), teams, pool, tiers: cfg.tiers, name: cfg.name });
+  await setState({ ...structuredClone(DEFAULT_STATE), teams, pool, tiers, name });
   return { teams: teams.length, pool: pool.length, name };
 }
 
@@ -102,4 +104,36 @@ export async function setPickClock(seconds, state) {
   state.draft.pickSeconds = Math.max(15, Math.min(600, Number(seconds) || 90));
   await setState(state);
   return { pickSeconds: state.draft.pickSeconds };
+}
+
+/* ---------- Format (game, team size, tiers, maps, rules…) ----------
+   Stored in the config override so it survives builds and can be reverted. Returns the resulting format. */
+export async function setFormat(b) {
+  const ov = { ...((await getConfigOverride()) || {}) };
+  const str = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
+  const int = (v, lo, hi) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
+  const strList = (a, n, max) => (Array.isArray(a) ? a : []).map(x => str(x, n)).filter(Boolean).slice(0, max);
+  if (b.name != null) ov.name = str(b.name, 80) || DEFAULT_STATE.name;
+  if (b.game != null) ov.game = str(b.game, 60) || DEFAULT_STATE.game;
+  if (Array.isArray(b.hosts)) ov.hosts = strList(b.hosts, 40, 6);
+  const fmt = { ...DEFAULT_STATE.format, ...(ov.format || {}) };
+  if (b.teamSize != null) fmt.teamSize = int(b.teamSize, 1, 10);
+  if (b.firstTo != null) fmt.firstTo = int(b.firstTo, 1, 99);
+  if (b.otTo != null) fmt.otTo = int(b.otTo, 1, 99);
+  if (b.swapEvery != null) fmt.swapEvery = int(b.swapEvery, 0, 99);
+  ov.format = fmt;
+  if (b.rounds != null) ov.rounds = int(b.rounds, 1, 9);
+  else if (b.teamSize != null) ov.rounds = Math.max(1, fmt.teamSize - 1); /* captain plus picks = team size */
+  const rounds = ov.rounds || DEFAULT_STATE.rounds;
+  if (Array.isArray(b.tiers)) {
+    const tiers = strList(b.tiers, 24, 8);
+    if (tiers.length) { ov.tiers = tiers; ov.quota = tiers.length >= rounds ? tiers.map(() => 1) : tiers.map(() => null); }
+  }
+  const tiers = ov.tiers || DEFAULT_STATE.tiers;
+  if (Array.isArray(b.quota)) ov.quota = tiers.map((_, i) => b.quota[i] == null ? null : int(b.quota[i], 0, 10));
+  if (Array.isArray(b.maps)) ov.maps = strList(b.maps, 40, 20);
+  if (Array.isArray(b.rules)) ov.rules = b.rules.filter(r => r && typeof r === 'object').map(r => ({ h: str(r.h || r.title, 40), t: str(r.t || r.text, 400) })).filter(r => r.t).slice(0, 15);
+  await setConfigOverride(ov);
+  const s = await getState();
+  return { name: s.name, game: s.game, hosts: s.hosts, format: s.format, rounds: s.rounds, tiers: s.tiers, quota: s.quota, maps: s.maps, rules: s.rules.length };
 }

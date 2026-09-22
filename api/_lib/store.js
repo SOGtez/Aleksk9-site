@@ -17,6 +17,7 @@ const spaced = (key, space) => ((space === undefined ? currentSpace() : space) =
 
 const KEY_STATE = 't:state';
 const KEY_ROLES = 't:roles';
+export const FORMAT_KEYS = ['name', 'game', 'hosts', 'format', 'rules', 'maps', 'tiers', 'quota', 'rounds'];
 
 let client;
 function redis() {
@@ -43,10 +44,14 @@ export async function getState() {
      What people do on the site (picks, matches, stats) is always read from the database. */
   const state = structuredClone(DEFAULT_STATE);
   const ov = await redis().get(spaced(KEY_OVERRIDE));
-  if (ov && Array.isArray(ov.teams) && ov.teams.length >= 2) {
-    state.teams = ov.teams; state.pool = ov.pool || []; if (ov.tiers) state.tiers = ov.tiers; if (ov.name) state.name = ov.name;
-    state.fromApplications = true;
+  if (ov && typeof ov === 'object') {
+    if (Array.isArray(ov.teams) && ov.teams.length >= 2) { state.teams = ov.teams; state.pool = ov.pool || []; state.fromApplications = true; }
+    /* Format set from the admin page or the assistant (game, tiers, maps, rules…) overrides the code defaults. */
+    for (const k of ['name', 'game', 'hosts', 'rules', 'maps', 'tiers', 'quota', 'rounds']) if (ov[k] !== undefined && ov[k] !== null) state[k] = ov[k];
+    if (ov.format && typeof ov.format === 'object') state.format = { ...state.format, ...ov.format };
+    state.formatSet = FORMAT_KEYS.some(k => ov[k] !== undefined && ov[k] !== null);
   }
+  for (const p of state.pool) if ((p.tier || 0) > state.tiers.length - 1) p.tier = state.tiers.length - 1;
   /* Twitch logins linked to players from the admin page (pictures + captain roles follow). */
   const links = (await redis().hgetall(KEY_PLAYER_TWITCH)) || {};
   for (const p of state.pool) if (links[p.id]) p.twitch = links[p.id];

@@ -9,6 +9,18 @@ export function baseUrl(req) {
   const proto = req.headers['x-forwarded-proto'] || 'https';
   return `${proto}://${req.headers.host}`;
 }
+/* The address people actually see. aleksk9.com goes through Cloudflare and an nginx proxy to Vercel, so the
+   Host header here is still the vercel.app one. Trust the page that sent them (Referer) when it is one of our
+   domains; otherwise a Cloudflare header means the request came in through aleksk9.com. */
+export const PUBLIC_HOSTS = ['aleksk9.com', 'www.aleksk9.com', 'aleksk9-website.vercel.app'];
+export function publicBase(req) {
+  try {
+    const ref = new URL(req.headers.referer || '');
+    if (PUBLIC_HOSTS.includes(ref.host)) return `https://${ref.host === 'www.aleksk9.com' ? 'aleksk9.com' : ref.host}`;
+  } catch { /* no referer */ }
+  if (req.headers['cf-ray'] || req.headers['cf-connecting-ip']) return 'https://aleksk9.com';
+  return baseUrl(req);
+}
 /* Returns { user, role }. user is null when logged out. */
 export async function whoami(req) {
   const user = getSession(req);

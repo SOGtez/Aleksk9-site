@@ -1,5 +1,5 @@
 import { setSession, cookieHeader, getSession } from '../session.js';
-import { baseUrl } from '../http.js';
+import { baseUrl, PUBLIC_HOSTS } from '../http.js';
 import { followsChannel } from '../twitch.js';
 import { cacheSet, recordLogin } from '../store.js';
 
@@ -11,14 +11,16 @@ export default async function handler(req, res) {
   const wantFollows = want.includes('follows'), wantChat = want.includes('chat');
   let back = (bar >= 0 ? nextRaw.slice(bar + 1) : nextRaw) || '/tournament';
   if (!/^\/[a-z0-9\-\/]*$/i.test(back)) back = '/tournament';
-  const clear = [cookieHeader('ak9_oauth_state', '', { maxAge: 0 }), cookieHeader('ak9_oauth_next', '', { maxAge: 0 })];
+  const clear = [cookieHeader('ak9_oauth_state', '', { maxAge: 0 }), cookieHeader('ak9_oauth_next', '', { maxAge: 0 }), cookieHeader('ak9_oauth_redir', '', { maxAge: 0 })];
   const fail = why => { res.setHeader('Set-Cookie', clear); res.redirect(302, `${back}?login=${why}`); };
 
   if (error) return fail('denied');
   const expected = req.cookies?.ak9_oauth_state;
   if (!code || !state || !expected || state !== expected) return fail('badstate');
 
-  const redirect = `${baseUrl(req)}/api/auth/callback`;
+  /* Same redirect_uri the login step used (aleksk9.com or vercel.app), else this request's host. */
+  let redirect = `${baseUrl(req)}/api/auth/callback`;
+  try { const r = new URL(decodeURIComponent(req.cookies?.ak9_oauth_redir || '')); if (PUBLIC_HOSTS.includes(r.host) && r.pathname === '/api/auth/callback') redirect = r.href; } catch { /* keep default */ }
   const tokenRes = await fetch('https://id.twitch.tv/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

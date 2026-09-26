@@ -1,5 +1,5 @@
 import { randomState, cookieHeader } from '../session.js';
-import { baseUrl } from '../http.js';
+import { publicBase } from '../http.js';
 
 /* GET /api/auth/login[?scope=follows,chat][&next=/apply]
    scope=follows → permission to see the user's followed channels (application page)
@@ -15,7 +15,7 @@ export default function handler(req, res) {
   if (want.includes('chat')) scopes.push('user:write:chat');
   let next = String(req.query.next || '/tournament');
   if (!/^\/[a-z0-9\-\/]*$/i.test(next)) next = '/tournament';
-  const redirect = `${baseUrl(req)}/api/auth/callback`;
+  const redirect = `${publicBase(req)}/api/auth/callback`;
   const url = new URL('https://id.twitch.tv/oauth2/authorize');
   url.searchParams.set('client_id', clientId);
   url.searchParams.set('redirect_uri', redirect);
@@ -24,7 +24,8 @@ export default function handler(req, res) {
   url.searchParams.set('state', state);
   res.setHeader('Set-Cookie', [
     cookieHeader('ak9_oauth_state', state, { maxAge: 600 }),
-    cookieHeader('ak9_oauth_next', want.join(',') + '|' + next, { maxAge: 600 })
+    cookieHeader('ak9_oauth_next', want.join(',') + '|' + next, { maxAge: 600 }),
+    cookieHeader('ak9_oauth_redir', encodeURIComponent(redirect), { maxAge: 600 })   /* the callback must send Twitch the exact same address */
   ]);
   res.redirect(302, url.toString());
 }

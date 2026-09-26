@@ -17,21 +17,21 @@ export const DEFAULT_STATE = {
     { h: 'Map bans', t: 'Captains ban maps until one is left. The last 3 maps standing are used for the finals.' },
     { h: 'Draft', t: 'Snake draft. Round 1 goes in the listed captain order, then the order flips every round.' },
     { h: 'Teams', t: 'Each captain drafts 1 Champ, 1 Good, 1 Decent and 1 Rookie player, so every team is built the same way.' },
-    { h: 'Streaming', t: 'You cannot be watching the stream while your own game is being played. If you are, your team is disqualified.' },
-    { h: 'PC players', t: 'Moss is required for every PC player (you will be told who to send it to). PC players must cap at 144 fps, nothing higher.' },
-    { h: 'Conduct', t: 'No team-killing or throwing games on purpose. Everyone must be in their own team\'s voice call.' },
+    { h: 'Streaming', t: 'Leave the stream before your game. Watching it while your own game is being played can get your team disqualified (proof required).' },
+    { h: 'PC players', t: 'Mouse and keyboard required. Cap at 144 fps or lower. Moss is required for every PC player to prevent cheating (you will be told who to send it to).' },
+    { h: 'Conduct', t: 'No intentional team-kills, and no throwing or selling games. Everyone must be in their own team\'s voice call.' },
     { h: 'Subs', t: 'A sub has to be a similar skill level to the player they replace, to keep teams fair.' },
-    { h: 'Rehosts & timeouts', t: 'A disconnect before the first kill means a rehost. After the first kill the round carries on. Intentional disconnects are punishable. Each captain may request 2 timeouts per game.' },
+    { h: 'Rehosts & pauses', t: 'Each team gets 1 rehost. Pauses are 1 minute max. Intentional disconnects are punishable.' },
     { h: 'Disputes', t: 'Every dispute needs proof. No proof, no punishment. The hosts\' decisions are final.' }
   ],
-  maps: ['Kafe Dostoyevsky', 'Border', 'Clubhouse', 'Bank', 'Villa', 'Lair', 'Nighthaven Labs', 'Fortress', 'Chalet'],
+  maps: ['Villa', 'Border', 'Chalet', 'Clubhouse', 'Nighthaven Labs', 'Bank', 'Lair', 'Kafe Dostoyevsky', 'Fortress'],
   teams: [
-    { id: 'leo',       name: 'Team Leo',       captain: 'Leo',       info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' },
-    { id: 'jullian',   name: 'Team Jullian',   captain: 'Jullian',   info: '',                           twitch: 'starboyjulian' },
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
-    { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '1120 hrs · Bronze',           twitch: 'alfie____8' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
-    { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' }
+    { id: 'steve',     name: 'Team Steve',     captain: 'Steve',     info: '' },
+    { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' },
+    { id: 'cuzan',     name: 'Team Cuzan',     captain: 'Cuzan',     info: '',                           twitch: 'cuz4n' },
+    { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '1120 hrs · Bronze',           twitch: 'alfie____8' }
   ],
   rounds: 4,
   tiers: ['Champs', 'Good', 'Decent', 'Rookies', 'Subs'],
@@ -40,31 +40,41 @@ export const DEFAULT_STATE = {
     { id: 'mycern',     name: 'MyCern',     tier: 0, info: '4000+ hrs · 10x Champ' },
     { id: 'vexjng',     name: 'Vexjng',     tier: 0, info: '1400+ hrs · 2x Champ' },
     { id: 'zynjto',     name: 'Zynjto',     tier: 0, info: '8000+ hrs · 6x Champ · Flex / Support', twitch: 'zynjto' },
-    { id: 'mrflex',     name: 'MrFlex',     tier: 0, info: '2000 hrs · 1x Champ' },
-    { id: 'iso',        name: 'Iso',        tier: 0, info: '2000 hrs · 1x Champ', twitch: 'gts_iso' },
     { id: 'duke',       name: 'Duke',       tier: 0, info: '4000+ hrs · 3x Champ' },
+    { id: 'garfield',   name: 'Garfield',   tier: 0, info: '' },
+    { id: 'l33n',       name: 'L33N',       tier: 0, info: '' },
 
     { id: 'nv30',       name: 'Notvash30',  tier: 1, info: '1540 hrs · Emerald · Breacher / Anchor', twitch: 'notvash30' },
-    { id: 'beebo',      name: 'Beebo',      tier: 1, info: '1409 hrs · Emerald · Intel / Anchor', twitch: 'itsbeebo_3' },
     { id: 'fxbm',       name: 'Fxbm',       tier: 1, info: '1350 hrs · lvl 193 · Emerald' },
     { id: 'jake',       name: 'Jake',       tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor', twitch: 'xjakex0x' },
     { id: 'noni',       name: 'Noni',       tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex', twitch: 'nonyuhh' },
     { id: 'lovez',      name: 'Lovez',      tier: 1, info: '1300+ hrs · lvl 300 · Emerald' },
+    { id: 'brandon',    name: 'Brandon',    tier: 1, info: '' },
 
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
     { id: 'marv',       name: 'Marv',       tier: 2, info: '191 hrs · lvl 82 · Silver' },
     { id: 'zack',       name: 'Zack',       tier: 2, info: '465 hrs · lvl 112 · Silver' },
     { id: 'klixvy',     name: 'Klixvy',     tier: 2, info: '' },
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
-    { id: 'nix',        name: 'Nix',        tier: 2, info: '870 hrs · lvl 140 · Gold' },
+    { id: 'colin',      name: 'Colin',      tier: 2, info: '' },
 
-    { id: 'angel',      name: 'Angel',      tier: 3, info: '141 hrs · lvl 80 · Silver' },
     { id: 'abstract',   name: 'Abstract',   tier: 3, info: '300 hrs · lvl 100 · Silver' },
     { id: 'cash',       name: 'Cash',       tier: 3, info: '860 hrs · lvl 203 · Gold' },
-    { id: 'nikoirl',    name: 'Niko',       tier: 3, info: '90 hrs · lvl 57 · Bronze' },
     { id: 'jalen',      name: 'Jalen',      tier: 3, info: '1000 hrs · lvl 112 · Silver' },
-    { id: 'carlos',     name: 'Carlos',     tier: 3, info: '251 hrs · lvl 124 · Bronze', twitch: 'carcarshaur' }
+    { id: 'carlos',     name: 'Carlos',     tier: 3, info: '251 hrs · lvl 124 · Bronze', twitch: 'carcarshaur' },
+    { id: 'clovs',      name: 'Clovs',      tier: 3, info: '' },
+    { id: 'leop',       name: 'Leo',        tier: 3, info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' }
   ],
+  /* Final rosters set by the hosts after the draft (Discord announcement, Sep 26). When this is not empty
+     it replaces the draft picks saved in the database. Player ids, in tier order Champs → Rookies. */
+  rosters: {
+    frankie:   ['duke', 'noni', 'colin', 'clovs'],
+    mroctober: ['garfield', 'nv30', 'aleksk9', 'jalen'],
+    steve:     ['l33n', 'jake', 'marv', 'leop'],
+    niko:      ['mycern', 'fxbm', 'pocket', 'carlos'],
+    cuzan:     ['zynjto', 'lovez', 'zack', 'abstract'],
+    alfie:     ['vexjng', 'brandon', 'klixvy', 'cash']
+  },
   draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */
   eventAt: '2026-09-27T00:00:00Z',   /* Tournament start: Sat Sep 26, 8:00 PM Eastern = 5:00 PM Pacific. */
   eventNote: '5:00 PM PT · 7:00 PM CT · 8:00 PM ET',
@@ -73,6 +83,7 @@ export const DEFAULT_STATE = {
   picks: [],            /* [{ team, player, by, at, auto? }] in order */
   matches: [],          /* [{ id, teams:[tid, tid], map, status:'upcoming'|'live'|'final', score:[n, n] }] */
   stats: {},            /* { playerId or teamId(captain): [kills, deaths, assists] } */
+  bracket: { seeds: [], bo: 1, finalBo: 3, results: {} },   /* playoff bracket, see api/_lib/bracket.js */
   updatedAt: 0
 };
 

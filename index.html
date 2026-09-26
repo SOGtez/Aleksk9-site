@@ -224,6 +224,7 @@
     .nav-links .nav-cta:hover { background: var(--accent-hover); }
     .nav-links .nav-cta::after { display: none; }
     @media (max-width: 480px) {
+      .nav-links .hide-sm { display: none; }
       .nav-links a { padding: 8px 8px; font-size: 13px; }
       .nav-links .nav-cta { display: none; }
       .nav-user span { display: none; }
@@ -668,7 +669,8 @@
         <ul class="nav-links">
           <li><a href="/" aria-current="page">Home</a></li>
           <li><a href="/tournament">Tournament</a></li>
-          <li><a href="/apply">Apply</a></li>
+          <li><a href="/bracket">Bracket</a></li>
+          <li class="hide-sm"><a href="/apply">Apply</a></li>
           <li class="nav-auth" id="nav-auth"></li>
           <li><a class="nav-cta" href="#" data-link="twitch" target="_blank" rel="noopener">Twitch</a></li>
         </ul>

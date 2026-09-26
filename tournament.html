@@ -96,7 +96,7 @@
     .nav-links .nav-cta { color: #fff; background: var(--accent); margin-left: 6px; }
     .nav-links .nav-cta:hover { background: var(--accent-hover); }
     .nav-links .nav-cta::after { display: none; }
-    @media (max-width: 480px) { .nav-links a { padding: 8px 8px; font-size: 13px; } .nav-links .nav-cta { display: none; } }
+    @media (max-width: 480px) { .nav-links a { padding: 8px 8px; font-size: 13px; } .nav-links .nav-cta, .nav-links .hide-sm { display: none; } }
 
     /* Demo bar (only when the API is unreachable or ?demo=1) */
     .demo-bar { background: var(--accent-soft); border-bottom: 1px solid rgba(225,6,0,.35); font-size: 13px; color: var(--fg-muted); }
@@ -447,7 +447,8 @@
         <ul class="nav-links">
           <li><a href="/">Home</a></li>
           <li><a href="/tournament" aria-current="page">Tournament</a></li>
-          <li><a href="/apply">Apply</a></li>
+          <li><a href="/bracket">Bracket</a></li>
+          <li class="hide-sm"><a href="/apply">Apply</a></li>
           <li><a class="nav-cta" href="#" data-link="twitch" target="_blank" rel="noopener">Twitch</a></li>
         </ul>
       </nav>
@@ -480,6 +481,7 @@
       <div class="container">
         <a href="#draft" class="is-active">Draft</a>
         <a href="#matches">Matches</a>
+        <a href="/bracket" id="subnav-bracket">Bracket →</a>
         <a href="#stats">Player Stats</a>
         <a href="#rules">Rules &amp; Maps</a>
       </div>
@@ -631,7 +633,7 @@
     var SPACE = /^\/tournament-test\/?$/.test(location.pathname) ? 'test' : '';
     var PAGE = SPACE ? '/tournament-test' : '/tournament';
     var LIVE = false, ME = null, role = 'viewer', D = null, lastUpdated = 0;
-    if (SPACE) { document.getElementById('test-bar').hidden = false; var rb = document.createElement('meta'); rb.name = 'robots'; rb.content = 'noindex'; document.head.appendChild(rb); document.querySelector('nav a[href="/tournament"]').setAttribute('href', PAGE); }
+    if (SPACE) { document.getElementById('test-bar').hidden = false; var rb = document.createElement('meta'); rb.name = 'robots'; rb.content = 'noindex'; document.head.appendChild(rb); document.querySelector('nav a[href="/tournament"]').setAttribute('href', PAGE); document.querySelector('nav a[href="/bracket"]').setAttribute('href', '/bracket-test'); document.getElementById('subnav-bracket').setAttribute('href', '/bracket-test'); }
     var confirming = null, editingMatch = null, statsEditing = false, loginOpen = false;
     var teamFilter = 'all', sortKey = 'kd', sortAsc = false;
 
@@ -1273,7 +1275,7 @@
     boot();
 
     /* Sub-nav active state */
-    var subLinks = Array.prototype.slice.call(document.querySelectorAll('.subnav a'));
+    var subLinks = Array.prototype.slice.call(document.querySelectorAll('.subnav a[href^="#"]'));
     var blocks = subLinks.map(function (a) { return document.querySelector(a.getAttribute('href')); });
     function updateSubnav() {
       var top = window.scrollY + (window.innerHeight || 800) * 0.45, idx = 0;

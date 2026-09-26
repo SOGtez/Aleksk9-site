@@ -1,5 +1,8 @@
 {
   "cleanUrls": true,
   "trailingSlash": false,
-  "rewrites": [{ "source": "/tournament-test", "destination": "/tournament" }]
+  "rewrites": [
+    { "source": "/tournament-test", "destination": "/tournament" },
+    { "source": "/bracket-test", "destination": "/bracket" }
+  ]
 }

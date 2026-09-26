@@ -1,5 +1,6 @@
 import { json, requireRole, readBody , spaced } from './_lib/http.js';
 import { getState, setState } from './_lib/store.js';
+import { DEFAULT_BRACKET, bracketOf, findMatch } from './_lib/bracket.js';
 
 /* helper or admin
    POST { action:'add', teams:[tid, tid], map }
@@ -23,6 +24,8 @@ async function handler(req, res) {
     return json(res, 200, { ok: true, match: m });
   }
 
+  if (String(b.action || '').startsWith('bracket-')) return bracket(req, res, me, b, state, teamIds, cleanMap);
+
   const m = state.matches.find(x => x.id === b.id);
   if (!m) return json(res, 400, { error: 'Unknown match' });
 
@@ -38,5 +41,54 @@ async function handler(req, res) {
   m.updatedBy = me.user.login;
   await setState(state);
   json(res, 200, { ok: true, match: m });
+}
+/* Playoff bracket (see api/_lib/bracket.js). helper or admin unless noted.
+   POST { action:'bracket-seeds', seeds:[tid, …] }   seed 1 first; a partial list fills slots one at a time
+   POST { action:'bracket-result', id, games:[{ map, score:[a,b] }], status:'live'|'upcoming', winner? }
+   POST { action:'bracket-clear-match', id }
+   POST { action:'bracket-reset' }                    admin: wipe seeds and every result */
+async function bracket(req, res, me, b, state, teamIds, cleanMap) {
+  const br = state.bracket = { ...DEFAULT_BRACKET, ...(state.bracket || {}) };
+  br.results = br.results || {};
+
+  if (b.action === 'bracket-reset') {
+    if (me.role !== 'admin') return json(res, 403, { error: 'Only admins can reset the bracket' });
+    state.bracket = { ...DEFAULT_BRACKET, bo: br.bo, finalBo: br.finalBo, results: {} };
+    await setState(state);
+    return json(res, 200, { ok: true });
+  }
+
+  if (b.action === 'bracket-seeds') {
+    if (Object.keys(br.results).length) return json(res, 409, { error: 'Matches have results already. An admin has to reset the bracket to change seeds' });
+    const seeds = Array.isArray(b.seeds) ? b.seeds.map(String) : [];
+    if (seeds.some((id, i) => !teamIds.has(id) || seeds.indexOf(id) !== i)) return json(res, 400, { error: 'Each team can only be seeded once' });
+    br.seeds = seeds;
+    await setState(state);
+    return json(res, 200, { ok: true, seeds });
+  }
+
+  const view = bracketOf(state);
+  const m = findMatch(view, String(b.id || ''));
+  if (!m || m.bye) return json(res, 400, { error: 'Unknown match' });
+
+  if (b.action === 'bracket-clear-match') {
+    delete br.results[m.id];
+    await setState(state);
+    return json(res, 200, { ok: true });
+  }
+
+  if (b.action === 'bracket-result') {
+    if (!m.teams[0] || !m.teams[1]) return json(res, 409, { error: 'Both teams for this match are not known yet' });
+    const games = (Array.isArray(b.games) ? b.games : []).slice(0, m.bo).map(g => ({
+      map: cleanMap(g && g.map) || 'TBD',
+      score: (Array.isArray(g && g.score) ? g.score : [0, 0]).slice(0, 2).map(n => Math.max(0, Math.min(99, Number(n) || 0)))
+    }));
+    const r = { teams: m.teams.slice(), games, status: b.status === 'live' ? 'live' : 'upcoming', updatedBy: me.user.login, at: Date.now() };
+    if (b.winner) { if (!m.teams.includes(b.winner)) return json(res, 400, { error: 'Winner must be one of the two teams' }); r.winner = b.winner; }
+    br.results[m.id] = r;
+    await setState(state);
+    return json(res, 200, { ok: true, match: findMatch(bracketOf(state), m.id) });
+  }
+  return json(res, 400, { error: 'Unknown bracket action' });
 }
 export default spaced(handler);

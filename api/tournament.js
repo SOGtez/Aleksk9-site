@@ -3,6 +3,7 @@ import { getState } from './_lib/store.js';
 import { nextSlot, rankFromInfo } from './_lib/defaults.js';
 import { getApplications } from './_lib/store.js';
 import { profiles } from './_lib/twitch.js';
+import { bracketOf } from './_lib/bracket.js';
 
 /* Public read of the whole tournament. The page polls this.
    Adds `avatar` (Twitch profile picture) to every team and pool entry that has a `twitch` login. */
@@ -17,6 +18,6 @@ async function handler(req, res) {
     const login = (x.twitch || '').toLowerCase();
     return { ...x, avatar: login && pics[login] ? pics[login].avatar : '', rank: (login && verified[login]) || rankFromInfo(x.info), rankVerified: !!(login && verified[login]) };
   };
-  json(res, 200, { ...state, teams: state.teams.map(withPic), pool: state.pool.map(withPic), next: nextSlot(state) });
+  json(res, 200, { ...state, teams: state.teams.map(withPic), pool: state.pool.map(withPic), next: nextSlot(state), bracketView: bracketOf(state) });
 }
 export default spaced(handler);

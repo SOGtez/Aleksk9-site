@@ -69,7 +69,19 @@ export async function getState() {
     state.picks = (Array.isArray(s.picks) ? s.picks : []).filter(p => teamIds.has(p.team) && poolIds.has(p.player));
     state.matches = Array.isArray(s.matches) ? s.matches : [];
     state.stats = s.stats && typeof s.stats === 'object' ? s.stats : {};
+    if (s.bracket && typeof s.bracket === 'object') state.bracket = { ...state.bracket, ...s.bracket };
     state.updatedAt = s.updatedAt || 0;
+  }
+  /* Fixed rosters from defaults.js replace the draft picks (shown on the draft board in snake order). */
+  if (state.rosters && Object.keys(state.rosters).length && !state.fromApplications) {
+    const ids = state.teams.map(t => t.id), poolIds = new Set(state.pool.map(p => p.id)), picks = [];
+    state.teamOrder = ids.slice();
+    for (let r = 0; r < state.rounds; r++) {
+      const order = r % 2 === 0 ? ids : ids.slice().reverse();
+      for (const tid of order) { const pid = (state.rosters[tid] || [])[r]; if (pid && poolIds.has(pid)) picks.push({ team: tid, player: pid, by: 'hosts', at: 0 }); }
+    }
+    state.picks = picks;
+    state.rostersFixed = true;
   }
   return state;
 }

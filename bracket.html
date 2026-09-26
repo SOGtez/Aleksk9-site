@@ -209,6 +209,19 @@
     .lightbox img { max-width: 100%; max-height: calc(100svh - 80px); border-radius: 10px; }
     .lightbox p { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 13px; color: var(--fg-muted); }
 
+    /* Locked bracket (before the reveal) */
+    .locked { padding: 44px 24px; text-align: center; }
+    .locked .lock { font-size: 40px; line-height: 1; }
+    .locked h2 { font-size: clamp(24px, 4vw, 32px); margin-top: 14px; }
+    .locked p { color: var(--fg-muted); font-size: 15px; margin: 10px auto 0; max-width: 46ch; }
+    .locked .teams { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 22px; }
+    .locked .teams span { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 999px; background: var(--bg-elev-2); border: 1px solid var(--line-strong); font-size: 13px; font-weight: 700; }
+    .locked .teams .avatar { width: 26px; height: 26px; font-size: 10px; }
+    .reveal-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; padding: 16px 18px; margin-bottom: 20px; border-color: rgba(255,176,0,.5); background: repeating-linear-gradient(-45deg, rgba(255,176,0,.10) 0 12px, rgba(255,176,0,.04) 12px 24px), var(--bg-elev); }
+    .reveal-bar .tx { flex: 1 1 260px; font-size: 14px; color: var(--fg-muted); }
+    .reveal-bar .tx b { display: block; color: var(--fg); font-size: 16px; font-weight: 800; }
+    @media (max-width: 759px) { .reveal-bar .btn { width: 100%; min-height: 48px; } }
+
     /* Seeding */
     .seeding { padding: 18px 20px; margin-bottom: 20px; }
     .seeding-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
@@ -403,6 +416,7 @@
 
     <section class="block" aria-label="Bracket">
       <div class="container">
+        <div class="card reveal-bar" id="reveal-bar" hidden></div>
         <div class="card champ" id="champ" hidden></div>
         <div class="live-now" id="live-now" aria-live="polite"></div>
         <div class="card quick" id="quick" hidden></div>
@@ -456,8 +470,11 @@
         });
       });
     }
+    /* Admins also see the bracket before it is revealed (preview). */
+    function tPath() { return '/api/tournament' + (role === 'admin' ? '?preview=1' : ''); }
+    var wasHidden = null;
     function refresh(force) {
-      return api('/api/tournament').then(function (d) {
+      return api(tPath()).then(function (d) {
         if (!force && d.updatedAt === lastUpdated) return;
         D = d; B = d.bracketView; lastUpdated = d.updatedAt || 0; renderAll();
       }).catch(function () {});
@@ -498,8 +515,8 @@
       document.getElementById('page-title').innerHTML = esc(D.name || 'Tournament').replace(/ Tournament$/, '') + ' <span>Bracket</span>';
       document.title = 'Bracket — ' + (D.name || 'Tournament') + ' — AleksK9';
       var live = allMatches().filter(function (m) { return m.status === 'live'; });
-      var st = B.champion ? 'done' : live.length ? 'live' : B.ready ? 'set' : 'seeding';
-      var txt = B.champion ? 'Champions: ' + tname(B.champion) : live.length ? (live.length > 1 ? live.length + ' matches live' : live[0].label + ' is live') : B.ready ? (B.started ? 'Playoffs underway' : 'Bracket set · waiting to start') : 'Seeds being set';
+      var st = B.hidden ? 'seeding' : B.champion ? 'done' : live.length ? 'live' : B.ready ? 'set' : 'seeding';
+      var txt = B.hidden ? 'Bracket reveal coming soon' : B.champion ? 'Champions: ' + tname(B.champion) : live.length ? (live.length > 1 ? live.length + ' matches live' : live[0].label + ' is live') : B.ready ? (B.started ? 'Playoffs underway' : 'Bracket set · waiting to start') : 'Seeds being set';
       var pill = document.getElementById('status-pill'); pill.dataset.status = st; document.getElementById('status-text').textContent = txt;
       var mr = document.getElementById('meta-row');
       mr.querySelectorAll('.pill:not(.pill-status)').forEach(function (p) { p.remove(); });
@@ -649,9 +666,12 @@
       });
 
       var foot = '<span>Updated ' + (D.updatedAt ? new Date(D.updatedAt).toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }) + ' PT' : '—') + ' · refreshes every 5 seconds</span><span class="sp"></span>';
+      if (role === 'admin' && !B.preview && !B.started) foot += '<button class="link-btn" id="bk-hide">Hide bracket again</button>';
       if (role === 'admin' && (B.started || B.seeds.length)) foot += '<button class="link-btn danger" id="bk-reset">' + (resetArmed ? 'Tap again to wipe every seed and score' : 'Reset bracket') + '</button>';
       document.getElementById('bk-foot').innerHTML = foot;
       bindOpen();
+      var hb = document.getElementById('bk-hide');
+      if (hb) hb.onclick = function () { api('/api/matches', { action: 'bracket-reveal', revealed: false }).then(function () { toast('Bracket hidden'); return refresh(true); }).catch(function (e) { toast(e.message); }); };
       var rs = document.getElementById('bk-reset');
       if (rs) rs.onclick = function () {
         if (!resetArmed) { resetArmed = true; renderBracket(); setTimeout(function () { if (resetArmed) { resetArmed = false; renderBracket(); } }, 4000); return; }
@@ -935,12 +955,38 @@
 
     function renderAll() {
       if (!B) { document.getElementById('bk').innerHTML = '<div class="empty-note">The bracket is not available yet.</div>'; return; }
-      renderHero(); renderTop(); renderQuick(); renderSubmit(); renderShots(); renderSeeding(); renderBracket();
+      if (wasHidden === true && !B.hidden && role !== 'admin') { toast('The bracket is out!'); beep(); }
+      wasHidden = !!B.hidden;
+      renderHero(); renderReveal();
+      if (B.hidden) { renderLocked(); return; }
+      renderTop(); renderQuick(); renderSubmit(); renderShots(); renderSeeding(); renderBracket();
+    }
+    /* Public view before the reveal: teams only, no seeds or matchups. */
+    function renderLocked() {
+      ['champ', 'quick', 'submit', 'shots', 'seeding'].forEach(function (id) { document.getElementById(id).hidden = true; });
+      document.getElementById('live-now').innerHTML = '';
+      document.getElementById('bk').innerHTML = '<div class="locked" style="width:100%"><div class="lock" aria-hidden="true">🔒</div><h2>The bracket is locked</h2>' +
+        '<p>Seeds and matchups get revealed before the first match. Keep this page open and it will appear by itself.</p>' +
+        '<div class="teams">' + D.teams.map(function (t) { return '<span>' + av(t) + esc(t.name) + '</span>'; }).join('') + '</div></div>';
+      document.getElementById('bk-foot').innerHTML = '<span>' + D.teams.length + ' teams · single elimination · Bo' + B.bo + ', final Bo' + B.finalBo + '</span>';
+    }
+    /* Admins: the bracket is hidden from everyone else until they reveal it. */
+    var revealArmed = false;
+    function renderReveal() {
+      var el = document.getElementById('reveal-bar');
+      el.hidden = !(role === 'admin' && B.preview); if (el.hidden) return;
+      el.innerHTML = '<div class="tx"><b>Hidden from the public</b>Only admins can see this bracket. Everyone else sees "Bracket reveal coming soon" until you reveal it.</div>' +
+        '<button class="btn btn-primary btn-sm" id="reveal-btn">' + (revealArmed ? 'Tap again to show everyone' : 'Reveal bracket') + '</button>';
+      document.getElementById('reveal-btn').onclick = function () {
+        if (!revealArmed) { revealArmed = true; renderReveal(); setTimeout(function () { if (revealArmed) { revealArmed = false; renderReveal(); } }, 4000); return; }
+        revealArmed = false;
+        api('/api/matches', { action: 'bracket-reveal', revealed: true }).then(function () { toast('Bracket revealed'); return refresh(true); }).catch(function (e) { toast(e.message); });
+      };
     }
 
     function boot() {
-      Promise.all([api('/api/me'), api('/api/tournament')]).then(function (r) {
-        ME = r[0].user; role = r[0].role; D = r[1]; B = D.bracketView; lastUpdated = D.updatedAt || 0;
+      api('/api/me').then(function (me) { ME = me.user; role = me.role; return Promise.all([me, api(tPath())]); }).then(function (r) {
+        D = r[1]; B = D.bracketView; lastUpdated = D.updatedAt || 0;
         renderAll();
         var q = new URLSearchParams(location.search).get('login');
         if (q === 'ok' && ME) toast('Logged in as ' + (ME.name || ME.login));

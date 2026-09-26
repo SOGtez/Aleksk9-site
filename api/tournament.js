@@ -1,4 +1,4 @@
-import { json , spaced } from './_lib/http.js';
+import { json, spaced, whoami } from './_lib/http.js';
 import { getState } from './_lib/store.js';
 import { nextSlot, rankFromInfo } from './_lib/defaults.js';
 import { getApplications } from './_lib/store.js';
@@ -18,6 +18,14 @@ async function handler(req, res) {
     const login = (x.twitch || '').toLowerCase();
     return { ...x, avatar: login && pics[login] ? pics[login].avatar : '', rank: (login && verified[login]) || rankFromInfo(x.info), rankVerified: !!(login && verified[login]) };
   };
-  json(res, 200, { ...state, teams: state.teams.map(withPic), pool: state.pool.map(withPic), next: nextSlot(state), bracketView: bracketOf(state) });
+  /* The bracket stays secret until an admin reveals it. Admins preview it with ?preview=1. The raw seeds are never sent. */
+  const revealed = !!(state.bracket && state.bracket.revealed);
+  let bracketView = bracketOf(state);
+  if (!revealed) {
+    const admin = req.query.preview ? (await whoami(req)).role === 'admin' : false;
+    bracketView = admin ? { ...bracketView, preview: true } : { hidden: true, size: bracketView.size, bo: bracketView.bo, finalBo: bracketView.finalBo, seeds: [], rounds: [], ready: false, champion: null, started: false };
+  }
+  const { bracket, ...pub } = state;
+  json(res, 200, { ...pub, teams: state.teams.map(withPic), pool: state.pool.map(withPic), next: nextSlot(state), bracketView, bracketRevealed: revealed });
 }
 export default spaced(handler);

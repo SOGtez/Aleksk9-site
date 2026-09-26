@@ -83,7 +83,9 @@ export const DEFAULT_STATE = {
   picks: [],            /* [{ team, player, by, at, auto? }] in order */
   matches: [],          /* [{ id, teams:[tid, tid], map, status:'upcoming'|'live'|'final', score:[n, n] }] */
   stats: {},            /* { playerId or teamId(captain): [kills, deaths, assists] } */
-  bracket: { seeds: [], bo: 1, finalBo: 3, results: {} },   /* playoff bracket, see api/_lib/bracket.js */
+  /* Playoff bracket (api/_lib/bracket.js). Seeds are the locked plan: 1 and 2 get byes, 4 v 5 and 3 v 6 play first.
+     Hidden from everyone but admins until an admin presses Reveal on /bracket. */
+  bracket: { seeds: ['steve', 'mroctober', 'niko', 'cuzan', 'alfie', 'frankie'], bo: 1, finalBo: 3, results: {}, revealed: false },
   updatedAt: 0
 };
 

@@ -36,6 +36,7 @@ async function handler(req, res) {
 
   if (b.action === 'submit') {
     const state = await getState();
+    if (!(state.bracket && state.bracket.revealed) && me.role !== 'admin') return json(res, 403, { error: 'The bracket has not been revealed yet' });
     const match = findMatch(bracketOf(state), String(b.match || ''));
     if (!match || match.bye || !match.teams[0] || !match.teams[1]) return json(res, 400, { error: 'Pick a match that has both teams' });
     const team = myTeam || String(b.team || '');

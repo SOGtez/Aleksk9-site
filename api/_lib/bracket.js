@@ -6,7 +6,7 @@
    `winner` is a manual override (forfeit). A result is ignored when the teams it was saved for are no longer
    the ones in that slot (an earlier result was changed). */
 
-export const DEFAULT_BRACKET = { seeds: [], bo: 1, finalBo: 3, results: {} };
+export const DEFAULT_BRACKET = { seeds: [], bo: 1, finalBo: 3, results: {}, revealed: false };
 
 /* Standard seed order for a bracket of `size` (power of two): 8 → [1,8,4,5,2,7,3,6]. */
 function seedOrder(size) {

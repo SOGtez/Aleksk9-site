@@ -69,7 +69,11 @@ export async function getState() {
     state.picks = (Array.isArray(s.picks) ? s.picks : []).filter(p => teamIds.has(p.team) && poolIds.has(p.player));
     state.matches = Array.isArray(s.matches) ? s.matches : [];
     state.stats = s.stats && typeof s.stats === 'object' ? s.stats : {};
-    if (s.bracket && typeof s.bracket === 'object') state.bracket = { ...state.bracket, ...s.bracket };
+    if (s.bracket && typeof s.bracket === 'object') {
+      const codeSeeds = state.bracket.seeds;
+      state.bracket = { ...state.bracket, ...s.bracket };
+      if (!s.bracket.seedsSet) state.bracket.seeds = codeSeeds;   /* seeds in defaults.js win until changed on the site */
+    }
     state.updatedAt = s.updatedAt || 0;
   }
   /* Fixed rosters from defaults.js replace the draft picks (shown on the draft board in snake order). */

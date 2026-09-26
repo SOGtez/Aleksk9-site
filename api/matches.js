@@ -47,6 +47,7 @@ async function handler(req, res) {
    POST { action:'bracket-result', id, games:[{ map, score:[a,b] }], status:'live'|'upcoming', winner? }
    POST { action:'bracket-clear-match', id }
    POST { action:'bracket-reset' }                    admin: wipe seeds and every result
+   POST { action:'bracket-reveal', revealed }         admin: show or hide the bracket for everyone else
    Helpers can save a score (result or clear) once a minute; admins have no limit. */
 const HELPER_COOLDOWN = 60;
 async function helperWait(me, res) {
@@ -60,9 +61,17 @@ async function bracket(req, res, me, b, state, teamIds, cleanMap) {
   const br = state.bracket = { ...DEFAULT_BRACKET, ...(state.bracket || {}) };
   br.results = br.results || {};
 
+  if (b.action === 'bracket-reveal') {
+    if (me.role !== 'admin') return json(res, 403, { error: 'Only admins can reveal the bracket' });
+    br.revealed = b.revealed !== false;
+    await setState(state);
+    return json(res, 200, { ok: true, revealed: br.revealed });
+  }
+  if (!br.revealed && me.role !== 'admin') return json(res, 403, { error: 'The bracket has not been revealed yet' });
+
   if (b.action === 'bracket-reset') {
     if (me.role !== 'admin') return json(res, 403, { error: 'Only admins can reset the bracket' });
-    state.bracket = { ...DEFAULT_BRACKET, bo: br.bo, finalBo: br.finalBo, results: {} };
+    state.bracket = { ...DEFAULT_BRACKET, bo: br.bo, finalBo: br.finalBo, results: {}, revealed: br.revealed, seedsSet: true };
     await setState(state);
     return json(res, 200, { ok: true });
   }
@@ -71,7 +80,7 @@ async function bracket(req, res, me, b, state, teamIds, cleanMap) {
     if (Object.keys(br.results).length) return json(res, 409, { error: 'Matches have results already. An admin has to reset the bracket to change seeds' });
     const seeds = Array.isArray(b.seeds) ? b.seeds.map(String) : [];
     if (seeds.some((id, i) => !teamIds.has(id) || seeds.indexOf(id) !== i)) return json(res, 400, { error: 'Each team can only be seeded once' });
-    br.seeds = seeds;
+    br.seeds = seeds; br.seedsSet = true;
     await setState(state);
     return json(res, 200, { ok: true, seeds });
   }

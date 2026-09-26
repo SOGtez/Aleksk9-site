@@ -28,7 +28,7 @@ export const DEFAULT_STATE = {
   teams: [
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
-    { id: 'steve',     name: 'Team Steve',     captain: 'Steve',     info: '' },
+    { id: 'steve',     name: 'Team Steve',     captain: 'Steve',     info: '',                           twitch: 'stavroooooooooooo' },
     { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' },
     { id: 'cuzan',     name: 'Team Cuzan',     captain: 'Cuzan',     info: '',                           twitch: 'cuz4n' },
     { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '1120 hrs · Bronze',           twitch: 'alfie____8' }

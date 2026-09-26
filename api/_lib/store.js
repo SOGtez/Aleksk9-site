@@ -156,6 +156,33 @@ export async function spaceHasData(space) {
   return false;
 }
 
+/* ---------- Cooldowns ----------
+   Returns 0 and starts the cooldown when it is free, otherwise the seconds left. */
+export async function cooldown(key, seconds) {
+  const k = spaced(key);
+  if (await redis().set(k, 1, { nx: true, ex: seconds })) return 0;
+  return Math.max(1, Number(await redis().ttl(k)) || seconds);
+}
+
+/* ---------- End-game screenshots from captains ----------
+   Metadata in one hash (small, listed by the bracket page); each image in its own key, kept 14 days. */
+const KEY_SHOTS = 't:shots';
+const SHOT_TTL = 14 * 24 * 3600;
+export async function addShot(meta, dataUrl) {
+  await redis().set(spaced('t:shot:' + meta.id), dataUrl, { ex: SHOT_TTL });
+  await redis().hset(spaced(KEY_SHOTS), { [meta.id]: meta });
+}
+export async function listShots() { return Object.values((await redis().hgetall(spaced(KEY_SHOTS))) || {}); }
+export async function getShot(id) { return redis().hget(spaced(KEY_SHOTS), id); }
+export async function getShotImage(id) { return redis().get(spaced('t:shot:' + id)); }
+export async function updateShot(id, patch) {
+  const m = await getShot(id); if (!m) return null;
+  const next = { ...m, ...patch };
+  await redis().hset(spaced(KEY_SHOTS), { [id]: next });
+  return next;
+}
+export async function deleteShot(id) { await redis().hdel(spaced(KEY_SHOTS), id); await redis().del(spaced('t:shot:' + id)); }
+
 /* ---------- Twitch login log + player links ---------- */
 export async function recordLogin(u, chat) {
   const key = u.login.toLowerCase();

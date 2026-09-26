@@ -171,6 +171,44 @@
     .ln.can:active { border-color: var(--live); }
     .ln-edit { margin-top: 10px; text-align: center; font-size: 12px; font-weight: 700; color: var(--accent); }
 
+    /* Captain: send a screenshot */
+    .submit, .shots { padding: 16px 18px; margin-bottom: 20px; }
+    .panel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 12px; }
+    .panel-head b { font-size: 16px; font-weight: 800; }
+    .panel-head span { font-size: 13px; color: var(--fg-muted); }
+    .panel-head .count { color: #fff; background: var(--accent); border-radius: 999px; padding: 1px 9px; font-size: 12px; font-weight: 800; }
+    .sub-form { display: grid; gap: 12px; }
+    .sub-form label.f { display: grid; gap: 6px; font-size: 12px; font-weight: 700; color: var(--fg-muted); }
+    .sub-form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sub-form .field { width: 100%; }
+    .pick-file { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 96px; border: 2px dashed var(--line-strong); border-radius: 14px; padding: 12px; font-weight: 700; font-size: 15px; color: var(--fg-muted); cursor: pointer; text-align: center; transition: border-color .2s; }
+    .pick-file:hover { border-color: var(--accent); color: var(--fg); }
+    .pick-file img { max-height: 180px; max-width: 100%; border-radius: 8px; display: block; }
+    .pick-file input { display: none; }
+    .sub-list { display: grid; gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 13px; color: var(--fg-muted); }
+    .sub-list .ok { color: #7ee2a8; font-weight: 700; }
+    .sub-list .wait { color: #ffb000; font-weight: 700; }
+
+    /* Helpers: screenshot inbox */
+    .shot { display: grid; grid-template-columns: 96px 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); align-items: start; }
+    .shot:first-of-type { border-top: 0; padding-top: 4px; }
+    .shot .thumb { width: 96px; height: 64px; border-radius: 8px; overflow: hidden; background: var(--bg-elev-2); border: 1px solid var(--line-strong); }
+    .shot .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .shot b { font-weight: 800; }
+    .shot .claim { display: block; font-size: 14px; margin-top: 2px; }
+    .shot small { display: block; font-size: 12px; color: var(--fg-dim); margin-top: 2px; }
+    .shot .note { display: block; font-size: 13px; color: var(--fg-muted); margin-top: 4px; font-style: italic; }
+    .shot .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 8px; }
+    .shot.done { opacity: .55; }
+    .shots-more { margin-top: 8px; }
+    .ed-shots { display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; }
+    .ed-shots button { flex: 0 0 auto; position: relative; width: 108px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line-strong); background: var(--bg-elev-2); text-align: left; }
+    .ed-shots img { width: 100%; height: 62px; object-fit: cover; display: block; }
+    .ed-shots span { display: block; padding: 4px 6px; font-size: 11px; font-weight: 700; color: var(--fg-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .lightbox { position: fixed; inset: 0; z-index: 120; background: rgba(0,0,0,.92); display: grid; place-items: center; padding: 16px; animation: fade .2s var(--ease); cursor: zoom-out; }
+    .lightbox img { max-width: 100%; max-height: calc(100svh - 80px); border-radius: 10px; }
+    .lightbox p { position: absolute; left: 0; right: 0; bottom: 16px; text-align: center; font-size: 13px; color: var(--fg-muted); }
+
     /* Seeding */
     .seeding { padding: 18px 20px; margin-bottom: 20px; }
     .seeding-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
@@ -271,6 +309,7 @@
     .sheet-opts input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--accent); }
     .sheet-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
     .sheet-foot .saved { font-size: 12px; color: var(--fg-dim); }
+    .sheet-foot .saved.warn { color: #ffb000; font-weight: 700; }
     .sheet-foot .sp { flex: 1; }
 
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); z-index: 100; background: #fff; color: #000; font-size: 14px; font-weight: 600; padding: 12px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity .3s var(--ease), transform .3s var(--ease); box-shadow: 0 20px 50px -20px rgba(0,0,0,.9); max-width: 90vw; text-align: center; }
@@ -307,6 +346,10 @@
       .step input { width: 58px; height: 48px; font-size: 20px; }
       .field, .step input, select { font-size: 16px; }   /* 16px stops iOS zooming into the field */
       .quick { padding: 12px; }
+      .submit, .shots { padding: 14px; }
+      .shot { grid-template-columns: 80px 1fr; }
+      .shot .thumb { width: 80px; height: 56px; }
+      .shot .acts .btn { flex: 1 1 auto; }
       .quick-list { flex-direction: column; }
       .quick button { width: 100%; }
       .seeds { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -363,6 +406,8 @@
         <div class="card champ" id="champ" hidden></div>
         <div class="live-now" id="live-now" aria-live="polite"></div>
         <div class="card quick" id="quick" hidden></div>
+        <div class="card submit" id="submit" hidden></div>
+        <div class="card shots" id="shots" hidden></div>
         <div class="card seeding" id="seeding" hidden></div>
         <div class="card bk-card">
           <div class="bk-scroll"><div class="bk" id="bk"><div class="empty-note">Loading the bracket…</div></div></div>
@@ -377,6 +422,7 @@
   </footer>
 
   <div id="sheet-root"></div>
+  <div id="lightbox-root"></div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -405,7 +451,7 @@
         : { cache: 'no-store', credentials: 'same-origin' };
       return fetch(path, opts).then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (j) {
-          if (!r.ok) throw new Error(j.error || ('Request failed (' + r.status + ')'));
+          if (!r.ok) { var err = new Error(j.error || ('Request failed (' + r.status + ')')); err.data = j; err.status = r.status; throw err; }
           return j;
         });
       });
@@ -430,6 +476,8 @@
       return names.join(', ');
     }
     function canEdit() { return role === 'helper' || role === 'admin'; }
+    function myTeam() { return role.indexOf('captain:') === 0 ? role.slice(8) : null; }
+    function autosave() { return role === 'admin'; }   /* helpers press Save (once a minute); admins save as they tap */
     function allMatches() { var out = []; B.rounds.forEach(function (r) { r.matches.forEach(function (m) { out.push(m); }); }); return out; }
     function findM(id) { var a = allMatches(); for (var i = 0; i < a.length; i++) if (a[i].id === id) return a[i]; return null; }
     /* Same rule as the server: first to 7, 6-6 goes to overtime, first to 8. */
@@ -461,13 +509,13 @@
 
       var auth = document.getElementById('auth');
       if (!ME) {
-        auth.innerHTML = '<a class="btn btn-ghost btn-sm" href="/api/auth/login?next=' + PAGE + '">' + TWITCH_ICON + 'Helper log in</a>' +
-          '<span class="auth-hint">Just watching? No login needed. The page updates by itself.</span>';
+        auth.innerHTML = '<a class="btn btn-ghost btn-sm" href="/api/auth/login?next=' + PAGE + '">' + TWITCH_ICON + 'Log in</a>' +
+          '<span class="auth-hint">Just watching? No login needed. Captains and helpers log in with Twitch.</span>';
       } else {
         auth.innerHTML = '<span class="auth-chip">' + av({ avatar: ME.avatar, name: ME.name || ME.login }) +
           '<span><b>' + esc(ME.name || ME.login) + '</b><br><span class="role">' + esc(roleLabel(role)) + '</span></span>' +
           (role === 'admin' ? '<a href="/admin">Admin</a>' : '') + '<a href="/api/auth/logout?next=' + PAGE + '">Log out</a></span>' +
-          (canEdit() ? '<span class="auth-hint">Tap a match to enter its score.</span>' : '');
+          (canEdit() ? '<span class="auth-hint">Tap a match to enter its score.</span>' : myTeam() ? '<span class="auth-hint">Send your end-game screenshot below after each map.</span>' : '');
       }
     }
 
@@ -613,20 +661,43 @@
     }
 
     /* ---------- score editor (helpers + admins) ---------- */
-    function openEditor(id) {
+    var coolUntil = 0;   /* helpers: when the next score save is allowed */
+    function coolLeft() { return Math.max(0, Math.ceil((coolUntil - Date.now()) / 1000)); }
+    function openEditor(id, prefill) {
       var m = findM(id); if (!m) return;
-      edit = { id: id, games: m.games.length ? JSON.parse(JSON.stringify(m.games)) : [{ map: 'TBD', score: [0, 0] }], live: m.status === 'live', winner: m.forfeit ? m.winner : '', clearArmed: false, saved: '' };
+      edit = { id: id, games: m.games.length ? JSON.parse(JSON.stringify(m.games)) : [{ map: 'TBD', score: [0, 0] }], live: m.status === 'live', winner: m.forfeit ? m.winner : '', clearArmed: false, closeArmed: false, dirty: false, saved: '' };
+      if (prefill && prefill.score) {
+        /* Fill in the score a captain claimed with their screenshot. Bo3: the map with that name, else the next empty map. */
+        var map = prefill.map || 'TBD', gi = 0;
+        if (m.bo > 1) {
+          gi = -1;
+          edit.games.forEach(function (g, i) { if (gi < 0 && map !== 'TBD' && g.map === map) gi = i; });
+          if (gi < 0) edit.games.forEach(function (g, i) { if (gi < 0 && !g.score[0] && !g.score[1]) gi = i; });
+          if (gi < 0 && edit.games.length < m.bo) { edit.games.push({ map: 'TBD', score: [0, 0] }); gi = edit.games.length - 1; }
+          if (gi < 0) gi = edit.games.length - 1;
+        }
+        edit.games[gi] = { map: map !== 'TBD' ? map : edit.games[gi].map, score: prefill.score.slice() };
+        changed(); return;
+      }
       renderEditor();
     }
-    function closeEditor() { flushSave(); edit = null; document.getElementById('sheet-root').innerHTML = ''; }
+    function closeEditor(force) {
+      if (edit && edit.dirty && !autosave() && !force && !edit.closeArmed) { edit.closeArmed = true; edit.saved = 'Not saved. Tap Close again to throw these numbers away.'; renderEditor(); return; }
+      flushSave(); edit = null; document.getElementById('sheet-root').innerHTML = '';
+    }
     function renderEditor() {
       var root = document.getElementById('sheet-root');
       if (!edit) { root.innerHTML = ''; return; }
-      var m = findM(edit.id); if (!m) { closeEditor(); return; }
-      var maps = ['TBD'].concat(D.maps || []);
+      var m = findM(edit.id); if (!m) { closeEditor(true); return; }
+      var maps = ['TBD'].concat(D.maps || []), auto = autosave();
       var html = '<div class="sheet-bg" id="sheet-bg"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">' +
         '<button class="x" id="sheet-x" aria-label="Close">×</button><h3 id="sheet-title">' + esc(m.label) + '</h3>' +
-        '<p class="sub">Best of ' + m.bo + ' · first to ' + ((D.format || {}).firstTo || 7) + ' rounds' + ((D.format || {}).otTo ? ', OT to ' + D.format.otTo : '') + '. Changes save as you tap.</p>';
+        '<p class="sub">Best of ' + m.bo + ' · first to ' + ((D.format || {}).firstTo || 7) + ' rounds' + ((D.format || {}).otTo ? ', OT to ' + D.format.otTo : '') + '. ' +
+        (auto ? 'Changes save as you tap.' : 'Set the numbers, then tap Save score. Helpers can save once a minute.') + '</p>';
+      var shots = SHOTS.filter(function (x) { return x.match === m.id; });
+      if (shots.length) html += '<div class="ed-shots">' + shots.map(function (x) {
+        return '<button data-view="' + esc(x.id) + '" title="Open screenshot"><img src="' + shotUrl(x.id) + '" alt="Screenshot from ' + esc(tname(x.team)) + '" loading="lazy"><span>' + esc(tname(x.team)) + (x.score ? ' · ' + x.score[0] + '–' + x.score[1] : '') + '</span></button>';
+      }).join('') + '</div>';
       edit.games.forEach(function (g, gi) {
         var w = gameWinner(g.score);
         html += '<div class="game"><div class="game-top"><span>' + (m.bo > 1 ? 'Map ' + (gi + 1) : 'Map') + '</span><select class="field" data-map="' + gi + '">' +
@@ -646,10 +717,12 @@
       if (m.bo > 1 && edit.games.length < m.bo && !decided) html += '<button class="btn btn-ghost btn-sm" id="add-game" style="margin-top:12px">+ Add map ' + (edit.games.length + 1) + '</button>';
       html += '<div class="sheet-opts"><label><input type="checkbox" id="opt-live"' + (edit.live ? ' checked' : '') + '> Show as live</label>' +
         '<label>Forfeit win <select class="field" id="opt-ff"><option value="">None</option>' + [0, 1].map(function (k) { return '<option value="' + esc(m.teams[k]) + '"' + (edit.winner === m.teams[k] ? ' selected' : '') + '>' + esc(tname(m.teams[k])) + '</option>'; }).join('') + '</select></label></div>' +
-        '<div class="sheet-foot"><span class="saved" id="saved">' + esc(edit.saved) + '</span><span class="sp"></span>' +
+        '<div class="sheet-foot"><span class="saved' + (edit.closeArmed || (edit.dirty && !auto) ? ' warn' : '') + '" id="saved">' + esc(edit.saved) + '</span><span class="sp"></span>' +
         '<button class="link-btn danger" id="clear-res">' + (edit.clearArmed ? 'Tap again to clear this match' : 'Clear result') + '</button>' +
-        '<button class="btn btn-primary btn-sm" id="sheet-done">Done</button></div></div></div>';
+        (auto ? '<button class="btn btn-primary btn-sm" id="sheet-done">Done</button>'
+              : '<button class="link-btn" id="sheet-done">Close</button><button class="btn btn-primary btn-sm" id="save-btn">Save score</button>') + '</div></div></div>';
       root.innerHTML = html;
+      tickSave();
 
       function pos(s) { var p = s.split(':'); return [Number(p[0]), Number(p[1])]; }
       function bump(s, d) { var p = pos(s), g = edit.games[p[0]]; g.score[p[1]] = Math.max(0, Math.min(99, (Number(g.score[p[1]]) || 0) + d)); if (d > 0 && !edit.winner) edit.live = true; changed(); }
@@ -658,38 +731,211 @@
       root.querySelectorAll('[data-score]').forEach(function (inp) { inp.onchange = function () { var p = pos(inp.dataset.score); edit.games[p[0]].score[p[1]] = Math.max(0, Math.min(99, Number(inp.value) || 0)); changed(); }; });
       root.querySelectorAll('[data-map]').forEach(function (sel) { sel.onchange = function () { edit.games[Number(sel.dataset.map)].map = sel.value; changed(); }; });
       root.querySelectorAll('[data-drop]').forEach(function (b) { b.onclick = function () { edit.games.pop(); changed(); }; });
+      root.querySelectorAll('[data-view]').forEach(function (b) { b.onclick = function () { viewShot(b.dataset.view); }; });
       var ag = document.getElementById('add-game'); if (ag) ag.onclick = function () { edit.games.push({ map: 'TBD', score: [0, 0] }); changed(); };
       document.getElementById('opt-live').onchange = function (e) { edit.live = e.target.checked; changed(); };
       document.getElementById('opt-ff').onchange = function (e) { edit.winner = e.target.value; changed(); };
-      document.getElementById('sheet-x').onclick = closeEditor;
-      document.getElementById('sheet-done').onclick = closeEditor;
+      document.getElementById('sheet-x').onclick = function () { closeEditor(); };
+      document.getElementById('sheet-done').onclick = function () { closeEditor(); };
       document.getElementById('sheet-bg').onclick = function (e) { if (e.target.id === 'sheet-bg') closeEditor(); };
+      var sb = document.getElementById('save-btn'); if (sb) sb.onclick = saveNow;
       document.getElementById('clear-res').onclick = function () {
         if (!edit.clearArmed) { edit.clearArmed = true; renderEditor(); return; }
+        if (!autosave() && coolLeft()) { toast('Wait ' + coolLeft() + 's before saving again'); return; }
         var id = edit.id; clearTimeout(saveTimer); saveTimer = null; edit = null; renderEditor();
-        api('/api/matches', { action: 'bracket-clear-match', id: id }).then(function () { toast('Result cleared'); return refresh(true); }).catch(function (e) { toast(e.message); });
+        api('/api/matches', { action: 'bracket-clear-match', id: id })
+          .then(function () { if (role === 'helper') coolUntil = Date.now() + 60000; toast('Result cleared'); return refresh(true); })
+          .catch(function (e) { if (e.data && e.data.retryAfter) coolUntil = Date.now() + e.data.retryAfter * 1000; toast(e.message); });
       };
     }
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && edit) closeEditor(); });
+    document.addEventListener('keydown', function (e) { if (e.key !== 'Escape') return; if (document.getElementById('lightbox')) closeLightbox(); else if (edit) closeEditor(); });
 
-    /* Changes save automatically, a moment after the last tap. */
+    /* Admins: changes save a moment after the last tap. Helpers: nothing is sent until Save score. */
     var saveTimer = null;
-    function changed() { edit.clearArmed = false; edit.saved = 'Saving…'; renderEditor(); clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 600); }
+    function changed() {
+      edit.clearArmed = false; edit.closeArmed = false; edit.dirty = true;
+      if (autosave()) { edit.saved = 'Saving…'; renderEditor(); clearTimeout(saveTimer); saveTimer = setTimeout(flushSave, 600); }
+      else { edit.saved = 'Not saved yet'; renderEditor(); }
+    }
+    function postResult(e) { return api('/api/matches', { action: 'bracket-result', id: e.id, games: e.games, status: e.live ? 'live' : 'upcoming', winner: e.winner || '' }); }
+    function savedText(r) { return r.match && r.match.winner ? 'Saved · ' + tname(r.match.winner) + ' advance' : 'Saved'; }
     function flushSave() {
       if (!saveTimer || !edit) return;
       clearTimeout(saveTimer); saveTimer = null;
       var e = edit;
-      api('/api/matches', { action: 'bracket-result', id: e.id, games: e.games, status: e.live ? 'live' : 'upcoming', winner: e.winner || '' })
-        .then(function (r) {
-          if (edit === e) { edit.saved = r.match && r.match.winner ? 'Saved · ' + tname(r.match.winner) + ' advance' : 'Saved'; var s = document.getElementById('saved'); if (s) s.textContent = edit.saved; }
+      postResult(e).then(function (r) {
+          if (edit === e) { edit.dirty = false; edit.saved = savedText(r); var s = document.getElementById('saved'); if (s) s.textContent = edit.saved; }
           return refresh(true);
         })
         .catch(function (err) { toast(err.message); if (edit === e) { edit.saved = 'Not saved'; var s = document.getElementById('saved'); if (s) s.textContent = edit.saved; } });
     }
+    function saveNow() {
+      if (!edit || !edit.dirty) return;
+      if (coolLeft()) { toast('Wait ' + coolLeft() + 's before saving again'); return; }
+      var e = edit, btn = document.getElementById('save-btn'); if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+      postResult(e).then(function (r) {
+        coolUntil = Date.now() + (r.cooldown || 0) * 1000;
+        if (edit === e) { edit.dirty = false; edit.closeArmed = false; edit.saved = savedText(r); renderEditor(); }
+        toast(savedText(r));
+        return refresh(true);
+      }).catch(function (err) {
+        if (err.data && err.data.retryAfter) coolUntil = Date.now() + err.data.retryAfter * 1000;
+        toast(err.message); if (edit === e) renderEditor();
+      });
+    }
+    /* Save button shows the cooldown as a countdown. */
+    function tickSave() {
+      var b = document.getElementById('save-btn'); if (!b || !edit) return;
+      var left = coolLeft();
+      b.disabled = !edit.dirty || left > 0;
+      b.textContent = left > 0 ? 'Save in 0:' + ('0' + left).slice(-2) : 'Save score';
+    }
+    setInterval(tickSave, 1000);
+
+    /* ---------- screenshots ---------- */
+    var SHOTS = [], shotsKey = '', shotsLoaded = false, showDone = false;
+    function shotUrl(id) { return '/api/shots?id=' + encodeURIComponent(id) + (SPACE ? '&space=' + SPACE : ''); }
+    function ago(t) { var s = Math.max(0, Math.round((Date.now() - t) / 1000)); return s < 60 ? 'just now' : s < 3600 ? Math.floor(s / 60) + 'm ago' : Math.floor(s / 3600) + 'h ago'; }
+    function claimText(x) {
+      if (!x.score) return '';
+      return esc(tname(x.teams[0])) + ' <b>' + x.score[0] + '–' + x.score[1] + '</b> ' + esc(tname(x.teams[1])) + (x.map ? ' · ' + esc(x.map) : '');
+    }
+    function loadShots() {
+      if (!(canEdit() || myTeam())) return Promise.resolve();
+      return api('/api/shots').then(function (r) {
+        var list = r.shots || [], key = list.map(function (x) { return x.id + x.status; }).join();
+        if (key === shotsKey) return;
+        if (shotsLoaded && canEdit()) {
+          var seen = {}; SHOTS.forEach(function (x) { seen[x.id] = 1; });
+          var fresh = list.filter(function (x) { return !seen[x.id] && x.status === 'new'; });
+          if (fresh.length) { toast('New screenshot from ' + tname(fresh[0].team)); beep(); }
+        }
+        SHOTS = list; shotsKey = key; shotsLoaded = true;
+        renderShots(); renderSubmitList();
+      }).catch(function () {});
+    }
+    function beep() { try { var ac = new (window.AudioContext || window.webkitAudioContext)(); var o = ac.createOscillator(), g = ac.createGain(); o.connect(g); g.connect(ac.destination); o.frequency.value = 880; g.gain.value = 0.12; o.start(); o.stop(ac.currentTime + 0.18); } catch (e) {} }
+    function viewShot(id) {
+      var x = SHOTS.filter(function (s) { return s.id === id; })[0];
+      document.getElementById('lightbox-root').innerHTML = '<div class="lightbox" id="lightbox" role="dialog" aria-label="Screenshot"><img src="' + shotUrl(id) + '" alt="End-game screenshot"><p>' +
+        (x ? esc(tname(x.team)) + ' · ' + esc(x.label) + ' · ' : '') + 'Tap anywhere to close</p></div>';
+      document.getElementById('lightbox').onclick = closeLightbox;
+    }
+    function closeLightbox() { document.getElementById('lightbox-root').innerHTML = ''; }
+
+    /* Helpers: inbox of screenshots from captains. */
+    function renderShots() {
+      var el = document.getElementById('shots');
+      if (!canEdit()) { el.hidden = true; return; }
+      var fresh = SHOTS.filter(function (x) { return x.status === 'new'; }), done = SHOTS.filter(function (x) { return x.status !== 'new'; });
+      el.hidden = !SHOTS.length; if (!SHOTS.length) return;
+      function item(x) {
+        var m = findM(x.match), stale = !m || !m.teams[0] || m.teams[0] !== x.teams[0] || m.teams[1] !== x.teams[1];
+        return '<div class="shot' + (x.status !== 'new' ? ' done' : '') + '"><button class="thumb" data-view="' + esc(x.id) + '" aria-label="Open screenshot"><img src="' + shotUrl(x.id) + '" alt="" loading="lazy"></button><div>' +
+          '<b>' + esc(tname(x.team)) + '</b> · ' + esc(x.label) +
+          (x.score ? '<span class="claim">Says: ' + claimText(x) + '</span>' : '<span class="claim" style="color:var(--fg-dim)">No score typed in, check the screenshot</span>') +
+          (x.note ? '<span class="note">“' + esc(x.note) + '”</span>' : '') +
+          '<small>' + esc(x.byName || x.by) + ' · ' + ago(x.at) + (x.status !== 'new' && x.doneBy ? ' · checked by ' + esc(x.doneBy) : '') + '</small>' +
+          '<div class="acts">' + (stale ? '<span style="font-size:12px;color:var(--fg-dim)">Match has changed</span>' : '<button class="btn btn-primary btn-sm" data-use="' + esc(x.id) + '">' + (x.score ? 'Enter this score' : 'Open match') + '</button>') +
+          (x.status === 'new' ? '<button class="link-btn" data-done="' + esc(x.id) + '">Mark checked</button>' : '<button class="link-btn" data-reopen="' + esc(x.id) + '">Move back</button>') +
+          (role === 'admin' ? '<button class="link-btn danger" data-del="' + esc(x.id) + '">Delete</button>' : '') + '</div></div></div>';
+      }
+      el.innerHTML = '<div class="panel-head"><b>Screenshots from captains</b>' + (fresh.length ? '<span class="count">' + fresh.length + ' new</span>' : '<span>All checked</span>') + '</div>' +
+        fresh.map(item).join('') +
+        (done.length ? '<div class="shots-more"><button class="link-btn" id="shots-toggle">' + (showDone ? 'Hide' : 'Show') + ' ' + done.length + ' checked</button></div>' + (showDone ? done.map(item).join('') : '') : '');
+      el.querySelectorAll('[data-view]').forEach(function (b) { b.onclick = function () { viewShot(b.dataset.view); }; });
+      el.querySelectorAll('[data-use]').forEach(function (b) { b.onclick = function () {
+        var x = SHOTS.filter(function (s) { return s.id === b.dataset.use; })[0]; if (!x) return;
+        openEditor(x.match, x.score ? { map: x.map, score: x.score } : null);
+      }; });
+      function act(sel, action, msg) { el.querySelectorAll(sel).forEach(function (b) { b.onclick = function () {
+        api('/api/shots', { action: action, id: b.dataset[Object.keys(b.dataset)[0]] }).then(function () { if (msg) toast(msg); shotsKey = ''; return loadShots(); }).catch(function (e) { toast(e.message); });
+      }; }); }
+      act('[data-done]', 'done', 'Marked as checked'); act('[data-reopen]', 'reopen', ''); act('[data-del]', 'delete', 'Screenshot deleted');
+      var tg = document.getElementById('shots-toggle'); if (tg) tg.onclick = function () { showDone = !showDone; renderShots(); };
+    }
+
+    /* Captains: send an end-game screenshot for their match. The form is built once so a refresh never wipes it. */
+    var subKey = '', subImage = '';
+    function captainMatches() {
+      var t = myTeam(); if (!t || !B.ready) return [];
+      return allMatches().filter(function (m) { return !m.bye && m.teams[0] && m.teams[1] && m.teams.indexOf(t) >= 0; });
+    }
+    function renderSubmit() {
+      var el = document.getElementById('submit'), list = captainMatches();
+      el.hidden = !myTeam(); if (!myTeam()) return;
+      var key = list.map(function (m) { return m.id + m.status; }).join();
+      if (key === subKey && el.innerHTML) return;
+      subKey = key;
+      if (!list.length) {
+        el.innerHTML = '<div class="panel-head"><b>Send your end-game screenshot</b><span>' + (B.ready ? 'Your next match shows up here once both teams are known.' : 'The bracket is not seeded yet.') + '</span></div><div id="sub-list"></div>';
+        renderSubmitList(); return;
+      }
+      var cur = list.filter(function (m) { return m.status !== 'final'; })[0] || list[list.length - 1];
+      var maps = ['TBD'].concat(D.maps || []);
+      el.innerHTML = '<div class="panel-head"><b>Send your end-game screenshot</b><span>After each map, send the scoreboard. A helper checks it and updates the bracket.</span></div>' +
+        '<div class="sub-form">' +
+        (list.length > 1 ? '<label class="f">Match<select class="field" id="sub-match">' + list.map(function (m) {
+          return '<option value="' + m.id + '"' + (m === cur ? ' selected' : '') + '>' + esc(m.label) + ' · vs ' + esc(tname(m.teams[0] === myTeam() ? m.teams[1] : m.teams[0])) + '</option>'; }).join('') + '</select></label>'
+          : '<input type="hidden" id="sub-match" value="' + cur.id + '"><div style="font-size:14px;font-weight:700">' + esc(cur.label) + ' · vs ' + esc(tname(cur.teams[0] === myTeam() ? cur.teams[1] : cur.teams[0])) + '</div>') +
+        '<label class="pick-file" id="sub-pick"><input type="file" accept="image/*" id="sub-file"><span id="sub-preview">📷 Tap to choose the screenshot</span></label>' +
+        '<label class="f">Map<select class="field" id="sub-map">' + maps.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('') + '</select></label>' +
+        '<div class="two"><label class="f">Your rounds<input class="field" id="sub-us" type="number" inputmode="numeric" min="0" max="99" placeholder="e.g. 7"></label>' +
+        '<label class="f">Their rounds<input class="field" id="sub-them" type="number" inputmode="numeric" min="0" max="99" placeholder="e.g. 4"></label></div>' +
+        '<label class="f">Note (optional)<input class="field" id="sub-note" maxlength="200" placeholder="Anything the helpers should know"></label>' +
+        '<button class="btn btn-primary" id="sub-send" disabled>Send screenshot</button></div><div id="sub-list"></div>';
+      subImage = '';
+      document.getElementById('sub-file').onchange = function (e) {
+        var f = e.target.files && e.target.files[0]; if (!f) return;
+        document.getElementById('sub-preview').textContent = 'Getting it ready…';
+        shrink(f).then(function (url) {
+          subImage = url;
+          document.getElementById('sub-preview').innerHTML = '<img src="' + url + '" alt="Your screenshot">';
+          document.getElementById('sub-send').disabled = false;
+        }).catch(function () { subImage = ''; document.getElementById('sub-preview').textContent = 'Could not read that image. Try another one.'; });
+      };
+      document.getElementById('sub-send').onclick = function () {
+        var btn = this; if (!subImage) return;
+        var us = document.getElementById('sub-us').value, them = document.getElementById('sub-them').value, map = document.getElementById('sub-map').value;
+        btn.disabled = true; btn.textContent = 'Sending…';
+        api('/api/shots', { action: 'submit', match: document.getElementById('sub-match').value, image: subImage, map: map === 'TBD' ? '' : map,
+          score: us !== '' || them !== '' ? [us, them] : null, note: document.getElementById('sub-note').value })
+          .then(function () { toast('Sent. The helpers will check it.'); subKey = ''; renderSubmit(); shotsKey = ''; return loadShots(); })
+          .catch(function (e) { toast(e.message); btn.disabled = false; btn.textContent = 'Send screenshot'; });
+      };
+      renderSubmitList();
+    }
+    function renderSubmitList() {
+      var el = document.getElementById('sub-list'); if (!el || !myTeam()) return;
+      var mine = SHOTS.filter(function (x) { return x.team === myTeam(); });
+      el.innerHTML = mine.length ? '<div class="sub-list">' + mine.slice(0, 6).map(function (x) {
+        return '<div>' + esc(x.label) + (x.map ? ' · ' + esc(x.map) : '') + (x.score ? ' · ' + x.score[0] + '–' + x.score[1] : '') + ' · ' + ago(x.at) + ' · ' +
+          (x.status === 'new' ? '<span class="wait">Waiting for a helper</span>' : '<span class="ok">Checked ✓</span>') + '</div>';
+      }).join('') + '</div>' : '';
+    }
+    /* Phone screenshots are big; shrink to at most 1600px and a JPEG under ~900 KB before sending. */
+    function shrink(file) {
+      return new Promise(function (resolve, reject) {
+        var img = new Image(), url = URL.createObjectURL(file);
+        img.onload = function () {
+          URL.revokeObjectURL(url);
+          var scale = Math.min(1, 1600 / Math.max(img.width, img.height)), q = [0.8, 0.65, 0.5, 0.4], out = '';
+          for (var pass = 0; pass < 3 && (!out || out.length > 900000); pass++) {
+            var c = document.createElement('canvas'); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+            c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+            for (var i = 0; i < q.length; i++) { out = c.toDataURL('image/jpeg', q[i]); if (out.length <= 900000) break; }
+            scale *= 0.7;
+          }
+          out.length <= 900000 ? resolve(out) : reject(new Error('too big'));
+        };
+        img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('bad image')); };
+        img.src = url;
+      });
+    }
 
     function renderAll() {
       if (!B) { document.getElementById('bk').innerHTML = '<div class="empty-note">The bracket is not available yet.</div>'; return; }
-      renderHero(); renderTop(); renderQuick(); renderSeeding(); renderBracket();
+      renderHero(); renderTop(); renderQuick(); renderSubmit(); renderShots(); renderSeeding(); renderBracket();
     }
 
     function boot() {
@@ -702,6 +948,7 @@
         else if (q) toast('Login did not work (' + q + '). Try again.');
         if (q) history.replaceState(null, '', location.pathname);
         setInterval(function () { refresh(); }, 5000);
+        loadShots(); setInterval(loadShots, 8000);
         document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
       }).catch(function () {
         document.getElementById('bk').innerHTML = '<div class="empty-note">Could not load the bracket. Refresh the page to try again.</div>';

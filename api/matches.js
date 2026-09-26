@@ -1,5 +1,5 @@
 import { json, requireRole, readBody , spaced } from './_lib/http.js';
-import { getState, setState } from './_lib/store.js';
+import { getState, setState, cooldown } from './_lib/store.js';
 import { DEFAULT_BRACKET, bracketOf, findMatch } from './_lib/bracket.js';
 
 /* helper or admin
@@ -46,7 +46,16 @@ async function handler(req, res) {
    POST { action:'bracket-seeds', seeds:[tid, …] }   seed 1 first; a partial list fills slots one at a time
    POST { action:'bracket-result', id, games:[{ map, score:[a,b] }], status:'live'|'upcoming', winner? }
    POST { action:'bracket-clear-match', id }
-   POST { action:'bracket-reset' }                    admin: wipe seeds and every result */
+   POST { action:'bracket-reset' }                    admin: wipe seeds and every result
+   Helpers can save a score (result or clear) once a minute; admins have no limit. */
+const HELPER_COOLDOWN = 60;
+async function helperWait(me, res) {
+  if (me.role !== 'helper') return false;
+  const wait = await cooldown('t:cool:score:' + me.user.login, HELPER_COOLDOWN);
+  if (!wait) return false;
+  json(res, 429, { error: `You can save a score once a minute. Try again in ${wait}s`, retryAfter: wait });
+  return true;
+}
 async function bracket(req, res, me, b, state, teamIds, cleanMap) {
   const br = state.bracket = { ...DEFAULT_BRACKET, ...(state.bracket || {}) };
   br.results = br.results || {};
@@ -72,6 +81,7 @@ async function bracket(req, res, me, b, state, teamIds, cleanMap) {
   if (!m || m.bye) return json(res, 400, { error: 'Unknown match' });
 
   if (b.action === 'bracket-clear-match') {
+    if (await helperWait(me, res)) return;
     delete br.results[m.id];
     await setState(state);
     return json(res, 200, { ok: true });
@@ -85,9 +95,10 @@ async function bracket(req, res, me, b, state, teamIds, cleanMap) {
     }));
     const r = { teams: m.teams.slice(), games, status: b.status === 'live' ? 'live' : 'upcoming', updatedBy: me.user.login, at: Date.now() };
     if (b.winner) { if (!m.teams.includes(b.winner)) return json(res, 400, { error: 'Winner must be one of the two teams' }); r.winner = b.winner; }
+    if (await helperWait(me, res)) return;
     br.results[m.id] = r;
     await setState(state);
-    return json(res, 200, { ok: true, match: findMatch(bracketOf(state), m.id) });
+    return json(res, 200, { ok: true, match: findMatch(bracketOf(state), m.id), cooldown: me.role === 'helper' ? HELPER_COOLDOWN : 0 });
   }
   return json(res, 400, { error: 'Unknown bracket action' });
 }

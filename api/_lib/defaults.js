@@ -28,7 +28,7 @@ export const DEFAULT_STATE = {
   teams: [
     { id: 'frankie',   name: 'Team Frankie',   captain: 'Frankie',   info: '32 hrs · lvl 18 · Unranked',  twitch: 'frankiemas8' },
     { id: 'mroctober', name: 'Team MrOctober', captain: 'MrOctober', info: '86 hrs · lvl 59 · Silver',    twitch: 'samurau847' },
-    { id: 'steve',     name: 'Team Steve',     captain: 'Steve',     info: '',                           twitch: 'stavroooooooooooo' },
+    { id: 'steve',     name: 'Team Pocket',    captain: 'Pocket',    info: 'Plat',                       twitch: 'pocketrocket01188' },  /* id stays 'steve' so seed 1 and the roster keep working */
     { id: 'niko',      name: 'Team Niko',      captain: 'Niko',      info: '263 hrs · lvl 65 · Bronze',   twitch: 'nikolaosthegoat10' },
     { id: 'cuzan',     name: 'val gf',         captain: 'Cuzan',     info: '',                           twitch: 'cuz4n' },
     { id: 'alfie',     name: 'Team Alfie',     captain: 'Alfie',     info: '1120 hrs · Bronze',           twitch: 'alfie____8' }
@@ -55,7 +55,7 @@ export const DEFAULT_STATE = {
     { id: 'marv',       name: 'Marv',       tier: 2, info: '191 hrs · lvl 82 · Silver' },
     { id: 'zack',       name: 'Zack',       tier: 2, info: '465 hrs · lvl 112 · Silver' },
     { id: 'klixvy',     name: 'Klixvy',     tier: 2, info: '' },
-    { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat' },
+    { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat', twitch: 'pocketrocket01188' },  /* also captains Team Pocket */
     { id: 'colin',      name: 'Colin',      tier: 2, info: '' },
 
     { id: 'abstract',   name: 'Abstract',   tier: 3, info: '300 hrs · lvl 100 · Silver' },

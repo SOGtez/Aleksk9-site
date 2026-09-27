@@ -107,6 +107,14 @@
     @media (min-width: 820px) { .grid2 { grid-template-columns: 1fr 1fr; align-items: start; } }
     .card h3 { font-size: 17px; letter-spacing: -0.02em; margin-bottom: 6px; }
     .card p.d { font-size: 14px; color: var(--fg-muted); margin-bottom: 14px; }
+    /* Overlays tab */
+    .ov-preview { position: relative; width: 100%; aspect-ratio: 1200 / 520; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-strong);
+      background: repeating-conic-gradient(#1b1b1b 0% 25%, #232323 0% 50%) 0 0 / 24px 24px; }   /* checkerboard = transparent */
+    .ov-preview iframe { position: absolute; left: 0; top: 0; width: 1200px; height: 520px; border: 0; transform-origin: 0 0; background: transparent; }
+    .ov-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+    .ov-row .field { flex: 1 1 220px; min-width: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; }
+    .ov-steps { margin: 14px 0 0; padding-left: 20px; font-size: 14px; color: var(--fg-muted); display: grid; gap: 6px; }
+    .ov-steps b { color: var(--fg); }
     label.f { display: grid; gap: 6px; font-size: 13px; font-weight: 600; color: var(--fg-muted); margin-bottom: 12px; }
     label.f .field { font-weight: 500; color: var(--fg); }
     .toggle { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line-strong); cursor: pointer; margin-bottom: 12px; }
@@ -261,6 +269,7 @@
         <button data-tab="tournament">Tournament</button>
         <button data-tab="roles">Roles</button>
         <button data-tab="logins">Twitch logins</button>
+        <button data-tab="overlays">Overlays</button>
       </div></nav>
       <div class="space-bar" id="space-bar" hidden>
         <span class="tag">Test mode</span>
@@ -409,6 +418,38 @@
         </div>
       </section>
 
+      <section class="tab" id="tab-overlays" hidden>
+        <div class="container grid2">
+          <div class="card pad">
+            <h3>Spooktober</h3>
+            <p class="d">The Spooktober logo with the day of October under it. It switches to the next day at midnight by itself, so one browser source works all month. Outside October only the logo shows.</p>
+            <div class="ov-preview" id="ov-preview"><iframe id="ov-frame" title="Spooktober overlay preview" src="/spooktober" loading="lazy"></iframe></div>
+            <div class="ov-row">
+              <label class="small" for="ov-day">Preview</label>
+              <select class="field" id="ov-day" style="flex:0 1 160px;font-family:inherit"><option value="">Today (live)</option></select>
+              <span class="small" id="ov-today"></span>
+            </div>
+            <div class="ov-row">
+              <input class="field" id="ov-url" readonly aria-label="Browser source URL">
+              <button class="btn btn-sm btn-primary" id="ov-copy" type="button">Copy URL</button>
+            </div>
+            <ol class="ov-steps">
+              <li>In OBS, add a <b>Browser</b> source and paste the URL.</li>
+              <li>Set <b>Width 1200</b> and <b>Height 520</b>, then resize it on your scene however you like.</li>
+              <li>The day follows the <b>streaming PC's clock</b>. To use another time zone add <b>?tz=America/New_York</b> (or any time zone) to the URL.</li>
+            </ol>
+          </div>
+          <div class="card pad">
+            <h3>Tournament board</h3>
+            <p class="d">Read-only draft and match board for the stream.</p>
+            <div class="ov-row">
+              <input class="field" id="ov-board-url" readonly aria-label="Tournament board URL">
+              <button class="btn btn-sm btn-ghost" id="ov-board-copy" type="button">Copy URL</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="tab" id="tab-roles" hidden>
         <div class="container grid2">
           <div class="card pad">
@@ -484,6 +525,25 @@
       if (!confirm('Overwrite the test tournament with a copy of the live one?')) return;
       api('/api/admin/space', { action: 'copy' }).then(function () { toast('Copied the live tournament into test'); return Promise.all([loadT(), loadApps()]); }).catch(function (e) { toast(e.message); });
     };
+
+    /* Overlays: preview scaled to the card, copyable browser-source URLs. */
+    (function () {
+      var frame = document.getElementById('ov-frame'), box = document.getElementById('ov-preview'), sel = document.getElementById('ov-day');
+      for (var i = 1; i <= 31; i++) { var o = document.createElement('option'); o.value = i; o.textContent = 'Day ' + i; sel.appendChild(o); }
+      var now = new Date();
+      document.getElementById('ov-today').textContent = now.getMonth() === 9 ? 'Today on this computer: Day ' + now.getDate() : 'Not October yet on this computer, so only the logo shows.';
+      function fit() { frame.style.transform = 'scale(' + (box.clientWidth / 1200) + ')'; }
+      window.addEventListener('resize', fit); new ResizeObserver(fit).observe(box); fit();
+      sel.onchange = function () { frame.src = '/spooktober' + (sel.value ? '?day=' + sel.value : ''); };
+      function copyBox(inputId, btnId, path) {
+        var inp = document.getElementById(inputId); inp.value = location.origin + path;
+        document.getElementById(btnId).onclick = function () {
+          (navigator.clipboard ? navigator.clipboard.writeText(inp.value) : Promise.reject()).then(function () { toast('URL copied'); }, function () { inp.select(); document.execCommand('copy'); toast('URL copied'); });
+        };
+      }
+      copyBox('ov-url', 'ov-copy', '/spooktober');
+      copyBox('ov-board-url', 'ov-board-copy', '/overlay');
+    })();
 
     /* Tabs */
     document.querySelectorAll('.tabs button').forEach(function (b) {

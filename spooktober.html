@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Spooktober overlay — AleksK9</title>
+  <!-- OBS browser source. Shows the Spooktober logo with "Day N" under it, and switches to the next day
+       at midnight by itself, so one browser source works for the whole month.
+       Options (add to the URL):
+         ?day=12                    always show day 12 (testing / previews)
+         ?tz=America/New_York       use this time zone instead of the streaming PC's clock
+         ?align=left|right          line the logo up to one side instead of the middle
+       Outside October only the logo shows. Recommended browser source size: 1200 × 520. -->
+  <link rel="preload" as="image" href="/assets/overlays/spooktober-logo.webp">
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+    .wrap {
+      /* Fit the whole graphic inside the browser source, whatever size it is. */
+      --w: min(100vw, calc(100vh * 2.3));
+      width: var(--w); height: 100%; margin: 0 auto;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    body.left .wrap { margin-left: 0; } body.right .wrap { margin-right: 0; }
+    .logo { width: 100%; height: auto; display: block; }
+    .day { height: calc(var(--w) * 0.175); margin-top: calc(var(--w) * -0.012); position: relative; }
+    .day img { height: 100%; width: auto; display: block; }
+    .day img.in { animation: dayin .9s cubic-bezier(.2, 1.4, .4, 1) both; }
+    @keyframes dayin { from { opacity: 0; transform: scale(.6) rotate(-4deg); filter: brightness(2.2); } }
+    .day[hidden] { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="logo" src="/assets/overlays/spooktober-logo.webp" alt="Spooktober">
+    <div class="day" id="day" hidden><img id="day-img" alt=""></div>
+  </div>
+  <script>
+    var q = new URLSearchParams(location.search);
+    var fixedDay = parseInt(q.get('day'), 10), tz = q.get('tz') || '';
+    if (q.get('align') === 'left' || q.get('align') === 'right') document.body.classList.add(q.get('align'));
+
+    /* Today's month and day on the streaming PC (or in ?tz=). */
+    function today() {
+      var d = new Date();
+      if (tz) {
+        try {
+          var parts = new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'numeric', day: 'numeric' }).formatToParts(d), o = {};
+          parts.forEach(function (p) { o[p.type] = Number(p.value); });
+          return { month: o.month, day: o.day };
+        } catch (e) { /* unknown time zone: fall back to the PC clock */ }
+      }
+      return { month: d.getMonth() + 1, day: d.getDate() };
+    }
+    function src(n) { return '/assets/overlays/spooktober-day-' + n + '.webp'; }
+
+    var shown = null;
+    function update() {
+      var t = today();
+      var n = fixedDay >= 1 && fixedDay <= 31 ? fixedDay : (t.month === 10 ? t.day : 0);
+      if (n === shown) return;
+      shown = n;
+      var box = document.getElementById('day'), img = document.getElementById('day-img');
+      if (!n) { box.hidden = true; return; }
+      var next = new Image();
+      next.onload = function () {
+        img.classList.remove('in'); void img.offsetWidth;   /* restart the animation */
+        img.src = next.src; img.alt = 'Day ' + n; img.classList.add('in'); box.hidden = false;
+        if (n < 31) new Image().src = src(n + 1);            /* have tomorrow ready */
+      };
+      next.src = src(n);
+    }
+    update();
+    setInterval(update, 15000);
+  </script>
+</body>
+</html>

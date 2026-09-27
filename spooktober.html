@@ -82,11 +82,13 @@
     .swarm[hidden] { display: none; }
     .bat { position: absolute; left: 0; top: var(--y); width: var(--s); animation: fly var(--dur) linear var(--d) both; }
     .bat .bob { animation: bob var(--bob) ease-in-out infinite alternate; }
-    .bat svg { display: block; width: 100%; height: auto; fill: #120906; filter: drop-shadow(0 0 2px rgba(255,140,40,.8)) drop-shadow(0 0 6px rgba(255,100,0,.35)); transform-origin: 50% 40%;
-      animation: flap var(--flap) ease-in-out infinite alternate; }
-    @keyframes fly { from { transform: translateX(-14vw) rotate(var(--r)); } to { transform: translateX(110vw) rotate(calc(var(--r) * -1)); } }
+    /* Each bat flaps through the three drawn frames (1 → 2 → 3 → 2) from one sprite sheet. */
+    .bat .sprite { display: block; width: 100%; aspect-ratio: 398 / 360; background: url(/assets/overlays/bat-sprite.webp) 0 0 / 300% 100% no-repeat;
+      filter: drop-shadow(0 0 1.5px rgba(255,140,40,.7));
+      animation: flap var(--flap) steps(1, end) infinite; }
+    @keyframes fly { from { transform: translateX(-18vw) rotate(var(--r)); } to { transform: translateX(112vw) rotate(calc(var(--r) * -1)); } }
     @keyframes bob { from { transform: translateY(calc(var(--s) * -.35)); } to { transform: translateY(calc(var(--s) * .35)); } }
-    @keyframes flap { from { transform: scaleY(1); } to { transform: scaleY(.3) scaleX(.9); } }
+    @keyframes flap { 0% { background-position: 0% 0; } 25% { background-position: 50% 0; } 50% { background-position: 100% 0; } 75% { background-position: 50% 0; } }
   </style>
 </head>
 <body>
@@ -135,15 +137,15 @@
     setInterval(update, 15000);
 
     /* ---------- Bats: one swarm, replayed every loop ---------- */
-    var BAT = '<svg viewBox="0 0 100 46"><path d="M50 16c-2-5-5-6-6-2-5-7-17-12-32-8 8 4 10 10 6 16 8-4 14 0 16 6 4-4 10-4 12 2l4-6 4 6c2-6 8-6 12-2 2-6 8-10 16-6-4-6-2-12 6-16-15-4-27 1-32 8-1-4-4-3-6 2z"/></svg>';
+    new Image().src = '/assets/overlays/bat-sprite.webp';
     (function () {
       var seed = 13; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
       var html = '';
-      for (var i = 0; i < 44; i++) {
-        var size = 3.2 + rnd() * 5.6;   /* vw */
-        html += '<div class="bat" style="--y:' + (8 + rnd() * 72).toFixed(1) + '%;--s:' + size.toFixed(2) + 'vw;--d:' + (rnd() * .5).toFixed(2) + 's;--dur:' + (2.3 + rnd() * .5).toFixed(2) +
-          's;--r:' + ((rnd() - .5) * 16).toFixed(1) + 'deg"><div class="bob" style="--bob:' + (.35 + rnd() * .35).toFixed(2) + 's">' +
-          BAT.replace('<svg', '<svg style="--flap:' + (.09 + rnd() * .07).toFixed(3) + 's"') + '</div></div>';
+      for (var i = 0; i < 30; i++) {
+        var size = 7 + rnd() * 7;   /* vw */
+        html += '<div class="bat" style="--y:' + (2 + rnd() * 70).toFixed(1) + '%;--s:' + size.toFixed(2) + 'vw;--d:' + (rnd() * .5).toFixed(2) + 's;--dur:' + (2.3 + rnd() * .5).toFixed(2) +
+          's;--r:' + ((rnd() - .5) * 12).toFixed(1) + 'deg"><div class="bob" style="--bob:' + (.4 + rnd() * .35).toFixed(2) + 's">' +
+          '<span class="sprite" style="--flap:' + (.34 + rnd() * .16).toFixed(2) + 's;animation-delay:-' + (rnd() * .5).toFixed(2) + 's"></span></div></div>';
       }
       document.getElementById('swarm').innerHTML = html;
     })();

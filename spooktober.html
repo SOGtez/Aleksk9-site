@@ -11,15 +11,52 @@
          ?day=12                    always show day 12 (testing / previews)
          ?tz=America/New_York       use this time zone instead of the streaming PC's clock
          ?align=left|right          line the logo up to one side instead of the middle
+         ?fog=0  ?lights=0          turn the drifting fog or the flickering lights off
        Outside October only the logo shows. Recommended browser source size: 1200 × 520. -->
   <link rel="preload" as="image" href="/assets/overlays/spooktober-logo.webp">
   <style>
     html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
     .wrap {
-      /* Fit the whole graphic inside the browser source, whatever size it is. */
-      --w: min(100vw, calc(100vh * 2.3));
-      width: var(--w); height: 100%; margin: 0 auto;
+      /* Fit the whole graphic inside the browser source, leaving a margin for the fog and lights. */
+      --w: min(86vw, calc(100vh * 1.98));
+      width: var(--w); height: 100%; margin: 0 auto; position: relative; z-index: 2;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
+    }
+    .wrap > img, .wrap > .day { position: relative; z-index: 2; }
+
+    /* ---------- Lights: glows that stay put and flicker like candles ---------- */
+    .lights { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; animation: fadein 4s ease-out .3s forwards; }
+    .light { position: absolute; border-radius: 50%; filter: blur(calc(var(--s) * 0.08)); width: var(--s); height: var(--s); transform: translate(-50%, -50%); }
+    .l1 { --s: 38vw; left: 17%; top: 44%; background: radial-gradient(circle, rgba(255,110,0,.55) 0%, rgba(255,80,0,.22) 38%, transparent 68%); animation: flick1 5.3s infinite steps(1, end), sway 11s ease-in-out infinite alternate; }
+    .l2 { --s: 40vw; left: 83%; top: 46%; background: radial-gradient(circle, rgba(140,40,255,.5) 0%, rgba(110,30,220,.2) 40%, transparent 68%); animation: flick2 6.7s infinite steps(1, end), sway 13s ease-in-out infinite alternate-reverse; }
+    .l3 { --s: 36vw; left: 50%; top: 76%; background: radial-gradient(circle, rgba(60,255,140,.28) 0%, rgba(40,200,110,.1) 42%, transparent 70%); animation: flick3 7.9s infinite steps(1, end); }
+    .l4 { --s: 34vw; left: 50%; top: 30%; background: radial-gradient(circle, rgba(255,160,40,.4) 0%, rgba(255,120,0,.14) 45%, transparent 70%); animation: flick2 4.1s infinite steps(1, end); }
+    @keyframes flick1 { 0% { opacity: 1; } 7% { opacity: .82; } 9% { opacity: .97; } 31% { opacity: .9; } 33% { opacity: .7; } 35% { opacity: .95; } 62% { opacity: 1; } 64% { opacity: .78; } 67% { opacity: .92; } 88% { opacity: .86; } }
+    @keyframes flick2 { 0% { opacity: .92; } 12% { opacity: 1; } 27% { opacity: .75; } 29% { opacity: .95; } 51% { opacity: .85; } 74% { opacity: 1; } 76% { opacity: .68; } 79% { opacity: .9; } }
+    @keyframes flick3 { 0% { opacity: .7; } 20% { opacity: 1; } 22% { opacity: .6; } 25% { opacity: .9; } 58% { opacity: .75; } 83% { opacity: 1; } }
+    @keyframes sway { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -52%) scale(1.06); } }
+
+    /* ---------- Fog: soft puffs around the sides and bottom that drift slowly ---------- */
+    .fog { position: fixed; inset: 0; pointer-events: none; opacity: 0; animation: fadein 10s ease-in-out 1s forwards; }
+    .fog.back { z-index: 1; }
+    .fog.front { z-index: 3; animation-delay: 4s; }
+    .puff { position: absolute; width: var(--s); height: calc(var(--s) * .42); left: var(--x); top: var(--y); transform: translate(-50%, -50%);
+      border-radius: 50%; filter: blur(calc(var(--s) * .05));
+      background: radial-gradient(closest-side, rgba(226,220,240,var(--a)) 0%, rgba(210,204,228,calc(var(--a) * .55)) 45%, transparent 100%);
+      animation: puff var(--t) ease-in-out var(--d) infinite alternate; }
+    @keyframes puff {
+      0%   { transform: translate(-50%, -50%) translateX(0) scale(1); opacity: .75; }
+      50%  { opacity: 1; }
+      100% { transform: translate(-50%, -50%) translateX(var(--dx)) scale(1.12); opacity: .8; }
+    }
+    @keyframes fadein { to { opacity: 1; } }
+    body.no-fog .fog, body.no-lights .lights { display: none; }
+    /* Everything fades out before the edge of the browser source, so there is never a visible box on stream. */
+    .lights, .fog {
+      -webkit-mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+      -webkit-mask-composite: source-in;
+      mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent);
+      mask-composite: intersect;
     }
     body.left .wrap { margin-left: 0; } body.right .wrap { margin-right: 0; }
     .logo { width: 100%; height: auto; display: block; }
@@ -31,14 +68,37 @@
   </style>
 </head>
 <body>
+  <div class="lights" aria-hidden="true"><span class="light l1"></span><span class="light l2"></span><span class="light l3"></span><span class="light l4"></span></div>
+  <div class="fog back" id="fog-back" aria-hidden="true"></div>
   <div class="wrap">
     <img class="logo" src="/assets/overlays/spooktober-logo.webp" alt="Spooktober">
     <div class="day" id="day" hidden><img id="day-img" alt=""></div>
   </div>
+  <div class="fog front" id="fog-front" aria-hidden="true"></div>
   <script>
     var q = new URLSearchParams(location.search);
     var fixedDay = parseInt(q.get('day'), 10), tz = q.get('tz') || '';
     if (q.get('align') === 'left' || q.get('align') === 'right') document.body.classList.add(q.get('align'));
+    if (q.get('fog') === '0') document.body.classList.add('no-fog');
+    if (q.get('lights') === '0') document.body.classList.add('no-lights');
+
+    /* Fog puffs: behind the logo around the edges and along the bottom, plus a few thin wisps in front at the very bottom.
+       Fixed pseudo-random layout so it looks the same every time the source loads. */
+    (function () {
+      var seed = 7; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+      function add(el, n, place, alpha, size) {
+        for (var i = 0; i < n; i++) {
+          var p = place(i, n), sp = document.createElement('span'); sp.className = 'puff';
+          sp.style.cssText = '--x:' + p[0] + '%;--y:' + p[1] + '%;--s:' + (size[0] + rnd() * (size[1] - size[0])) + 'vw;--a:' + (alpha[0] + rnd() * (alpha[1] - alpha[0])).toFixed(2) +
+            ';--dx:' + ((rnd() < .5 ? -1 : 1) * (4 + rnd() * 8)).toFixed(1) + 'vw;--t:' + (18 + rnd() * 22).toFixed(1) + 's;--d:-' + (rnd() * 20).toFixed(1) + 's';
+          el.appendChild(sp);
+        }
+      }
+      var back = document.getElementById('fog-back'), front = document.getElementById('fog-front');
+      add(back, 11, function (i, n) { return [4 + i / (n - 1) * 92 + (rnd() - .5) * 8, 80 + rnd() * 12]; }, [.3, .46], [22, 36]);            /* along the bottom */
+      add(back, 4, function (i) { return [i < 2 ? 5 + rnd() * 8 : 87 + rnd() * 8, 28 + rnd() * 50]; }, [.24, .36], [20, 30]);              /* left and right edges */
+      add(front, 6, function (i, n) { return [6 + i / (n - 1) * 88 + (rnd() - .5) * 10, 88 + rnd() * 6]; }, [.16, .26], [20, 32]);          /* thin wisps in front */
+    })();
 
     /* Today's month and day on the streaming PC (or in ?tz=). */
     function today() {

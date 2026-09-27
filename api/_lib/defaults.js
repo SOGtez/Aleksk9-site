@@ -48,12 +48,12 @@ export const DEFAULT_STATE = {
     { id: 'fxbm',       name: 'Fxbm',       tier: 1, info: '1350 hrs · lvl 193 · Emerald' },
     { id: 'jake',       name: 'Jake',       tier: 1, info: '1366 hrs · Plat (PC), Diamond roller · Flex / Anchor', twitch: 'xjakex0x' },
     { id: 'noni',       name: 'Noni',       tier: 1, info: '600 hrs · Diamond (PC), Diamond roller · Flex', twitch: 'nonyuhh' },
-    { id: 'lovez',      name: 'Lovez',      tier: 1, info: '1300+ hrs · lvl 300 · Emerald' },
+    { id: 'wedgey',     name: 'Wedgey',     tier: 1, info: '' },
     { id: 'brandon',    name: 'Brandon',    tier: 1, info: '' },
 
     { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
     { id: 'marv',       name: 'Marv',       tier: 2, info: '191 hrs · lvl 82 · Silver' },
-    { id: 'zack',       name: 'Zack',       tier: 2, info: '465 hrs · lvl 112 · Silver' },
+    { id: 'tdk',        name: 'TDK',        tier: 2, info: '' },
     { id: 'klixvy',     name: 'Klixvy',     tier: 2, info: '' },
     { id: 'pocket',     name: 'Pocket',     tier: 2, info: 'Plat', twitch: 'pocketrocket01188' },  /* also captains Team Pocket */
     { id: 'colin',      name: 'Colin',      tier: 2, info: '' },
@@ -61,18 +61,17 @@ export const DEFAULT_STATE = {
     { id: 'abstract',   name: 'Abstract',   tier: 3, info: '300 hrs · lvl 100 · Silver' },
     { id: 'cash',       name: 'Cash',       tier: 3, info: '860 hrs · lvl 203 · Gold' },
     { id: 'jalen',      name: 'Jalen',      tier: 3, info: '1000 hrs · lvl 112 · Silver' },
-    { id: 'carlos',     name: 'Carlos',     tier: 3, info: '251 hrs · lvl 124 · Bronze', twitch: 'carcarshaur' },
     { id: 'clovs',      name: 'Clovs',      tier: 3, info: '' },
     { id: 'leop',       name: 'Leo',        tier: 3, info: '102 hrs · lvl 55 · Unranked', twitch: 'bailout7xleo' }
   ],
-  /* Final rosters set by the hosts after the draft (Discord announcement, Sep 26). When this is not empty
+  /* Final rosters set by the hosts after the draft (latest Discord announcement, Sep 26). When this is not empty
      it replaces the draft picks saved in the database. Player ids, in tier order Champs → Rookies. */
   rosters: {
     frankie:   ['duke', 'noni', 'colin', 'clovs'],
     mroctober: ['garfield', 'nv30', 'aleksk9', 'jalen'],
-    steve:     ['l33n', 'jake', 'marv', 'leop'],
-    niko:      ['mycern', 'fxbm', 'pocket', 'carlos'],
-    cuzan:     ['zynjto', 'lovez', 'zack', 'abstract'],
+    steve:     ['l33n', 'jake', 'marv', 'abstract'],     /* Team Pocket */
+    niko:      ['mycern', 'fxbm', 'pocket', 'leop'],
+    cuzan:     ['zynjto', 'wedgey', 'tdk', 'abstract'],  /* val gf. Abstract and Pocket play on two teams (short on players) */
     alfie:     ['vexjng', 'brandon', 'klixvy', 'cash']
   },
   draft: { open: false, pickSeconds: 90, turnStartedAt: 0 },   /* admin opens the draft; clock per pick */

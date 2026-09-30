@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark" data-brand="red" data-accent="orange" data-neutral="gray" data-solid="color" data-solid-style="flat" data-border="playful" data-surface="translucent" data-transition="all" data-scaling="100">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -230,20 +230,26 @@
     @keyframes ai-spin { to { transform: rotate(360deg); } }
     @media (max-width: 640px) { .ai-head { flex-direction: column; } .ai-log { padding: 14px; max-height: 60vh; } .ai-msg { max-width: 92%; } .ai-foot { padding: 12px 14px 16px; } .ai-confirm ol { columns: 1; } }
   </style>
+  <!-- Shared Once UI theme (matches the Next.js pages) -->
+  <link rel="stylesheet" href="/theme/once-tokens.css">
+  <link rel="stylesheet" href="/theme/site.css">
 </head>
 <body>
-  <header class="nav">
-    <div class="container">
-      <a class="brand" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-nav.png" alt="AleksK9" width="161" height="96"></a>
-      <nav aria-label="Primary">
-        <ul class="nav-links">
-          <li><a href="/">Home</a></li>
-          <li><a href="/tournament">Tournament</a></li>
-          <li><a href="/apply">Apply</a></li>
-          <li><a href="/admin" aria-current="page">Admin</a></li>
-        </ul>
-      </nav>
-    </div>
+  <div class="ou-bg" aria-hidden="true"></div>
+  <div class="ou-fade" aria-hidden="true"></div>
+  <!-- Shared header (same as the Next.js pages). The Tournament link keeps id="nav-tournament": the test-mode scripts change its href. -->
+  <header class="ou-header" data-border="rounded">
+    <div class="side left"><a class="logo" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-nav.png" alt="AleksK9" width="67" height="40"></a></div>
+    <nav class="ou-pill" aria-label="Primary">
+      <a class="ou-tb" href="/" aria-label="Home"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"></path><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"></path></svg></a>
+      <span class="ou-sep" aria-hidden="true"></span>
+      <a class="ou-tb" href="/about"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M224,128a95.76,95.76,0,0,1-31.8,71.37A72,72,0,0,0,128,160a40,40,0,1,0-40-40,40,40,0,0,0,40,40,72,72,0,0,0-64.2,39.37h0A96,96,0,1,1,224,128Z" opacity="0.2"></path><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24ZM74.08,197.5a64,64,0,0,1,107.84,0,87.83,87.83,0,0,1-107.84,0ZM96,120a32,32,0,1,1,32,32A32,32,0,0,1,96,120Zm97.76,66.41a79.66,79.66,0,0,0-36.06-28.75,48,48,0,1,0-59.4,0,79.66,79.66,0,0,0-36.06,28.75,88,88,0,1,1,131.52,0Z"></path></svg><span class="lbl">About</span></a>
+      <a class="ou-tb" href="/blog"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M208,32V192H72a24,24,0,0,0-24,24V56A24,24,0,0,1,72,32h40v96l32-24,32,24V32Z" opacity="0.2"></path><path d="M208,24H72A32,32,0,0,0,40,56V224a8,8,0,0,0,8,8H192a8,8,0,0,0,0-16H56a16,16,0,0,1,16-16H208a8,8,0,0,0,8-8V32A8,8,0,0,0,208,24ZM120,40h48v72L148.79,97.6a8,8,0,0,0-9.6,0L120,112Zm80,144H72a31.82,31.82,0,0,0-16,4.29V56A16,16,0,0,1,72,40h32v88a8,8,0,0,0,12.8,6.4L144,114l27.21,20.4A8,8,0,0,0,176,136a8.1,8.1,0,0,0,3.58-.84A8,8,0,0,0,184,128V40h16Z"></path></svg><span class="lbl">Blog</span></a>
+      <span class="ou-sep" aria-hidden="true"></span>
+      <a class="ou-tb" href="/tournament" id="nav-tournament"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M200,48v63.1c0,39.7-31.75,72.6-71.45,72.9A72,72,0,0,1,56,112V48Z" opacity="0.2"></path><path d="M232,64H208V48a8,8,0,0,0-8-8H56a8,8,0,0,0-8,8V64H24A16,16,0,0,0,8,80V96a40,40,0,0,0,40,40h3.65A80.13,80.13,0,0,0,120,191.61V216H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16H136V191.58c31.94-3.23,58.44-25.64,68.08-55.58H208a40,40,0,0,0,40-40V80A16,16,0,0,0,232,64ZM48,120A24,24,0,0,1,24,96V80H48v32q0,4,.39,8Zm144-8.9c0,35.52-29,64.64-64,64.9a64,64,0,0,1-64-64V56H192ZM232,96a24,24,0,0,1-24,24h-.5a81.81,81.81,0,0,0,.5-8.9V80h24Z"></path></svg><span class="lbl">Tournament</span></a>
+      <a class="ou-tb" href="/bracket"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M64,112v32a8,8,0,0,1-8,8H24a8,8,0,0,1-8-8V112a8,8,0,0,1,8-8H56A8,8,0,0,1,64,112ZM208,40H160a8,8,0,0,0-8,8V96a8,8,0,0,0,8,8h48a8,8,0,0,0,8-8V48A8,8,0,0,0,208,40Zm0,112H160a8,8,0,0,0-8,8v48a8,8,0,0,0,8,8h48a8,8,0,0,0,8-8V160A8,8,0,0,0,208,152Z" opacity="0.2"></path><path d="M160,112h48a16,16,0,0,0,16-16V48a16,16,0,0,0-16-16H160a16,16,0,0,0-16,16V64H128a24,24,0,0,0-24,24v32H72v-8A16,16,0,0,0,56,96H24A16,16,0,0,0,8,112v32a16,16,0,0,0,16,16H56a16,16,0,0,0,16-16v-8h32v32a24,24,0,0,0,24,24h16v16a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V160a16,16,0,0,0-16-16H160a16,16,0,0,0-16,16v16H128a8,8,0,0,1-8-8V88a8,8,0,0,1,8-8h16V96A16,16,0,0,0,160,112ZM56,144H24V112H56v32Zm104,16h48v48H160Zm0-112h48V96H160Z"></path></svg><span class="lbl">Bracket</span></a>
+    </nav>
+    <div class="side right" id="ou-account"></div>
   </header>
 
   <main id="main">
@@ -480,7 +486,12 @@
       </section>
     </div>
   </main>
-  <footer class="footer"><div class="container">© <span id="y"></span> AleksK9</div></footer>
+  <footer class="ou-footer">
+    <div class="inner">
+      <span>© <span id="y" data-year>2026</span> /<b>AleksK9</b>/ Design adapted from <a href="https://once-ui.com/products/magic-portfolio" target="_blank" rel="noopener">Magic Portfolio by Once UI</a> (<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>)</span>
+      <a class="icon" href="https://twitch.tv/aleksk9_" target="_blank" rel="noopener" aria-label="Twitch"><svg fill="currentColor" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M391.17,103.47H352.54v109.7h38.63ZM285,103H246.37V212.75H285ZM120.83,0,24.31,91.42V420.58H140.14V512l96.53-91.42h77.25L487.69,256V0ZM449.07,237.75l-77.22,73.12H294.61l-67.6,64v-64H140.14V36.58H449.07Z"></path></svg></a>
+    </div>
+  </footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -906,5 +917,6 @@
       return Promise.all([loadT(), loadApps(), loadAI()]);
     }).catch(function (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = 'Could not reach the server: ' + e.message; });
   </script>
+  <script src="/theme/site.js" defer></script>
 </body>
 </html>

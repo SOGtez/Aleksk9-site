@@ -1,0 +1,238 @@
+/* Stream + chat section on the homepage (styles moved from the old index.html, scoped to .ak9-stream
+   so they never clash with Once UI). Markup: src/components/StreamSection.tsx, script: public/embed/stream.js */
+.ak9-stream {
+  --bg: #0a0a0a; --bg-elev: #111111; --fg: #ffffff; --fg-muted: rgba(255,255,255,.64); --fg-dim: rgba(255,255,255,.40);
+  --line: rgba(255,255,255,.10); --accent: #E10600; --accent-hover: #ff1a12; --live: #FF2A2A; --radius: 14px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  width: 100%; color: var(--fg); font-family: var(--font-body), system-ui, sans-serif; font-size: 16px; line-height: 1.5;
+}
+.ak9-stream *, .ak9-stream *::before, .ak9-stream *::after { box-sizing: border-box; }
+.ak9-stream a { color: inherit; text-decoration: none; }
+.ak9-stream button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.ak9-stream .btn-sm { min-height: 36px; padding: 0 16px; font-size: 13px; gap: 6px; }
+
+    .ak9-stream .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 0 26px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+      border: 1px solid transparent;
+      transition: transform .25s var(--ease), background-color .25s var(--ease),
+                  border-color .25s var(--ease), box-shadow .25s var(--ease), color .25s var(--ease);
+      will-change: transform;
+    }
+    .ak9-stream .btn:hover { transform: translateY(-2px); }
+    .ak9-stream .btn:active { transform: translateY(0); }
+    .ak9-stream .btn svg { width: 18px; height: 18px; }
+
+    .ak9-stream .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 8px 28px -10px rgba(225, 6, 0, 0.6);
+    }
+    .ak9-stream .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 14px 34px -10px rgba(225, 6, 0, 0.75);
+    }
+
+    .ak9-stream .btn-ghost {
+      background: transparent;
+      color: var(--fg);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .ak9-stream .btn-ghost:hover {
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+
+    .ak9-stream .stream { padding: 0; }
+    .ak9-stream .stream-main { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .ak9-stream .stream-info { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+    .ak9-stream .stream-info .live-card { flex: 1 1 320px; min-width: 0; }
+    .ak9-stream .stream-info .btn { flex: 0 0 auto; }
+    .ak9-stream .stream-grid { display: grid; gap: 14px; }
+    @media (min-width: 900px) { .ak9-stream .stream-grid { grid-template-columns: minmax(0, 1fr) 380px; align-items: stretch; } }
+
+    .ak9-stream .player { position: relative; border-radius: 16px; overflow: hidden; background: #000; border: 1px solid var(--line); aspect-ratio: 16 / 9; box-shadow: 0 30px 70px -40px rgba(0,0,0,1); min-width: 0; }
+    /* Side by side: the player fills its column and takes the chat's height (Twitch letterboxes inside). */
+    @media (min-width: 900px) { .ak9-stream .chat { min-height: 0; } .ak9-stream .chat-view { min-height: 260px; } }
+    .ak9-stream .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .ak9-stream .player .offline-note { position: absolute; left: 12px; bottom: 12px; padding: 8px 12px; border-radius: 999px; background: rgba(10,10,10,.8); border: 1px solid var(--line); font-size: 12px; color: var(--fg-muted); }
+    .ak9-stream .chat { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: var(--bg-elev); }
+    @media (max-width: 899px) { .ak9-stream .chat { min-height: 440px; } }
+
+    /* Site-rendered chat (read live from Twitch) */
+    .ak9-stream .chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 700; }
+    .ak9-stream .chat-head .state { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--fg-muted); }
+    .ak9-stream .chat-head .state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--fg-dim); }
+    .ak9-stream .chat-head .state.on::before { background: #3fd26f; box-shadow: 0 0 8px #3fd26f; }
+    .ak9-stream .chat-view { flex: 1; position: relative; overflow: hidden; min-height: 320px; }
+    .ak9-stream .chat-log { position: absolute; inset: 0; overflow-y: auto; padding: 8px 12px; font-size: 14px; line-height: 1.45; overscroll-behavior: contain; scrollbar-width: thin; }
+    .ak9-stream .msg { padding: 4px 6px; border-radius: 8px; word-wrap: break-word; overflow-wrap: anywhere; animation: msgin .18s var(--ease); }
+    .ak9-stream .msg:hover { background: rgba(255,255,255,.03); }
+    .ak9-stream .msg.me { background: rgba(225,6,0,.10); }
+    .ak9-stream .msg img { display: inline-block; max-width: none; }
+    .ak9-stream .msg .badge { width: 18px; height: 18px; vertical-align: -4px; margin-right: 3px; border-radius: 3px; }
+    .ak9-stream .msg .name { font-weight: 700; }
+    .ak9-stream .msg .emote { height: 28px; vertical-align: middle; margin: -6px 1px; }
+    .ak9-stream .msg.action .text { font-style: italic; }
+    .ak9-stream .msg.sys { color: var(--fg-muted); font-size: 13px; background: rgba(255,255,255,.03); border-left: 2px solid var(--accent); }
+    .ak9-stream .msg.deleted { opacity: .35; }
+    .ak9-stream .chat-jump { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 7px 14px; border-radius: 999px; background: #fff; color: #000; font-size: 12px; font-weight: 700; box-shadow: 0 10px 30px -10px rgba(0,0,0,1); }
+    @keyframes msgin { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .ak9-stream .composer { border-top: 1px solid var(--line); padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; background: var(--bg-elev); }
+    .ak9-stream .composer input { flex: 1; min-width: 0; padding: 10px 12px; border-radius: 10px; background: #171717; color: var(--fg); border: 1px solid rgba(255,255,255,.18); font: inherit; font-size: 14px; }
+    .ak9-stream .composer input:focus { outline: none; border-color: var(--accent); }
+    .ak9-stream .composer .hint { flex: 1 1 140px; font-size: 13px; color: var(--fg-muted); }
+    .ak9-stream .composer .who { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--fg-muted); white-space: nowrap; }
+    .ak9-stream .composer .who img { width: 24px; height: 24px; border-radius: 50%; }
+    .ak9-stream .composer .count { font-size: 11px; color: var(--fg-dim); white-space: nowrap; }
+
+    /* Popup nudging people to the Twitch app */
+    .ak9-stream .modal[hidden] { display: none; }
+    .ak9-stream .modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.7); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .ak9-stream .modal-card { width: 100%; max-width: 420px; padding: 28px 24px; border-radius: 20px; background: var(--bg-elev); border: 1px solid rgba(225,6,0,.4); text-align: center; box-shadow: 0 40px 80px -30px rgba(0,0,0,1); animation: pop .3s var(--ease); }
+    .ak9-stream .modal-card img { width: 160px; height: auto; margin: 0 auto 8px; display: block; }
+    .ak9-stream .modal-card h2 { font-size: 24px; margin-bottom: 8px; }
+    .ak9-stream .modal-card p { color: var(--fg-muted); font-size: 15px; margin-bottom: 18px; }
+    .ak9-stream .modal-card .actions { display: grid; gap: 8px; }
+    .ak9-stream .modal-card .later { background: none; border: 0; cursor: pointer; font: inherit; font-size: 13px; color: var(--fg-muted); text-decoration: underline; text-underline-offset: 3px; margin-top: 6px; padding: 8px; }
+    .ak9-stream .modal-card .later:hover { color: var(--fg); }
+    @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+    /* Avatar placeholder — swap the <img> src or drop an <img> inside .avatar */
+    .ak9-stream .avatar {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(160deg, #1a1a1a, #0d0d0d);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow:
+        0 0 0 6px rgba(225, 6, 0, 0.10),
+        0 0 60px -10px rgba(225, 6, 0, 0.55);
+      overflow: hidden;
+      position: relative;
+    }
+    .ak9-stream .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .ak9-stream .avatar-initial {
+      font-weight: 900;
+      font-size: 64px;
+      letter-spacing: -0.06em;
+      color: var(--fg);
+      user-select: none;
+    }
+    .ak9-stream .avatar-initial span { color: var(--accent); }
+
+    .ak9-stream .hero h1 {
+      font-size: clamp(56px, 13vw, 128px);
+      letter-spacing: -0.05em;
+      line-height: 0.95;
+      text-shadow: 0 0 40px rgba(225, 6, 0, 0.25);
+    }
+    .ak9-stream .hero h1 span { color: var(--accent); }
+    .ak9-stream .hero .sub {
+      font-size: clamp(17px, 2.4vw, 22px);
+      font-weight: 500;
+      color: var(--fg-muted);
+      letter-spacing: -0.01em;
+    }
+    .ak9-stream .hero .sub b { color: var(--fg); font-weight: 600; }
+    .ak9-stream .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    @media (max-width: 460px) {
+      .ak9-stream .hero-actions { flex-direction: column; width: 100%; }
+      .ak9-stream .hero-actions .btn { width: 100%; }
+    }
+
+
+    .ak9-stream .live-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 20px 14px 16px;
+      border-radius: var(--radius);
+      background: var(--bg-elev);
+      border: 1px solid var(--line);
+      box-shadow: 0 20px 50px -30px rgba(0,0,0,0.9);
+      transition: border-color .25s var(--ease), transform .25s var(--ease);
+      max-width: 100%;
+    }
+    .ak9-stream .live-card:hover { border-color: rgba(255, 42, 42, 0.45); transform: translateY(-2px); }
+
+    .ak9-stream .live-dot {
+      position: relative;
+      width: 12px; height: 12px;
+      flex: 0 0 12px;
+      border-radius: 50%;
+      background: var(--live);
+      box-shadow: 0 0 14px var(--live);
+    }
+    .ak9-stream .live-dot::before,
+    .ak9-stream .live-dot::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--live);
+      opacity: 0.55;
+      animation: pulse 1.8s var(--ease) infinite;
+    }
+    .ak9-stream .live-dot::after { animation-delay: .6s; }
+    @keyframes pulse {
+      .ak9-stream 0% { transform: scale(1);   opacity: .55; }
+      .ak9-stream 100% { transform: scale(3.2); opacity: 0; }
+    }
+
+    .ak9-stream .live-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .ak9-stream .live-label {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+    .ak9-stream .live-meta {
+      font-size: 13px;
+      color: var(--fg-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ak9-stream .live-cta {
+      margin-left: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--fg);
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.16);
+      white-space: nowrap;
+      transition: background-color .2s var(--ease), border-color .2s var(--ease);
+    }
+    .ak9-stream .live-cta:hover { background: var(--accent); border-color: var(--accent); }
+
+    /* Offline state (for later) */
+    .ak9-stream .live-card[data-state="offline"] .live-dot { background: rgba(255,255,255,0.35); box-shadow: none; }
+    .ak9-stream .live-card[data-state="offline"] .live-dot::before,
+    .ak9-stream .live-card[data-state="offline"] .live-dot::after { animation: none; opacity: 0; }
+    .ak9-stream .live-card[data-state="loading"] { opacity: .6; }
+
+
+    @media (max-width: 460px) {
+      .ak9-stream .live-card { width: 100%; }
+      .ak9-stream .live-cta { display: none; }
+    }
+

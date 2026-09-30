@@ -37,7 +37,7 @@ const home: Home = {
   label: "Home",
   title: "AleksK9 — Twitch streamer",
   description: "AleksK9 on Twitch: Rainbow Six Siege streams, community tournaments and Spooktober.",
-  headline: <>Live on Twitch. Siege, tournaments and the community.</>,
+  headline: <>Live on Twitch daily.</>,
   featured: {
     display: true,
     title: (
@@ -53,8 +53,8 @@ const home: Home = {
   },
   subline: (
     <>
-      I'm <Text as="span" size="xl" weight="strong">AleksK9</Text>. I stream Rainbow Six Siege and run community
-      events like the R6 5v5 Tournament with Notvash30.
+      I'm <Text as="span" size="xl" weight="strong">AleksK9</Text>. I do a little bit of everything on stream:
+      games, hanging out with chat, community events and whatever comes next.
     </>
   ),
 };

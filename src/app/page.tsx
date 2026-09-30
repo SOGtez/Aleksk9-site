@@ -13,6 +13,7 @@ import {
 import { home, about, person, baseURL, routes } from "@/resources";
 import { Posts } from "@/components/blog/Posts";
 import { StreamSection } from "@/components/StreamSection";
+import { EventCard } from "@/components/EventCard";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -96,35 +97,8 @@ export default function Home() {
         </Column>
       </RevealFx>
 
-      {/* Tournament */}
-      <Column
-        fillWidth
-        padding="xl"
-        radius="l"
-        border="brand-alpha-medium"
-        background="brand-alpha-weak"
-        gap="16"
-        s={{ padding: "l" }}
-      >
-        <Text variant="label-strong-s" onBackground="brand-weak">
-          COMMUNITY EVENT
-        </Text>
-        <Heading as="h2" variant="display-strong-s" wrap="balance">
-          R6 5v5 Tournament
-        </Heading>
-        <Text onBackground="neutral-weak" variant="body-default-l" wrap="balance">
-          Six captains drafted their squads live on the site, then fought it out in a single-elimination bracket.
-          Team Alfie took the title. Rosters, stats and every result are still up.
-        </Text>
-        <Row gap="12" paddingTop="8" s={{ direction: "column" }}>
-          <Button href="/bracket" variant="primary" size="m" prefixIcon="bracket" data-border="rounded">
-            See the bracket
-          </Button>
-          <Button href="/tournament" variant="secondary" size="m" prefixIcon="trophy" data-border="rounded">
-            Rosters and stats
-          </Button>
-        </Row>
-      </Column>
+      {/* Tournament: the glow follows the mouse, like the template's newsletter card */}
+      <EventCard />
 
       {/* Blog */}
       {routes["/blog"] && (

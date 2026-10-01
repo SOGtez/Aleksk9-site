@@ -5,107 +5,74 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
   <title>Spooktober overlay — AleksK9</title>
-  <!-- OBS browser source. Shows the Spooktober logo with "Day N" under it, and switches to the next day
-       at midnight by itself, so one browser source works for the whole month.
-       It plays on a loop (about 20 seconds):
-         logo fades in → 5 s → orange light slowly fades in → 3 s → flickers for 3 s
-         → a swarm of bats flies across and the logo vanishes with them → starts again
+  <!-- OBS browser source. A still Spooktober logo with "Day N" under it and a soft orange light that flickers
+       gently on it. The day switches at midnight by itself, so one browser source works all October.
        Options (add to the URL):
          ?day=12                    always show day 12 (testing / previews)
          ?tz=America/New_York       use this time zone instead of the streaming PC's clock
          ?align=left|right          line the logo up to one side instead of the middle
-         ?loop=0                    no animation: just the logo, softly lit
-         ?at=16.5                   freeze the loop at that second (previews)
+         ?lights=0                  no flicker: just the logo
        Outside October only the logo shows. Recommended browser source size: 1200 × 520. -->
   <link rel="preload" as="image" href="/assets/overlays/spooktober-logo.webp">
   <style>
-    @property --wipe { syntax: '<percentage>'; inherits: false; initial-value: -30%; }
     html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
     .wrap {
-      /* Fit the whole graphic inside the browser source, leaving a margin for the glow and the bats. */
+      /* Fit the whole graphic inside the browser source, with a little room for the glow. */
       --w: min(86vw, calc(100vh * 1.98));
       width: var(--w); height: 100%; margin: 0 auto; position: relative; z-index: 2;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
     }
     body.left .wrap { margin-left: 0; } body.right .wrap { margin-right: 0; }
-    .art { display: flex; flex-direction: column; align-items: center; width: 100%; flex-shrink: 0; }
     .logo { width: 100%; height: auto; display: block; flex-shrink: 0; }
     .day { height: calc(var(--w) * 0.175); margin-top: calc(var(--w) * -0.012); flex-shrink: 0; }
     .day img { height: 100%; width: auto; display: block; }
     .day[hidden] { display: none; }
 
-    /* ---------- The logo's light: a warm glow on the artwork itself, so it can never be out of line ---------- */
-    .art img { filter: brightness(1) saturate(1) drop-shadow(0 0 0 rgba(255,120,20,0)); transition: filter 3s ease-in-out; }
-    body.lit .art img, body.flicker .art img, body.loop-off .art img { filter: brightness(1.08) saturate(1.1) drop-shadow(0 0 calc(var(--w) * .014) rgba(255,120,20,.42)); }
-    body.flicker .art img { transition: none; animation: flicker 3s steps(1, end); }
+    /* Light on the artwork itself (a filter, so it always lines up with the logo and the day). */
+    .wrap img { filter: brightness(1.05) saturate(1.06) drop-shadow(0 0 calc(var(--w) * .012) rgba(255,120,20,.32));
+      animation: flicker 4.6s steps(1, end) infinite; }
     @keyframes flicker {
-      0%   { filter: brightness(1.08) saturate(1.1)  drop-shadow(0 0 calc(var(--w) * .014) rgba(255,120,20,.42)); }
-      9%   { filter: brightness(.96)  saturate(1)    drop-shadow(0 0 calc(var(--w) * .008) rgba(255,120,20,.2)); }
-      13%  { filter: brightness(1.12) saturate(1.12) drop-shadow(0 0 calc(var(--w) * .016) rgba(255,130,30,.5)); }
-      27%  { filter: brightness(1.02) saturate(1.05) drop-shadow(0 0 calc(var(--w) * .01) rgba(255,120,20,.3)); }
-      31%  { filter: brightness(.94)  saturate(1)    drop-shadow(0 0 calc(var(--w) * .006) rgba(255,120,20,.15)); }
-      35%  { filter: brightness(1.1)  saturate(1.1)  drop-shadow(0 0 calc(var(--w) * .015) rgba(255,125,25,.46)); }
-      52%  { filter: brightness(1.05) saturate(1.08) drop-shadow(0 0 calc(var(--w) * .012) rgba(255,120,20,.36)); }
-      58%  { filter: brightness(.95)  saturate(1)    drop-shadow(0 0 calc(var(--w) * .007) rgba(255,120,20,.18)); }
-      61%  { filter: brightness(1.12) saturate(1.12) drop-shadow(0 0 calc(var(--w) * .016) rgba(255,130,30,.5)); }
-      78%  { filter: brightness(1)    saturate(1.04) drop-shadow(0 0 calc(var(--w) * .01) rgba(255,120,20,.28)); }
-      83%  { filter: brightness(1.1)  saturate(1.1)  drop-shadow(0 0 calc(var(--w) * .014) rgba(255,125,25,.44)); }
-      100% { filter: brightness(1.08) saturate(1.1)  drop-shadow(0 0 calc(var(--w) * .014) rgba(255,120,20,.42)); }
+      0%   { filter: brightness(1.05) saturate(1.06) drop-shadow(0 0 calc(var(--w) * .012) rgba(255,120,20,.32)); }
+      14%  { filter: brightness(1.02) saturate(1.03) drop-shadow(0 0 calc(var(--w) * .009) rgba(255,120,20,.24)); }
+      17%  { filter: brightness(1.06) saturate(1.07) drop-shadow(0 0 calc(var(--w) * .013) rgba(255,125,25,.36)); }
+      41%  { filter: brightness(1.04) saturate(1.05) drop-shadow(0 0 calc(var(--w) * .011) rgba(255,120,20,.3)); }
+      44%  { filter: brightness(1.01) saturate(1.02) drop-shadow(0 0 calc(var(--w) * .008) rgba(255,120,20,.22)); }
+      47%  { filter: brightness(1.05) saturate(1.06) drop-shadow(0 0 calc(var(--w) * .012) rgba(255,120,20,.33)); }
+      72%  { filter: brightness(1.07) saturate(1.07) drop-shadow(0 0 calc(var(--w) * .014) rgba(255,130,30,.38)); }
+      75%  { filter: brightness(1.03) saturate(1.04) drop-shadow(0 0 calc(var(--w) * .01) rgba(255,120,20,.27)); }
+      90%  { filter: brightness(1.05) saturate(1.06) drop-shadow(0 0 calc(var(--w) * .012) rgba(255,120,20,.32)); }
     }
 
-    /* Soft orange glow behind the logo, following the same light. */
-    .glow { position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0; transition: opacity 3s ease-in-out;
-      background: radial-gradient(ellipse 34% 40% at 20% 44%, rgba(255,110,0,.26), transparent 70%),
-                  radial-gradient(ellipse 34% 40% at 80% 46%, rgba(255,110,0,.24), transparent 70%),
-                  radial-gradient(ellipse 40% 36% at 50% 40%, rgba(255,140,30,.18), transparent 70%);
+    /* Faint orange glow behind the logo, flickering out of step with the light on it. */
+    .glow { position: fixed; inset: 0; z-index: 1; pointer-events: none;
+      background: radial-gradient(ellipse 34% 40% at 20% 44%, rgba(255,110,0,.2), transparent 70%),
+                  radial-gradient(ellipse 34% 40% at 80% 46%, rgba(255,110,0,.18), transparent 70%),
+                  radial-gradient(ellipse 40% 36% at 50% 40%, rgba(255,140,30,.14), transparent 70%);
       -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
       -webkit-mask-composite: source-in;
       mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent), linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
-      mask-composite: intersect; }
-    body.lit .glow, body.flicker .glow, body.loop-off .glow { opacity: 1; }
-    body.flicker .glow { transition: none; animation: glowflick 3s steps(1, end); }
-    @keyframes glowflick { 0% { opacity: 1; } 9% { opacity: .45; } 13% { opacity: 1; } 31% { opacity: .35; } 35% { opacity: .95; } 58% { opacity: .4; } 61% { opacity: 1; } 78% { opacity: .6; } 83% { opacity: 1; } }
+      mask-composite: intersect;
+      animation: glowflick 5.3s steps(1, end) infinite; }
+    @keyframes glowflick { 0% { opacity: 1; } 11% { opacity: .75; } 14% { opacity: .95; } 38% { opacity: .85; } 41% { opacity: .65; } 44% { opacity: 1; } 69% { opacity: .9; } 81% { opacity: .7; } 84% { opacity: .95; } }
 
-    /* ---------- Loop: fade in, then get wiped away by the bats ---------- */
-    .art { opacity: 0; }
-    body.shown .art { opacity: 1; transition: opacity 1.4s ease-out; }
-    body.loop-off .art { opacity: 1; }
-    body.bats .art { opacity: 1;
-      -webkit-mask-image: linear-gradient(to right, transparent calc(var(--wipe) - 14%), #000 calc(var(--wipe) + 14%));
-      mask-image: linear-gradient(to right, transparent calc(var(--wipe) - 14%), #000 calc(var(--wipe) + 14%));
-      animation: wipe 2.3s linear .45s forwards; }   /* keeps pace with the middle of the swarm */
-    body.bats .glow { opacity: 0; transition: opacity 1.6s ease-in .6s; }
-    @keyframes wipe { from { --wipe: -30%; } to { --wipe: 130%; } }
-
-    /* ---------- Bats ---------- */
-    .swarm { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
-    .swarm[hidden] { display: none; }
-    .bat { position: absolute; left: 0; top: var(--y); width: var(--s); animation: fly var(--dur) linear var(--d) both; }
-    .bat .bob { animation: bob var(--bob) ease-in-out infinite alternate; }
-    /* Each bat flaps through the three drawn frames (1 → 2 → 3 → 2) from one sprite sheet. */
-    .bat .sprite { display: block; width: 100%; aspect-ratio: 398 / 360; background: url(/assets/overlays/bat-sprite.webp) 0 0 / 300% 100% no-repeat;
-      filter: drop-shadow(0 0 1.5px rgba(255,140,40,.7));
-      animation: flap var(--flap) steps(1, end) infinite; }
-    @keyframes fly { from { transform: translateX(-18vw) rotate(var(--r)); } to { transform: translateX(112vw) rotate(calc(var(--r) * -1)); } }
-    @keyframes bob { from { transform: translateY(calc(var(--s) * -.35)); } to { transform: translateY(calc(var(--s) * .35)); } }
-    @keyframes flap { 0% { background-position: 0% 0; } 25% { background-position: 50% 0; } 50% { background-position: 100% 0; } 75% { background-position: 50% 0; } }
+    body.no-lights .glow { display: none; }
+    body.no-lights .wrap img { filter: none; animation: none; }
+    @media (prefers-reduced-motion: reduce) { .wrap img, .glow { animation: none; } }
   </style>
 </head>
 <body>
   <div class="glow" aria-hidden="true"></div>
   <div class="wrap">
-    <div class="art">
-      <img class="logo" src="/assets/overlays/spooktober-logo.webp" alt="Spooktober">
-      <div class="day" id="day" hidden><img id="day-img" alt=""></div>
-    </div>
+    <img class="logo" src="/assets/overlays/spooktober-logo.webp" alt="Spooktober">
+    <div class="day" id="day" hidden><img id="day-img" alt=""></div>
   </div>
-  <div class="swarm" id="swarm" aria-hidden="true" hidden></div>
   <script>
     var q = new URLSearchParams(location.search);
     var fixedDay = parseInt(q.get('day'), 10), tz = q.get('tz') || '';
     if (q.get('align') === 'left' || q.get('align') === 'right') document.body.classList.add(q.get('align'));
+    if (q.get('lights') === '0') document.body.classList.add('no-lights');
 
-    /* ---------- Day of October ---------- */
+    /* Today's month and day on the streaming PC (or in ?tz=). */
     function today() {
       var d = new Date();
       if (tz) {
@@ -135,44 +102,6 @@
     }
     update();
     setInterval(update, 15000);
-
-    /* ---------- Bats: one swarm, replayed every loop ---------- */
-    new Image().src = '/assets/overlays/bat-sprite.webp';
-    (function () {
-      var seed = 13; function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
-      var html = '';
-      for (var i = 0; i < 30; i++) {
-        var size = 7 + rnd() * 7;   /* vw */
-        html += '<div class="bat" style="--y:' + (2 + rnd() * 70).toFixed(1) + '%;--s:' + size.toFixed(2) + 'vw;--d:' + (rnd() * .5).toFixed(2) + 's;--dur:' + (2.3 + rnd() * .5).toFixed(2) +
-          's;--r:' + ((rnd() - .5) * 12).toFixed(1) + 'deg"><div class="bob" style="--bob:' + (.4 + rnd() * .35).toFixed(2) + 's">' +
-          '<span class="sprite" style="--flap:' + (.34 + rnd() * .16).toFixed(2) + 's;animation-delay:-' + (rnd() * .5).toFixed(2) + 's"></span></div></div>';
-      }
-      document.getElementById('swarm').innerHTML = html;
-    })();
-
-    /* ---------- Loop: fade in → 5 s → light fades in (3 s) → 3 s → flicker 3 s → bats → again ---------- */
-    var body = document.body, swarm = document.getElementById('swarm');
-    function phase(list) { body.classList.remove('shown', 'lit', 'flicker', 'bats'); list.forEach(function (c) { body.classList.add(c); }); }
-    function loop() {
-      swarm.hidden = true; phase([]);                                                        /* hidden, unlit */
-      setTimeout(function () { phase(['shown']); }, 400);                                    /* fade in over 1.4 s */
-      setTimeout(function () { phase(['shown', 'lit']); }, 6800);                            /* after 5 s: light fades in over 3 s */
-      setTimeout(function () { phase(['shown', 'flicker']); }, 12800);                       /* after 3 s lit: flicker for 3 s */
-      setTimeout(function () { swarm.hidden = false; phase(['bats', 'lit']); }, 15800);      /* bats sweep the logo away */
-      setTimeout(loop, 19600);                                                               /* start again */
-    }
-    /* ?at=16.5 freezes the loop at that second (for previews and checking the timing). */
-    var STEPS = [[0, []], [.4, ['shown']], [6.8, ['shown', 'lit']], [12.8, ['shown', 'flicker']], [15.8, ['bats', 'lit']]];
-    function freezeAt(t) {
-      var i = 0; while (i + 1 < STEPS.length && STEPS[i + 1][0] <= t) i++;
-      phase(i ? STEPS[i - 1][1] : []); getComputedStyle(document.querySelector('.art img')).filter;   /* style before this step, so transitions start */
-      swarm.hidden = i !== 4; phase(STEPS[i][1]);
-      var into = (t - STEPS[i][0]) * 1000;
-      document.getAnimations().forEach(function (an) { an.pause(); an.currentTime = into; });
-    }
-    if (q.get('loop') === '0') body.classList.add('loop-off');
-    else if (q.get('at')) window.addEventListener('load', function () { freezeAt(parseFloat(q.get('at')) || 0); });
-    else loop();
   </script>
 </body>
 </html>

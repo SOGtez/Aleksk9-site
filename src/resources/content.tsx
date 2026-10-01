@@ -89,6 +89,14 @@ const about: About = {
     display: true,
     title: "Community events",
     experiences: [
+      /* Newest first: older events are further down the list. */
+      {
+        company: "Spooktober",
+        timeframe: "October 2026 · Now",
+        role: "Stream event",
+        achievements: [<>The Halloween event on stream, running all through October.</>],
+        images: [],
+      },
       {
         company: "R6 5v5 Tournament",
         timeframe: "September 2026",
@@ -97,13 +105,6 @@ const about: About = {
           <>Six captains drafted their teams live on the site in a snake draft.</>,
           <>Single-elimination playoffs with a live bracket. Team Alfie took the title.</>,
         ],
-        images: [],
-      },
-      {
-        company: "Spooktober",
-        timeframe: "October 2026",
-        role: "Stream event",
-        achievements: [<>The Halloween event on stream, running all through October.</>],
         images: [],
       },
     ],

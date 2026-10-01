@@ -1,0 +1,95 @@
+/* Shared theme for the plain-HTML pages (tournament, bracket, admin, apply, how-to-draft) so they match the
+   Next.js pages (Once UI "Magic Portfolio" design). Load AFTER the page's own <style>, together with
+   once-tokens.css (Once UI's colour tokens), on an <html> that carries the same data-* settings as
+   src/app/layout.tsx: data-theme="dark" data-brand="red" data-accent="orange" data-neutral="gray"
+   data-solid="color" data-solid-style="flat" data-border="playful" data-surface="translucent" data-transition="all" data-scaling="100".
+   Header + footer markup: see public/theme/README.md (same on every page). Account button: site.js. */
+
+/* ---------- Page colours → Once UI tokens (the pages' own variable names stay the same) ---------- */
+:root[data-theme] {
+  --bg: var(--page-background);
+  --bg-elev: var(--surface-background);
+  --bg-elev-2: var(--neutral-alpha-weak);
+  --fg: var(--neutral-on-background-strong);
+  --fg-muted: var(--neutral-on-background-medium);
+  --fg-dim: var(--neutral-on-background-weak);
+  --line: var(--neutral-alpha-weak);
+  --line-strong: var(--neutral-alpha-medium);
+  --accent: var(--brand-solid-strong);
+  --accent-hover: var(--brand-solid-medium);
+  --accent-soft: var(--brand-alpha-weak);
+  --radius: var(--radius-l);
+  --nav-h: 64px;
+}
+@media (max-width: 767px) { :root[data-theme] { --nav-h: 0px; } }   /* on phones the nav sits at the bottom */
+
+body { background: var(--page-background) !important; position: relative; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+body > main, body > .footer, body > .ou-footer { position: relative; z-index: 1; }
+
+/* ---------- Background: red glow at the top + faint dots, like the Once UI <Background> on the home page ---------- */
+.ou-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  -webkit-mask-image: radial-gradient(100vh at 50% 0, #000 0%, transparent 100%); mask-image: radial-gradient(100vh at 50% 0, #000 0%, transparent 100%); }
+.ou-bg::before { content: ""; position: absolute; inset: 0; opacity: .5;
+  background: radial-gradient(ellipse 100% 60% at 50% 0%, var(--brand-background-strong), var(--page-background)); }
+.ou-bg::after { content: ""; position: absolute; inset: 0; opacity: .4;
+  background-image: radial-gradient(var(--brand-background-strong) 1px, transparent 1px); background-size: var(--static-space-2) var(--static-space-2); }
+/* The pages' own hero glows are replaced by the shared background */
+.t-hero .bg::before, .hero .bg::before { display: none !important; }
+
+/* ---------- Header: logo, centred pill of nav buttons, account on the right ---------- */
+.ou-header { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 8px; padding: 8px; margin-top: 16px; }
+.ou-header > .side { flex: 1 1 0; display: flex; align-items: center; min-width: 0; }
+.ou-header > .side.right { justify-content: flex-end; padding-right: 12px; }
+.ou-header > .side.left { padding-left: 12px; }
+.ou-header .logo img { height: 40px; width: auto; display: block; }
+.ou-fade { position: fixed; left: 0; right: 0; top: 0; height: 80px; z-index: 49; pointer-events: none;
+  background: linear-gradient(to bottom, var(--page-background), transparent); -webkit-backdrop-filter: blur(.5rem); backdrop-filter: blur(.5rem);
+  -webkit-mask-image: linear-gradient(#000 25%, transparent 100%); mask-image: linear-gradient(#000 25%, transparent 100%); }
+.ou-pill { display: flex; align-items: center; gap: 4px; padding: 4px; background: var(--page-background); border: 1px solid var(--neutral-alpha-weak);
+  border-radius: var(--radius-m-nest-4, calc(var(--radius-m) + 4px)); box-shadow: var(--shadow-l); }
+.ou-sep { width: 1px; height: 24px; background: var(--neutral-alpha-medium); flex: 0 0 1px; }
+.ou-tb { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 4px 8px; border: 1px solid transparent; border-radius: var(--radius-m);
+  color: var(--neutral-on-background-strong); font-size: 14px; font-weight: 500; line-height: 1; white-space: nowrap; text-decoration: none;
+  background: transparent; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
+.ou-tb:hover, .ou-tb:focus-visible { background: var(--neutral-alpha-weak); border-color: var(--neutral-alpha-weak); }
+.ou-tb[aria-current="page"], .ou-tb.selected { background: var(--neutral-alpha-medium); border-color: var(--neutral-alpha-weak); }
+.ou-tb svg { width: 16px; height: 16px; flex: 0 0 16px; }
+.ou-tb img { width: 20px; height: 20px; border-radius: 50%; }
+@media (max-width: 767px) {
+  .ou-header { position: fixed; top: auto; bottom: 24px; left: 0; right: 0; margin: 0; justify-content: center; }
+  .ou-header > .side { display: none; }
+  .ou-tb .lbl { display: none; }
+  .ou-fade { top: auto; bottom: 0; transform: rotate(180deg); }
+  body { padding-bottom: 96px; }
+  .toast { bottom: 96px !important; }
+}
+
+/* ---------- Footer ---------- */
+.ou-footer { display: flex; justify-content: center; padding: 8px; margin-top: auto; }
+.ou-footer .inner { width: 100%; max-width: 1024px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 16px; font-size: 14px; color: var(--neutral-on-background-weak); }
+.ou-footer b { color: var(--neutral-on-background-strong); font-weight: 400; padding: 0 4px; }
+.ou-footer a { color: var(--neutral-on-background-strong); text-decoration: none; }
+.ou-footer a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ou-footer .icon { display: inline-flex; width: 32px; height: 32px; align-items: center; justify-content: center; border-radius: var(--radius-m); color: var(--neutral-on-background-strong); }
+.ou-footer .icon:hover { background: var(--neutral-alpha-weak); text-decoration: none; }
+.ou-footer .icon svg { width: 16px; height: 16px; }
+@media (max-width: 767px) { .ou-footer .inner { flex-direction: column; text-align: center; } }
+
+/* ---------- Components in the Once UI style ---------- */
+.card { background: var(--surface-background) !important; border-color: var(--neutral-alpha-weak) !important; border-radius: var(--radius-l) !important;
+  -webkit-backdrop-filter: blur(var(--static-space-1, 1px)); backdrop-filter: blur(var(--static-space-1, 1px)); box-shadow: none; }
+.btn { font-weight: 500; letter-spacing: 0; border-radius: var(--radius-full); }
+.btn:hover { transform: none; }
+.btn-primary { background: var(--brand-solid-strong); color: var(--brand-on-solid-strong); box-shadow: none; border-color: var(--brand-border-strong, transparent); }
+.btn-primary:hover { background: var(--brand-solid-medium); box-shadow: none; }
+.btn-ghost { background: var(--neutral-alpha-weak); border-color: var(--neutral-alpha-medium); color: var(--neutral-on-background-strong); box-shadow: none; }
+.btn-ghost:hover { background: var(--neutral-alpha-medium); border-color: var(--neutral-alpha-medium); box-shadow: none; }
+.field, input.field, select.field, textarea.field { background: var(--neutral-alpha-weak); border-color: var(--neutral-alpha-medium); border-radius: var(--radius-m); color: var(--neutral-on-background-strong); }
+.field:focus { outline: none; border-color: var(--brand-border-strong, var(--brand-solid-strong)); box-shadow: 0 0 0 1px var(--brand-border-strong, var(--brand-solid-strong)) inset; }
+.pill { border-color: var(--neutral-alpha-medium); color: var(--neutral-on-background-medium); }
+.eyebrow, .t-hero .eyebrow { color: var(--brand-on-background-weak, var(--brand-solid-strong)); }
+.eyebrow::before { background: currentColor; }
+h1, h2, h3 { font-weight: 700; letter-spacing: -0.03em; }
+h1 span, .t-hero h1 span { color: var(--brand-solid-strong); }
+.subnav { background: color-mix(in srgb, var(--page-background) 85%, transparent) !important; border-color: var(--neutral-alpha-weak) !important; }
+.toast { background: var(--neutral-on-background-strong); color: var(--page-background); }

@@ -1,6 +1,19 @@
-# Backend setup
+# Setup
 
-The site is static HTML plus a few serverless functions in `api/`. They need
+The site is a **Next.js** app (design adapted from Once UI's Magic Portfolio, CC BY-NC 4.0: keep the footer credit).
+
+| Where | What |
+|---|---|
+| `src/app` | Home, About and Blog pages. Text lives in `src/resources/content.tsx`; blog posts are `.mdx` files in `src/app/blog/posts` |
+| `src/pages/api` | the API (Twitch login, tournament, bracket, screenshots, chat, admin). Shared code in `src/server/lib` |
+| `public/*.html` | tournament, bracket, admin, apply, overlay, spooktober and how-to-draft pages, served at `/tournament` etc. (rewrites in `next.config.mjs`) |
+| `public/embed/stream.js` | the homepage's Twitch player + chat, used by `src/components/StreamSection.tsx` |
+
+Run locally with `npm install` then `npm run dev` (Node 20+).
+
+## Backend setup
+
+The API routes need They need
 five environment variables and an Upstash Redis database, all set in the
 Vercel project that deploys this repo.
 

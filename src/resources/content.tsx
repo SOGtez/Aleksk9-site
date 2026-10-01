@@ -26,7 +26,7 @@ const social: Social = [
   {
     name: "Twitch",
     icon: "twitch",
-    link: "https://twitch.tv/aleksk9_",
+    link: "https://twitch.tv/aieksk9",
     essential: true,
   },
 ];

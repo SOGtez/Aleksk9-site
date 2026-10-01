@@ -1,7 +1,10 @@
 import { cacheGet, cacheSet } from './store.js';
 
 const CID = () => process.env.TWITCH_CLIENT_ID;
-const CHANNEL = () => (process.env.TWITCH_CHANNEL || 'aleksk9_').toLowerCase();
+/* The stream's Twitch login. Renamed from aleksk9_ to AIeksK9 (capital i, not L) on 2026-09-30.
+   Set here instead of the TWITCH_CHANNEL setting in Vercel, which still holds the old name. */
+export const CHANNEL_LOGIN = 'aieksk9';
+const CHANNEL = () => CHANNEL_LOGIN;
 
 export async function appToken() {
   const cached = await cacheGet('twitch:app_token');

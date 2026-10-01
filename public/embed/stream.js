@@ -23,7 +23,7 @@ window.ak9StreamInit = function () {
     /* ==============================================================
        STREAM EMBED + CHAT BOX
        ============================================================== */
-    var CHANNEL = 'aleksk9_';
+    var CHANNEL = 'aieksk9';   /* Twitch login (renamed from aleksk9_ on 2026-09-30) */
     var host = location.hostname || 'localhost';
     var player = document.getElementById('player');
     var playing = false;
@@ -129,11 +129,11 @@ window.ak9StreamInit = function () {
 
     if (location.protocol !== 'file:') {
       fetch('/api/live', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
-        if (d && d.live) setLiveState('live', d.title ? d.title : 'twitch.tv/aleksk9_');
-        else { setLiveState('offline', 'twitch.tv/aleksk9_ · follow to get notified'); player.insertAdjacentHTML('beforeend', '<span class="offline-note">Offline right now · chat is still open</span>'); }
-      }).catch(function () { setLiveState('offline', 'twitch.tv/aleksk9_'); });
+        if (d && d.live) setLiveState('live', d.title ? d.title : 'twitch.tv/AIeksK9');
+        else { setLiveState('offline', 'twitch.tv/AIeksK9 · follow to get notified'); player.insertAdjacentHTML('beforeend', '<span class="offline-note">Offline right now · chat is still open</span>'); }
+      }).catch(function () { setLiveState('offline', 'twitch.tv/AIeksK9'); });
     } else {
-      setLiveState('offline', 'twitch.tv/aleksk9_');
+      setLiveState('offline', 'twitch.tv/AIeksK9');
     }
 
     var CHAT = { user: null, canChat: false, count: 0 };

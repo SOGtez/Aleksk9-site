@@ -35,8 +35,8 @@ Project → Settings → Environment Variables. Add for Production and Preview:
 | `TWITCH_CLIENT_ID` | from step 1 |
 | `TWITCH_CLIENT_SECRET` | from step 1 |
 | `SESSION_SECRET` | any long random string, e.g. output of `openssl rand -hex 32` |
-| `ADMIN_LOGINS` | Twitch usernames that are always admin, comma separated, e.g. `aleksk9_` |
-| `TWITCH_CHANNEL` | channel for the homepage live badge, `aleksk9_` |
+| `ADMIN_LOGINS` | Twitch usernames that are always admin, comma separated, e.g. `aieksk9` |
+| `TWITCH_CHANNEL` | not used any more: the channel is set in `src/server/lib/twitch.js` (`aieksk9`) |
 | `OPENROUTER_API_KEY` | from https://openrouter.ai/keys, for the tournament assistant on the admin page |
 | `OPENROUTER_MODELS` | optional, comma separated model ids tried in order. Default `z-ai/glm-5.2:free` |
 | `OPENROUTER_FALLBACK` | optional, `1` to also try every free model with tool support after the list above. Off by default |

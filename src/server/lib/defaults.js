@@ -51,7 +51,7 @@ export const DEFAULT_STATE = {
     { id: 'wedgey',     name: 'Wedgey',     tier: 1, info: '' },
     { id: 'brandon',    name: 'Brandon',    tier: 1, info: '' },
 
-    { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aleksk9_' },
+    { id: 'aleksk9',    name: 'AleksK9',    tier: 2, info: '205 hrs · lvl 89 · Silver', twitch: 'aieksk9' },
     { id: 'marv',       name: 'Marv',       tier: 2, info: '191 hrs · lvl 82 · Silver' },
     { id: 'tdk',        name: 'TDK',        tier: 2, info: '' },
     { id: 'klixvy',     name: 'Klixvy',     tier: 2, info: '' },

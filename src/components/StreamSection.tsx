@@ -12,11 +12,11 @@ const MARKUP = `
       <div class="stream-main">
         <div class="player" id="player"></div>
         <div class="stream-info">
-          <a id="live-card" class="live-card" data-state="loading" href="https://twitch.tv/aleksk9_" target="_blank" rel="noopener">
+          <a id="live-card" class="live-card" data-state="loading" href="https://twitch.tv/aieksk9" target="_blank" rel="noopener">
             <span class="live-dot" aria-hidden="true"></span>
             <span class="live-text">
               <span class="live-label" data-live-label>Checking stream…</span>
-              <span class="live-meta" data-live-meta>twitch.tv/aleksk9_</span>
+              <span class="live-meta" data-live-meta>twitch.tv/AIeksK9</span>
             </span>
             <span class="live-cta" aria-hidden="true">Open</span>
           </a>
@@ -38,7 +38,7 @@ const MARKUP = `
       <h2 id="app-modal-title">Enjoying the stream?</h2>
       <p>You're chatting like a regular. Watch on the Twitch app for the full experience: better quality, emotes, and no missed messages.</p>
       <div class="actions">
-        <a class="btn btn-primary" id="app-modal-go" href="https://twitch.tv/aleksk9_" target="_blank" rel="noopener">Watch on Twitch</a>
+        <a class="btn btn-primary" id="app-modal-go" href="https://twitch.tv/aieksk9" target="_blank" rel="noopener">Watch on Twitch</a>
         <button class="later" id="app-modal-later" type="button">Keep watching here</button>
       </div>
     </div>

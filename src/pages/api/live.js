@@ -1,10 +1,10 @@
 import { json } from '../../server/lib/http.js';
 import { cacheGet, cacheSet } from '../../server/lib/store.js';
-import { appToken } from '../../server/lib/twitch.js';
+import { appToken, CHANNEL_LOGIN } from '../../server/lib/twitch.js';
 
 /* Public: is the channel live? Cached 60s so Twitch is not hammered. */
 export default async function handler(req, res) {
-  const channel = (process.env.TWITCH_CHANNEL || 'aleksk9_').toLowerCase();
+  const channel = CHANNEL_LOGIN;
   try {
     const cached = await cacheGet('twitch:live:' + channel);
     if (cached) return json(res, 200, cached);

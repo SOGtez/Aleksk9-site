@@ -76,7 +76,7 @@ export default function Home() {
           </RevealFx>
           <RevealFx paddingTop="4" delay={0.4} horizontal="center">
             <Row gap="12" s={{ direction: "column" }}>
-              <Button href="https://twitch.tv/aleksk9_" prefixIcon="twitch" variant="primary" size="m" data-border="rounded">
+              <Button href="https://twitch.tv/aieksk9" prefixIcon="twitch" variant="primary" size="m" data-border="rounded">
                 Watch on Twitch
               </Button>
               <Button href={about.path} variant="secondary" size="m" data-border="rounded" arrowIcon>

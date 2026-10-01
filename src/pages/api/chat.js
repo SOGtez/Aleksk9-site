@@ -1,6 +1,6 @@
 import { json, whoami, readBody } from '../../server/lib/http.js';
 import { cacheGet, cacheSet } from '../../server/lib/store.js';
-import { broadcasterId, appToken } from '../../server/lib/twitch.js';
+import { broadcasterId, appToken, CHANNEL_LOGIN } from '../../server/lib/twitch.js';
 
 /* Homepage chat box.
    GET  → { user, canChat, count }        canChat = we hold a chat token for this user
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     const uid = me.user?.id;
     const tok = uid ? await cacheGet('tw:tok:' + uid) : null;
     const count = uid ? Number(await cacheGet(dayKey(uid))) || 0 : 0;
-    return json(res, 200, { user: me.user, canChat: !!tok, count, channel: process.env.TWITCH_CHANNEL || 'aleksk9_' });
+    return json(res, 200, { user: me.user, canChat: !!tok, count, channel: CHANNEL_LOGIN });
   }
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   if (!me.user) return json(res, 401, { error: 'Log in with Twitch to chat' });

@@ -1,3 +1,4 @@
+import { CHANNEL_LOGIN } from '../../server/lib/twitch.js';
 import { json, whoami, readBody } from '../../server/lib/http.js';
 import { getSettings, getApplication, setApplication, getApplications, getState } from '../../server/lib/store.js';
 import { cleanApplication, PLATFORMS, RANKS, ROLES } from '../../server/lib/applications.js';
@@ -21,7 +22,7 @@ export default async function handler(req, res) {
       settings: { open: settings.open, captainsOpen: !!settings.captainsOpen, cap: settings.cap, deadline: settings.deadline, dates: settings.dates, note: settings.note },
       tournament: { name: state.name, teams: state.teams.length, teamSize: state.format.teamSize, spotsLeft, totalPlayers, playersIn, draftStarted: state.picks.length > 0 },
       options: { platforms: PLATFORMS, ranks: RANKS, roles: ROLES },
-      channel: process.env.TWITCH_CHANNEL || 'aleksk9_',
+      channel: CHANNEL_LOGIN,
       me: me.user, role: me.role, counts,
       application: login ? (await getApplication(login)) : null
     });

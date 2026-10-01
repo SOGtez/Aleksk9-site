@@ -38,14 +38,14 @@ export const EventCard = () => (
     />
     <Column maxWidth="s" horizontal="center" gap="12">
       <Text variant="label-strong-s" onBackground="brand-weak">
-        COMMUNITY EVENT
+        PAST EVENT
       </Text>
       <Heading variant="display-strong-xs" wrap="balance">
         R6 5v5 Tournament
       </Heading>
       <Text wrap="balance" marginBottom="l" variant="body-default-l" onBackground="neutral-weak">
-        Six captains drafted their squads live on the site, then fought it out in a single-elimination bracket.
-        Team Alfie took the title. Rosters, stats and every result are still up.
+        A one-time community tournament co-hosted with Notvash30. Six captains drafted their squads live on the
+        site, then fought it out in a single-elimination bracket. Team Alfie took the title.
       </Text>
     </Column>
     <Row gap="12" horizontal="center" s={{ direction: "column" }}>

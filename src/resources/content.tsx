@@ -8,7 +8,7 @@ const person: Person = {
   firstName: "Aleks",
   lastName: "K9",
   name: "AleksK9",
-  role: "Twitch streamer",
+  role: "Variety streamer",
   avatar: "/assets/ak9-logo.png",
   email: "",
   location: "America/Los_Angeles", // only used if display.location / display.time are turned on
@@ -35,21 +35,21 @@ const home: Home = {
   path: "/",
   image: "/og-image.png",
   label: "Home",
-  title: "AleksK9 — Twitch streamer",
-  description: "AleksK9 on Twitch: Rainbow Six Siege streams, community tournaments and Spooktober.",
+  title: "AleksK9 — Variety streamer on Twitch",
+  description: "AleksK9 is a variety streamer on Twitch, live daily with a little bit of everything.",
   headline: <>Live on Twitch daily.</>,
   featured: {
     display: true,
     title: (
       <Row gap="12" vertical="center">
-        <strong className="ml-4">R6 5v5 Tournament</strong>{" "}
+        <strong className="ml-4">Spooktober</strong>{" "}
         <Line background="brand-alpha-strong" vert height="20" />
         <Text marginRight="4" onBackground="brand-medium">
-          See the bracket
+          All October on stream
         </Text>
       </Row>
     ),
-    href: "/bracket",
+    href: "/blog/spooktober",
   },
   subline: (
     <>
@@ -63,7 +63,7 @@ const about: About = {
   path: "/about",
   label: "About",
   title: "About AleksK9",
-  description: "Meet AleksK9, Twitch streamer and community tournament host",
+  description: "Meet AleksK9, variety streamer on Twitch",
   tableOfContent: {
     display: true,
     subItems: false,
@@ -80,8 +80,8 @@ const about: About = {
     title: "Introduction",
     description: (
       <>
-        AleksK9 is a Twitch streamer who plays Rainbow Six Siege and brings the community together
-        with events: drafted 5v5 tournaments, live brackets and themed months like Spooktober.
+        AleksK9 is a variety streamer on Twitch, live daily with a little bit of everything: whatever game
+        is on the menu that day, hanging out with chat, and community events like Spooktober.
       </>
     ),
   },
@@ -92,7 +92,7 @@ const about: About = {
       {
         company: "R6 5v5 Tournament",
         timeframe: "September 2026",
-        role: "Host, with Notvash30",
+        role: "One-time event, co-hosted with Notvash30",
         achievements: [
           <>Six captains drafted their teams live on the site in a snake draft.</>,
           <>Single-elimination playoffs with a live bracket. Team Alfie took the title.</>,
@@ -115,11 +115,11 @@ const about: About = {
   },
   technical: {
     display: true,
-    title: "What I play",
+    title: "On stream",
     skills: [
       {
-        title: "Rainbow Six Siege",
-        description: <>The main game on stream, and the game for the community tournaments.</>,
+        title: "Variety",
+        description: <>A little bit of everything: different games, hanging out with chat and the occasional community event.</>,
         tags: [],
         images: [],
       },
@@ -131,7 +131,7 @@ const blog: Blog = {
   path: "/blog",
   label: "Blog",
   title: "Updates from AleksK9",
-  description: "News about streams, tournaments and community events",
+  description: "News about streams and community events",
   // Add a post by adding a new .mdx file to src/app/blog/posts
 };
 

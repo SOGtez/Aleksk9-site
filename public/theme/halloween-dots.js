@@ -29,6 +29,14 @@
   canvas.setAttribute('aria-hidden', 'true');
   canvas.className = 'ak9-dots';
   canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0;opacity:' + OPACITY;
+  /* Fade in the same way as the page background (Once UI RevealFx, medium speed): a 2s left-to-right wipe out of a blur. */
+  var MASK = 'linear-gradient(to right, black 0%, black 25%, transparent 50%)';
+  function revealStyle(shown) {
+    var st = canvas.style, pos = shown ? '0 0' : '100% 0';
+    st.webkitMaskImage = st.maskImage = MASK; st.webkitMaskSize = st.maskSize = '400% 100%';
+    st.webkitMaskPosition = st.maskPosition = pos; st.filter = shown ? 'blur(0)' : 'blur(1rem)';
+  }
+  revealStyle(false);
 
   function colour() {
     var c = getComputedStyle(document.documentElement).getPropertyValue('--brand-background-strong').trim();
@@ -71,6 +79,12 @@
     else if (bg) bg.parentNode.insertBefore(canvas, bg.nextSibling);
     else document.body.insertBefore(canvas, document.body.firstChild);
     draw();
+    canvas.style.transition = 'all 2s ease-in-out';
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      revealStyle(true);
+      /* Once shown, drop the mask and blur so the canvas costs nothing extra to draw. */
+      setTimeout(function () { var st = canvas.style; st.transition = st.webkitMaskImage = st.maskImage = st.filter = ''; }, 2100);
+    }); });
     var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 200); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

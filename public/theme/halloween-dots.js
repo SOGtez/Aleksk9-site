@@ -1,4 +1,4 @@
-/* Halloween dot art: pumpkins, ghosts, bats and friends drawn with dots, gently animated (the same kind of dots as the page
+/* Halloween dot art: pumpkins, ghosts, bats and friends drawn with dots (the same kind of dots as the page
    background, in the theme colour) and scattered behind the content. Used by the Next.js layout and the
    plain-HTML pages. Turn it off for a page with <html data-dots="off">, or remove the script tag.
    Shapes: game-icons.net (CC BY 3.0) via react-icons, all drawn on a 512 x 512 grid. */
@@ -24,34 +24,11 @@
   var STEP = 6;        /* distance between dots, CSS px */
   var R = 1.25;        /* dot radius, CSS px */
   var OPACITY = 0.7;
-  var FPS = 30;        /* plenty for slow motion, easy on laptops and phones */
-  /* People who ask their device for less motion get the still picture. */
-  var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  /* How each kind of shape moves. Times in seconds, distances in CSS px, angles in radians.
-     fly = flies across the screen (px per second, wraps around), bob = up/down, sway = side to side, turn = rocking, flap = wing beat (squash), glow = brightness flicker. */
-  var MOTION = {
-    ghost:        { bob: 26, bobT: 5,  sway: 18, swayT: 8,  breathe: 0.6, breatheT: 4 },
-    ghost2:       { bob: 26, bobT: 6,  sway: 20, swayT: 9,  breathe: 0.6, breatheT: 5 },
-    bat:          { fly: 60, bob: 22, bobT: 2.4, flap: 0.45, flapT: 0.7 },
-    moonbats:     { turn: 0.08, turnT: 10, breathe: 0.3, breatheT: 6 },
-    jackolantern: { glow: 0.8, turn: 0.05, turnT: 5 },
-    pumpkin:      { glow: 0.6, turn: 0.05, turnT: 6 },
-    candles:      { glow: 0.85, glowFast: true },
-    spider:       { bob: 40, bobT: 4, turn: 0.06, turnT: 4 },
-    web:          { turn: 0.05, turnT: 7, breathe: 0.4, breatheT: 6 },
-    witch:        { fly: 35, faces: 1, bob: 24, bobT: 3.5, turn: 0.08, turnT: 3.5 },
-    tomb:         { breathe: 0.5, breatheT: 6 },
-    cauldron:     { wobble: 0.07, wobbleT: 1.4, glow: 0.5 },
-    cat:          { turn: 0.07, turnT: 5, breathe: 0.3, breatheT: 5 },
-    house:        { glow: 0.45, breathe: 0.3, breatheT: 7 }
-  };
 
   var canvas = document.createElement('canvas');
   canvas.setAttribute('aria-hidden', 'true');
   canvas.className = 'ak9-dots';
   canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:0;opacity:' + OPACITY;
-  var ctx = canvas.getContext('2d'), items = [], W = 0, H = 0, dpr = 1;
 
   function colour() {
     var c = getComputedStyle(document.documentElement).getPropertyValue('--brand-background-strong').trim();
@@ -59,81 +36,33 @@
   }
   /* Same layout every time for the same screen size: a seeded random scatter on a loose grid. */
   function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
-  /* Smooth random-ish flicker made of a few sine waves (no jumps, never repeats visibly). */
-  function flicker(t, p, fast) {
-    var k = fast ? 2.2 : 1;
-    return 0.5 + 0.22 * Math.sin(t * 2.3 * k + p) + 0.17 * Math.sin(t * 5.1 * k + p * 2) + 0.11 * Math.sin(t * 9.7 * k + p * 3);
-  }
 
-  /* Each shape is turned into dots once, on its own small canvas (a sprite); every frame only moves the sprites. */
-  function sprite(name, size, rot, colourValue) {
-    var g = Math.ceil(size / STEP), mask = document.createElement('canvas'), m = mask.getContext('2d');
-    mask.width = g; mask.height = g;
-    m.translate(g / 2, g / 2); m.rotate(rot); m.scale(g / 512, g / 512); m.translate(-256, -256);
-    m.fill(new Path2D(ART[name]));
-    var px = m.getImageData(0, 0, g, g).data, side = g * STEP;
-    var out = document.createElement('canvas'), o = out.getContext('2d');
-    out.width = Math.ceil(side * dpr); out.height = Math.ceil(side * dpr);
-    o.scale(dpr, dpr); o.fillStyle = colourValue;
-    for (var j = 0; j < g; j++) for (var i = 0; i < g; i++) {
-      if (px[(j * g + i) * 4 + 3] < 110) continue;
-      o.beginPath(); o.arc(i * STEP + STEP / 2, j * STEP + STEP / 2, R, 0, 6.2832); o.fill();
-    }
-    return { img: out, side: side };
-  }
-
-  function layout() {
-    dpr = Math.min(2, window.devicePixelRatio || 1); W = window.innerWidth; H = window.innerHeight;
+  function draw() {
+    var dpr = Math.min(2, window.devicePixelRatio || 1), W = window.innerWidth, H = window.innerHeight;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    var col = colour(), rand = rng(7 + Math.round(W / 50) * 31 + Math.round(H / 50));
+    var ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = colour();
+    var rand = rng(7 + Math.round(W / 50) * 31 + Math.round(H / 50));
     var cell = W < 700 ? 190 : 260, cols = Math.max(2, Math.round(W / cell)), rows = Math.max(2, Math.round(H / cell));
     var cw = W / cols, ch = H / rows, n = 0;
     var order = NAMES.slice().sort(function () { return rand() - 0.5; });
-    items = [];
+    var shape = document.createElement('canvas'), sctx = shape.getContext('2d');
     for (var r = 0; r < rows; r++) for (var c = 0; c < cols; c++) {
       if (rand() < 0.38) continue;                                   /* leave gaps so it never looks like wallpaper */
       var size = Math.min(cw, ch) * (0.55 + rand() * 0.3), name = order[n++ % order.length];
       var x = c * cw + (cw - size) * rand(), y = r * ch + (ch - size) * rand(), rot = (rand() - 0.5) * 0.45;
-      var s = sprite(name, size, rot, col);
-      items.push({ name: name, s: s, cx: x + s.side / 2, cy: y + s.side / 2, p: rand() * 100, dir: rand() < 0.5 ? -1 : 1, m: MOTION[name] || {} });
-    }
-  }
-
-  function frame(t) {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-    for (var k = 0; k < items.length; k++) {
-      var it = items[k], m = it.m, p = it.p, TAU = 6.2832, a = 1, sx = 1, sy = 1, dx = 0, dy = 0, ang = 0;
-      if (m.fly) {                                                    /* across the screen, then back in from the other side */
-        var span = W + it.s.side * 2, d = it.dir * m.fly * t;
-        dx += ((((it.cx + it.s.side + d) % span) + span) % span) - it.s.side - it.cx;
-        if (m.faces && m.faces !== it.dir) sx = -1;                  /* face the way it is flying */
+      /* Rasterise the shape small, then put a dot wherever it is filled. */
+      var g = Math.ceil(size / STEP); shape.width = g; shape.height = g;
+      sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.clearRect(0, 0, g, g);
+      sctx.translate(g / 2, g / 2); sctx.rotate(rot); sctx.scale(g / 512, g / 512); sctx.translate(-256, -256);
+      sctx.fill(new Path2D(ART[name]));
+      var px = sctx.getImageData(0, 0, g, g).data;
+      for (var j = 0; j < g; j++) for (var i = 0; i < g; i++) {
+        if (px[(j * g + i) * 4 + 3] < 110) continue;
+        ctx.beginPath(); ctx.arc(x + i * STEP + STEP / 2, y + j * STEP + STEP / 2, R, 0, 6.2832); ctx.fill();
       }
-      if (m.bob) dy += m.bob * Math.sin(TAU * t / m.bobT + p);
-      if (m.sway) dx += m.sway * Math.sin(TAU * t / m.swayT + p * 1.3);
-      if (m.turn) ang += m.turn * Math.sin(TAU * t / m.turnT + p * 0.7);
-      if (m.flap) sy = 1 - m.flap * (0.5 + 0.5 * Math.sin(TAU * t / m.flapT + p));
-      if (m.wobble) { var w = m.wobble * Math.sin(TAU * t / m.wobbleT + p); sx *= 1 + w; sy = 1 - w; }
-      if (m.breathe) a *= 1 - m.breathe * (0.5 + 0.5 * Math.sin(TAU * t / m.breatheT + p));
-      if (m.glow) a *= 1 - m.glow * (1 - flicker(t, p, m.glowFast));
-      ctx.globalAlpha = Math.max(0, Math.min(1, a));
-      ctx.save();
-      ctx.translate(it.cx + dx, it.cy + dy); ctx.rotate(ang); ctx.scale(sx, sy);
-      ctx.drawImage(it.s.img, -it.s.side / 2, -it.s.side / 2, it.s.side, it.s.side);
-      ctx.restore();
     }
-    ctx.globalAlpha = 1;
   }
-
-  var last = 0, running = false;
-  function loop(now) {
-    if (!running) return;
-    requestAnimationFrame(loop);
-    if (now - last < 1000 / FPS - 2) return;
-    last = now; frame(now / 1000);
-  }
-  function play() { if (still || running) return; running = true; requestAnimationFrame(loop); }
-  function pause() { running = false; }
-
   function start() {
     if (document.documentElement.getAttribute('data-dots') === 'off') return;
     /* Above the page's background glow, below the content: right after the background layer if there is one. */
@@ -141,9 +70,8 @@
     if (slot) slot.appendChild(canvas);
     else if (bg) bg.parentNode.insertBefore(canvas, bg.nextSibling);
     else document.body.insertBefore(canvas, document.body.firstChild);
-    layout(); frame(0); play();
-    document.addEventListener('visibilitychange', function () { document.hidden ? pause() : play(); });
-    var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(function () { layout(); frame(performance.now() / 1000); }, 200); });
+    draw();
+    var t; window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 200); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

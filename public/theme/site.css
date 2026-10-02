@@ -21,10 +21,13 @@
   --radius: var(--radius-l);
   --nav-h: 64px;
 }
+/* Matching rgb for the see-through accent shades the pages use (rgb(var(--accent-rgb) / .2)). */
+:root[data-brand="red"] { --accent-rgb: 225 6 0; }
+:root[data-brand="orange"] { --accent-rgb: 253 99 37; }
 @media (max-width: 767px) { :root[data-theme] { --nav-h: 0px; } }   /* on phones the nav sits at the bottom */
 
 body { background: var(--page-background) !important; position: relative; font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-body > main, body > .footer, body > .ou-footer { position: relative; z-index: 1; }
+body > main, body > .footer, body > .ou-footer, body > .demo-bar, body > .test-bar { position: relative; z-index: 1; }
 
 /* ---------- Background: red glow at the top + faint dots, like the Once UI <Background> on the home page ---------- */
 .ou-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;

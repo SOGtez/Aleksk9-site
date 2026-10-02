@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 
 import { Fade, Flex, Line, Row, ToggleButton, Text } from "@once-ui-system/core";
 
-import { routes, about, blog } from "@/resources";
+import { routes, about, blog, calendar } from "@/resources";
 import styles from "./Header.module.scss";
 
 /* The tournament, bracket and admin pages are plain HTML (in /public), not Next.js pages,
@@ -97,6 +97,7 @@ export const Header = () => {
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
               {routes["/about"] && <NavItem icon="person" label={about.label} href="/about" selected={pathname === "/about"} />}
               {routes["/blog"] && <NavItem icon="book" label={blog.label} href="/blog" selected={pathname.startsWith("/blog")} />}
+              {routes["/calendar"] && <NavItem icon="calendar" label={calendar.label} href="/calendar" selected={pathname === "/calendar"} />}
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
               <NavItem icon="trophy" label="Tournament" href="/tournament" selected={false} page />
               <NavItem icon="bracket" label="Bracket" href="/bracket" selected={false} page />

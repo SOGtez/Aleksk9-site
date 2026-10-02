@@ -187,6 +187,15 @@ export async function updateShot(id, patch) {
 }
 export async function deleteShot(id) { await redis().hdel(spaced(KEY_SHOTS), id); await redis().del(spaced('t:shot:' + id)); }
 
+/* ---------- Calendar ----------
+   Events Aleks (admins) plan for the stream: one hash, event id -> event. Not per space: there is one calendar. */
+const KEY_EVENTS = 'cal:events';
+export function hasDatabase() { return !!((process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL) && (process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN)); }
+export async function listEvents() { return Object.values((await redis().hgetall(KEY_EVENTS)) || {}); }
+export async function saveEvent(ev) { await redis().hset(KEY_EVENTS, { [ev.id]: ev }); return ev; }
+export async function getEvent(id) { return redis().hget(KEY_EVENTS, id); }
+export async function deleteEvent(id) { return redis().hdel(KEY_EVENTS, id); }
+
 /* ---------- Twitch login log + player links ---------- */
 export async function recordLogin(u, chat) {
   const key = u.login.toLowerCase();

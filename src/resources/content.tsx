@@ -152,4 +152,12 @@ const gallery: Gallery = {
   images: [],
 };
 
-export { person, social, newsletter, home, about, blog, work, gallery };
+/* Stream calendar (src/app/calendar). Aleks adds events from the admin page. */
+const calendar = {
+  path: "/calendar",
+  label: "Calendar",
+  title: "Stream calendar",
+  description: "Streams, events and everything Aleks has planned, in your time zone.",
+};
+
+export { person, social, newsletter, home, about, blog, work, gallery, calendar };

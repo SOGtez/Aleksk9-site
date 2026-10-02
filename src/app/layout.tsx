@@ -3,6 +3,7 @@ import "@once-ui-system/core/css/tokens.css";
 import "@/resources/custom.css";
 
 import classNames from "classnames";
+import Script from "next/script";
 
 import {
   Background,
@@ -155,14 +156,19 @@ export default async function RootLayout({
               }}
             />
           </RevealFx>
+          {/* Halloween dot art (public/theme/halloween-dots.js) is drawn here: above the glow, below the content. */}
+          <div id="ak9-dots-slot" aria-hidden="true" />
+          <Script src="/theme/halloween-dots.js" strategy="afterInteractive" />
           <Flex fillWidth minHeight="16" s={{ hide: true }} />
           <Header />
-          <Flex zIndex={0} fillWidth padding="l" horizontal="center" flex={1}>
+          <Flex position="relative" zIndex={1} fillWidth padding="l" horizontal="center" flex={1}>
             <Flex horizontal="center" fillWidth minHeight="0">
               <RouteGuard>{children}</RouteGuard>
             </Flex>
           </Flex>
-          <Footer />
+          <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
+            <Footer />
+          </div>
         </Column>
       </Providers>
     </Flex>

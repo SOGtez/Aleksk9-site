@@ -29,22 +29,22 @@
   var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* How each kind of shape moves. Times in seconds, distances in CSS px, angles in radians.
-     bob = up/down, sway = side to side, turn = rocking, flap = wing beat (squash), glow = brightness flicker. */
+     fly = flies across the screen (px per second, wraps around), bob = up/down, sway = side to side, turn = rocking, flap = wing beat (squash), glow = brightness flicker. */
   var MOTION = {
-    ghost:        { bob: 12, bobT: 6,  sway: 8,  swayT: 9,  breathe: 0.35, breatheT: 5 },
-    ghost2:       { bob: 12, bobT: 7,  sway: 10, swayT: 10, breathe: 0.35, breatheT: 6 },
-    bat:          { bob: 10, bobT: 3,  sway: 18, swayT: 6,  flap: 0.28, flapT: 0.9 },
-    moonbats:     { turn: 0.04, turnT: 12, breathe: 0.15, breatheT: 8 },
-    jackolantern: { glow: 0.45, turn: 0.02, turnT: 7 },
-    pumpkin:      { glow: 0.3, turn: 0.02, turnT: 8 },
-    candles:      { glow: 0.5, glowFast: true },
-    spider:       { bob: 16, bobT: 5, turn: 0.03, turnT: 5 },
-    web:          { turn: 0.025, turnT: 9, breathe: 0.2, breatheT: 7 },
-    witch:        { bob: 10, bobT: 4, sway: 36, swayT: 14, turn: 0.05, turnT: 4 },
-    tomb:         { breathe: 0.25, breatheT: 9 },
-    cauldron:     { wobble: 0.035, wobbleT: 1.6, glow: 0.25 },
-    cat:          { turn: 0.03, turnT: 6, breathe: 0.15, breatheT: 6 },
-    house:        { glow: 0.2, breathe: 0.15, breatheT: 10 }
+    ghost:        { bob: 26, bobT: 5,  sway: 18, swayT: 8,  breathe: 0.6, breatheT: 4 },
+    ghost2:       { bob: 26, bobT: 6,  sway: 20, swayT: 9,  breathe: 0.6, breatheT: 5 },
+    bat:          { fly: 60, bob: 22, bobT: 2.4, flap: 0.45, flapT: 0.7 },
+    moonbats:     { turn: 0.08, turnT: 10, breathe: 0.3, breatheT: 6 },
+    jackolantern: { glow: 0.8, turn: 0.05, turnT: 5 },
+    pumpkin:      { glow: 0.6, turn: 0.05, turnT: 6 },
+    candles:      { glow: 0.85, glowFast: true },
+    spider:       { bob: 40, bobT: 4, turn: 0.06, turnT: 4 },
+    web:          { turn: 0.05, turnT: 7, breathe: 0.4, breatheT: 6 },
+    witch:        { fly: 35, faces: 1, bob: 24, bobT: 3.5, turn: 0.08, turnT: 3.5 },
+    tomb:         { breathe: 0.5, breatheT: 6 },
+    cauldron:     { wobble: 0.07, wobbleT: 1.4, glow: 0.5 },
+    cat:          { turn: 0.07, turnT: 5, breathe: 0.3, breatheT: 5 },
+    house:        { glow: 0.45, breathe: 0.3, breatheT: 7 }
   };
 
   var canvas = document.createElement('canvas');
@@ -95,7 +95,7 @@
       var size = Math.min(cw, ch) * (0.55 + rand() * 0.3), name = order[n++ % order.length];
       var x = c * cw + (cw - size) * rand(), y = r * ch + (ch - size) * rand(), rot = (rand() - 0.5) * 0.45;
       var s = sprite(name, size, rot, col);
-      items.push({ name: name, s: s, cx: x + s.side / 2, cy: y + s.side / 2, p: rand() * 100, m: MOTION[name] || {} });
+      items.push({ name: name, s: s, cx: x + s.side / 2, cy: y + s.side / 2, p: rand() * 100, dir: rand() < 0.5 ? -1 : 1, m: MOTION[name] || {} });
     }
   }
 
@@ -103,11 +103,16 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
     for (var k = 0; k < items.length; k++) {
       var it = items[k], m = it.m, p = it.p, TAU = 6.2832, a = 1, sx = 1, sy = 1, dx = 0, dy = 0, ang = 0;
+      if (m.fly) {                                                    /* across the screen, then back in from the other side */
+        var span = W + it.s.side * 2, d = it.dir * m.fly * t;
+        dx += ((((it.cx + it.s.side + d) % span) + span) % span) - it.s.side - it.cx;
+        if (m.faces && m.faces !== it.dir) sx = -1;                  /* face the way it is flying */
+      }
       if (m.bob) dy += m.bob * Math.sin(TAU * t / m.bobT + p);
       if (m.sway) dx += m.sway * Math.sin(TAU * t / m.swayT + p * 1.3);
       if (m.turn) ang += m.turn * Math.sin(TAU * t / m.turnT + p * 0.7);
       if (m.flap) sy = 1 - m.flap * (0.5 + 0.5 * Math.sin(TAU * t / m.flapT + p));
-      if (m.wobble) { var w = m.wobble * Math.sin(TAU * t / m.wobbleT + p); sx = 1 + w; sy = 1 - w; }
+      if (m.wobble) { var w = m.wobble * Math.sin(TAU * t / m.wobbleT + p); sx *= 1 + w; sy = 1 - w; }
       if (m.breathe) a *= 1 - m.breathe * (0.5 + 0.5 * Math.sin(TAU * t / m.breatheT + p));
       if (m.glow) a *= 1 - m.glow * (1 - flicker(t, p, m.glowFast));
       ctx.globalAlpha = Math.max(0, Math.min(1, a));

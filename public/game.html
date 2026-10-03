@@ -67,8 +67,6 @@
   .flash{position:fixed;inset:0;background:var(--red);opacity:0;pointer-events:none}
   .flash.go{animation:fl .3s}
   @keyframes fl{0%{opacity:.35}100%{opacity:0}}
-  .credit{position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom));font-size:10px;color:var(--dim);pointer-events:none}
-  @media (max-width:600px){.credit{display:none}}
   @media (prefers-reduced-motion:reduce){.banner.show,.flash.go{animation:none}}
 </style>
 <script type="importmap">{"imports":{"three":"/game/vendor/three.module.js","three/addons/":"/game/vendor/addons/"}}</script>
@@ -116,7 +114,6 @@
     <a class="back" href="/">← Back to aleksk9.com</a>
   </div>
 </div>
-<div class="credit">3D: three.js</div>
 <script type="module" src="/game/game.js"></script>
 </body>
 </html>

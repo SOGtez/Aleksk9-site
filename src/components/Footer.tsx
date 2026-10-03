@@ -25,11 +25,9 @@ export const Footer = () => {
           <Text onBackground="neutral-weak">© {currentYear} /</Text>
           <Text paddingX="4">{person.name}</Text>
           <Text onBackground="neutral-weak">
-            {/* The Magic Portfolio template is CC BY-NC 4.0: this credit and the license link must stay
-                unless there is a Once UI Pro license. The design was adapted for AleksK9. */}
-            / Design adapted from{" "}
-            <SmartLink href="https://once-ui.com/products/magic-portfolio">Magic Portfolio by Once UI</SmartLink>{" "}
-            (<SmartLink href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</SmartLink>)
+            {/* The Magic Portfolio template is CC BY-NC 4.0: its credit and license link live on /credits,
+                and this link to it must stay unless there is a Once UI Pro license. */}
+            / <SmartLink href="/credits">Credits</SmartLink>
           </Text>
         </Text>
         <Row gap="16">

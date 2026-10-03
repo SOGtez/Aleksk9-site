@@ -16,6 +16,18 @@ import { baseURL, about, person, social, display } from "@/resources";
 import TableOfContents from "@/components/about/TableOfContents";
 import styles from "@/components/about/about.module.scss";
 import React from "react";
+import { profiles, CHANNEL_LOGIN } from "@/server/lib/twitch";
+
+/* Aleks's current Twitch profile picture (checked again at most once an hour); the AK9 logo if Twitch can't be reached. */
+export const revalidate = 3600;
+async function twitchAvatar() {
+  try {
+    const p = (await profiles([CHANNEL_LOGIN])) as Record<string, { avatar: string }>;
+    return p[CHANNEL_LOGIN]?.avatar || person.avatar;
+  } catch {
+    return person.avatar;
+  }
+}
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -27,7 +39,8 @@ export async function generateMetadata() {
   });
 }
 
-export default function About() {
+export default async function About() {
+  const avatar = await twitchAvatar();
   const structure = [
     {
       title: about.intro.title,
@@ -62,7 +75,7 @@ export default function About() {
         author={{
           name: person.name,
           url: `${baseURL}${about.path}`,
-          image: `${baseURL}${person.avatar}`,
+          image: avatar.startsWith("http") ? avatar : `${baseURL}${avatar}`,
         }}
       />
       {about.tableOfContent.display && (
@@ -93,7 +106,7 @@ export default function About() {
             flex={3}
             horizontal="center"
           >
-            <Avatar src={person.avatar} size="xl" />
+            <Avatar src={avatar} size="xl" />
             {display.location && (
               <Row gap="8" vertical="center">
                 <Icon onBackground="accent-weak" name="globe" />

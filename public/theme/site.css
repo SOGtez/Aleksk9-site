@@ -96,3 +96,7 @@ h1, h2, h3 { font-weight: 700; letter-spacing: -0.03em; }
 h1 span, .t-hero h1 span { color: var(--brand-solid-strong); }
 .subnav { background: color-mix(in srgb, var(--page-background) 85%, transparent) !important; border-color: var(--neutral-alpha-weak) !important; }
 .toast { background: var(--neutral-on-background-strong); color: var(--page-background); }
+
+/* Tournament and Bracket are hidden from the menu for now (the pages still work by link).
+   To show them again, delete this rule and set SHOW_TOURNAMENT = true in src/components/Header.tsx. */
+.ou-pill #nav-tournament, .ou-pill a.ou-tb[href^="/bracket"] { display: none; }

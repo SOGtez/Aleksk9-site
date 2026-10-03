@@ -8,6 +8,10 @@ import { Fade, Flex, Line, Row, ToggleButton, Text } from "@once-ui-system/core"
 import { routes, about, blog, calendar } from "@/resources";
 import styles from "./Header.module.scss";
 
+/* Tournament and Bracket are hidden from the menu for now (the pages still work by link). The static pages
+   hide them with a rule at the end of public/theme/site.css. */
+const SHOW_TOURNAMENT = false;
+
 /* The tournament, bracket and admin pages are plain HTML (in /public), not Next.js pages,
    so these buttons do a normal page load instead of a client-side route change. */
 const go = (href: string) => () => window.location.assign(href);
@@ -99,8 +103,8 @@ export const Header = () => {
               {routes["/blog"] && <NavItem icon="book" label={blog.label} href="/blog" selected={pathname.startsWith("/blog")} />}
               {routes["/calendar"] && <NavItem icon="calendar" label={calendar.label} href="/calendar" selected={pathname === "/calendar"} />}
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
-              <NavItem icon="trophy" label="Tournament" href="/tournament" selected={false} page />
-              <NavItem icon="bracket" label="Bracket" href="/bracket" selected={false} page />
+              {SHOW_TOURNAMENT && <NavItem icon="trophy" label="Tournament" href="/tournament" selected={false} page />}
+              {SHOW_TOURNAMENT && <NavItem icon="bracket" label="Bracket" href="/bracket" selected={false} page />}
               <NavItem icon="game" label="Game" href="/game" selected={false} page />
             </Row>
           </Row>

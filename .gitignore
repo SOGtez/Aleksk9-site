@@ -6,3 +6,6 @@ node_modules/
 .DS_Store
 .next/
 next-env.d.ts
+blender/__pycache__/
+blender/*.blend
+blender/*.blend1

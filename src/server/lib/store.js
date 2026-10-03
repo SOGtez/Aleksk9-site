@@ -209,3 +209,31 @@ export async function setPlayerLink(playerId, login) {
   if (!login) return redis().hdel(KEY_PLAYER_TWITCH, playerId);
   return redis().hset(KEY_PLAYER_TWITCH, { [playerId]: String(login).toLowerCase() });
 }
+
+/* ---------- Chat Survivors (the game on /game) ----------
+   Leaderboard: a sorted set ranks entry ids (score = rooms * 1e6 + seconds survived), a hash holds the entries.
+   Only the best 100 are kept. */
+const KEY_GAME_RANK = 'game:rank';
+const KEY_GAME_ENTRIES = 'game:entries';
+const GAME_KEEP = 100;
+export async function addGameScore(entry, score) {
+  await redis().zadd(KEY_GAME_RANK, { score, member: entry.id });
+  await redis().hset(KEY_GAME_ENTRIES, { [entry.id]: entry });
+  const extra = (await redis().zrange(KEY_GAME_RANK, 0, -(GAME_KEEP + 1))) || [];
+  if (extra.length) {
+    await redis().zrem(KEY_GAME_RANK, ...extra);
+    await redis().hdel(KEY_GAME_ENTRIES, ...extra);
+  }
+  const rank = await redis().zrevrank(KEY_GAME_RANK, entry.id);
+  return rank == null ? null : rank + 1;
+}
+export async function topGameScores(n) {
+  const ids = (await redis().zrange(KEY_GAME_RANK, 0, n - 1, { rev: true })) || [];
+  if (!ids.length) return [];
+  const map = (await redis().hmget(KEY_GAME_ENTRIES, ...ids)) || {};
+  return ids.map((id) => map[id]).filter(Boolean);
+}
+export async function deleteGameScore(id) {
+  await redis().zrem(KEY_GAME_RANK, id);
+  await redis().hdel(KEY_GAME_ENTRIES, id);
+}

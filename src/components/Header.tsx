@@ -101,6 +101,7 @@ export const Header = () => {
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
               <NavItem icon="trophy" label="Tournament" href="/tournament" selected={false} page />
               <NavItem icon="bracket" label="Bracket" href="/bracket" selected={false} page />
+              <NavItem icon="game" label="Game" href="/game" selected={false} page />
             </Row>
           </Row>
         </Row>

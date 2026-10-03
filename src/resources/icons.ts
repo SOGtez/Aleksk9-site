@@ -22,6 +22,7 @@ import {
   PiImageDuotone,
   PiTrophyDuotone,
   PiTreeStructureDuotone,
+  PiGameControllerDuotone,
   PiSignInBold,
   PiShieldStarDuotone,
 } from "react-icons/pi";
@@ -71,6 +72,7 @@ export const iconLibrary: Record<string, IconType> = {
   twitch: FaTwitch,
   trophy: PiTrophyDuotone,
   bracket: PiTreeStructureDuotone,
+  game: PiGameControllerDuotone,
   signIn: PiSignInBold,
   admin: PiShieldStarDuotone,
 };

@@ -7,7 +7,7 @@ const withMDX = mdx({
 
 /* The tournament, bracket, admin and overlay pages are plain HTML in /public. These rewrites keep their
    old addresses (aleksk9.com/tournament, /bracket, …) working exactly as before. */
-const STATIC_PAGES = ["tournament", "bracket", "admin", "apply", "overlay", "spooktober", "how-to-draft"];
+const STATIC_PAGES = ["tournament", "bracket", "admin", "apply", "overlay", "spooktober", "how-to-draft", "game"];
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {

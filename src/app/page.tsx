@@ -62,7 +62,7 @@ export default function Home() {
           )}
           <RevealFx translateY="4" fillWidth horizontal="center" paddingBottom="8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/ak9-logo-hero.png" alt="" width={300} height={179} style={{ width: 300, height: "auto" }} />
+            <img src="/assets/ak9-logo-halloween-hero.png" alt="" width={300} height={182} style={{ width: 300, height: "auto" }} />
           </RevealFx>
           <RevealFx translateY="4" fillWidth horizontal="center" paddingBottom="16">
             <Heading wrap="balance" variant="display-strong-l">

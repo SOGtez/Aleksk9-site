@@ -91,7 +91,7 @@ export const Header = () => {
         <Row paddingLeft="12" fillWidth vertical="center" s={{ hide: true }}>
           <a href="/" aria-label="AleksK9 home" style={{ display: "inline-flex" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/ak9-logo-nav.png" alt="AleksK9" height={40} style={{ height: 40, width: "auto" }} />
+            <img src="/assets/ak9-logo-halloween-nav.png" alt="AleksK9" height={40} style={{ height: 40, width: "auto" }} />
           </a>
         </Row>
         <Row fillWidth horizontal="center">

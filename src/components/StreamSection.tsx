@@ -34,7 +34,7 @@ const MARKUP = `
   </div>
   <div class="modal" id="app-modal" hidden role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
     <div class="modal-card">
-      <img src="/assets/ak9-logo-hero.png" alt="">
+      <img src="/assets/ak9-logo-halloween-hero.png" alt="">
       <h2 id="app-modal-title">Enjoying the stream?</h2>
       <p>You're chatting like a regular. Watch on the Twitch app for the full experience: better quality, emotes, and no missed messages.</p>
       <div class="actions">

@@ -5,7 +5,7 @@ import styles from "./awards.module.scss";
 import { Award, ResultCard, Theme, Wildcard, WildcardList, WORDS, themeClass } from "./shared";
 
 /* /awards/<season>: one finished season from the Hall of Fame. */
-type Archived = { id: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
+type Archived = { wildcardsBy?: string; id: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
 
 export function HallSeason({ id }: { id: string }) {
   const [s, setS] = useState<Archived | null>(null);
@@ -28,7 +28,7 @@ export function HallSeason({ id }: { id: string }) {
         <div className={styles.btnRow}><a className={styles.ghostBtn} href={`/awards/reveal?season=${encodeURIComponent(s.id)}`}>Replay the reveal</a></div>
       </div>
       <div className={styles.results}>{s.awards.map((a, i) => <ResultCard key={a.id} a={a} i={i} theme={s.theme} />)}</div>
-      <WildcardList list={s.wildcards} />
+      <WildcardList list={s.wildcards} by={s.wildcardsBy} />
       <p className={styles.footNote}>{WORDS[s.theme].kicker} the AK9 Awards · {s.label}</p>
     </div>
   );

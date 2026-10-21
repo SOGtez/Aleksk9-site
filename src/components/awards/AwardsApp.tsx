@@ -242,7 +242,7 @@ function Winners({ s, results }: { s: Season; results: Results }) {
     <>
       <p className={styles.intro}>{results.totalVoters} people voted. Here is who chat picked.</p>
       <div className={styles.results}>{results.awards.map((a, i) => <ResultCard key={a.id} a={a} i={i} theme={s.theme} />)}</div>
-      <WildcardList list={results.wildcards || []} />
+      <WildcardList list={results.wildcards || []} by={s.wildcardsBy} />
     </>
   );
 }

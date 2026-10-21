@@ -7,7 +7,7 @@ import { Award, Face, Theme, Wildcard, WORDS, loginUrl, pad2, themeClass } from 
 /* /awards/reveal: the page Aleks shows on stream to reveal the winners one award at a time.
    Before the winners are published only admins can open it; afterwards (or with ?season=<id>) anyone can
    replay it. Space / → next, ← back, F fullscreen. */
-type Show = { label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
+type Show = { wildcardsBy?: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
 type Step = { kind: "intro" } | { kind: "award"; i: number } | { kind: "win"; i: number } | { kind: "wild" } | { kind: "outro" };
 
 let ac: AudioContext | null = null;
@@ -45,11 +45,11 @@ export function RevealStage() {
         if (a.ok) {
           const d = await a.json();
           if (!d.season || !d.results) { setGate("error"); return; }
-          setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards: d.results.awards, wildcards: d.season.wildcards || [] });
+          setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards: d.results.awards, wildcards: d.season.wildcards || [], wildcardsBy: d.season.wildcardsBy });
           setCanPublish(!d.demo && d.stage !== "revealed"); return;
         }
         const p = await (await fetch("/api/awards", { cache: "no-store" })).json();
-        if (p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [] }); return; }
+        if (p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [], wildcardsBy: p.season.wildcardsBy }); return; }
         setGate(p.me && p.me.loggedIn ? "admin" : "login");
       } catch { setGate("error"); }
     })();
@@ -170,7 +170,7 @@ export function RevealStage() {
         })()}
         {cur.kind === "wild" && (
           <div className={styles.sAward}>
-            <div className={styles.anum}>Wildcards · picked by Aleks</div>
+            <div className={styles.anum}>Wildcards · picked by {show.wildcardsBy || "Aleks"}</div>
             <div className={styles.sWildGrid}>
               {show.wildcards.map((wc) => (
                 <div key={wc.title} className={styles.sWild}>

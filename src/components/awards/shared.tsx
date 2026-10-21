@@ -11,6 +11,7 @@ export type Wildcard = { title: string; winners: string[]; people?: { name: stri
 export type Stage = "soon" | "nominate-soon" | "nominate" | "nominate-closed" | "vote" | "closed" | "revealed";
 export type Theme = "classic" | "crime" | "spooky";
 export type Season = {
+  wildcardsBy?: string;
   id: string; label: string; theme: Theme; phase: string; stage: Stage;
   nominateOpen: string; nominateDeadline: string; voteDeadline: string;
   awards: Award[]; wildcards: Wildcard[]; counts?: { nominators: number; voters: number };
@@ -104,12 +105,13 @@ export function ResultCard({ a, i, theme }: { a: Award; i: number; theme: Theme 
   );
 }
 
-export function WildcardList({ list }: { list: Wildcard[] }) {
+/* `by`: who picked the wildcards. Without a name it is Aleks. */
+export function WildcardList({ list, by }: { list: Wildcard[]; by?: string }) {
   if (!list || !list.length) return null;
   return (
     <div className={styles.wildWrap}>
       <div className={styles.sectionH}>Wildcard awards</div>
-      <p className={styles.sectionP}>Picked by Aleks, not voted.</p>
+      <p className={styles.sectionP}>{by ? `Picked by ${by}.` : "Picked by Aleks, not voted."}</p>
       <div className={styles.wildGrid}>
         {list.map((wc) => (
           <div key={wc.title} className={styles.wild}>

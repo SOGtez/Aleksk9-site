@@ -7,6 +7,7 @@ export const PAST_SEASONS = [
  "theme": "crime",
  "totalVoters": 27,
  "source": "tezcreations.com/ak9awards",
+ "wildcardsBy": "Tez",
  "awards": [
   {
    "id": "3a4a7ecc-38f9-48cf-871b-369333665a43",

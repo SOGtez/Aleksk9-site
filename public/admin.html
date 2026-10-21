@@ -538,7 +538,8 @@
 
           <div class="card pad">
             <h3>Wildcard awards</h3>
-            <p class="d">Picked by Aleks, not voted. They show after the voted awards on the reveal page and with the winners.</p>
+            <p class="d">Picked by hand, not voted. They show after the voted awards on the reveal page and with the winners.</p>
+            <label class="f" style="max-width:320px">Picked by<input class="field" id="aw-wild-by" maxlength="30" placeholder="Aleks"></label>
             <div class="aw-grid" id="aw-wild"></div>
             <div class="aw-row" style="margin-top:12px"><button class="btn btn-sm" type="button" id="aw-add-wild">+ Add a wildcard</button></div>
           </div>
@@ -747,6 +748,7 @@
       function render() {
         $('aw-empty').hidden = !!S; $('aw-season').hidden = !S;
         if (!S) { $('aw-awards').innerHTML = ''; $('aw-wild').innerHTML = ''; return; }
+        $('aw-wild-by').value = S.wildcardsBy || '';
         $('aw-label').value = S.label || ''; $('aw-theme').value = S.theme || 'classic'; $('aw-phase').value = S.phase || 'soon';
         $('aw-nopen').value = toLocal(S.nominateOpen); $('aw-nclose').value = toLocal(S.nominateDeadline); $('aw-vclose').value = toLocal(S.voteDeadline);
         var stageName = { soon: 'Coming soon', 'nominate-soon': 'Nominations not open yet', nominate: 'Nominations open', 'nominate-closed': 'Nominations closed (deadline passed)', vote: 'Voting open', closed: 'Voting closed', revealed: 'Winners published' }[STAGE] || STAGE;
@@ -777,10 +779,11 @@
         }).join('') || '<p class="small">No wildcards.</p>';
       }
       function readSeason() {
+        S.wildcardsBy = $('aw-wild-by').value;
         S.label = $('aw-label').value; S.theme = $('aw-theme').value; S.phase = $('aw-phase').value;
         S.nominateOpen = fromLocal($('aw-nopen').value); S.nominateDeadline = fromLocal($('aw-nclose').value); S.voteDeadline = fromLocal($('aw-vclose').value);
       }
-      ['aw-label', 'aw-theme', 'aw-phase', 'aw-nopen', 'aw-nclose', 'aw-vclose'].forEach(function (id) { $(id).addEventListener('input', function () { readSeason(); mark(); }); });
+      ['aw-wild-by', 'aw-label', 'aw-theme', 'aw-phase', 'aw-nopen', 'aw-nclose', 'aw-vclose'].forEach(function (id) { $(id).addEventListener('input', function () { readSeason(); mark(); }); });
       function onEdit(e) {
         var t = e.target, a = t.dataset.a, n = t.dataset.n, w = t.dataset.w, k = t.dataset.k;
         if (a != null && n != null) { S.awards[a].nominees[n][k] = t.value; if (k === 'login') S.awards[a].nominees[n].image = ''; }

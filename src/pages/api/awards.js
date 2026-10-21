@@ -31,6 +31,7 @@ function publicSeason(season, stage, counts) {
     nominateOpen: season.nominateOpen || '', nominateDeadline: season.nominateDeadline || '', voteDeadline: season.voteDeadline || '',
     awards: (season.awards || []).map((a) => ({ id: a.id, title: a.title, description: a.description || '', nominees: showsFinalists(stage) ? a.nominees || [] : [] })),
     wildcards: stage === 'revealed' ? season.wildcards || [] : [],
+    wildcardsBy: season.wildcardsBy || '',
     counts,
   };
 }
@@ -75,6 +76,7 @@ function sanitizeSeason(input, prev) {
     nominateOpen: isIso(s.nominateOpen) ? new Date(s.nominateOpen).toISOString() : '',
     nominateDeadline: isIso(s.nominateDeadline) ? new Date(s.nominateDeadline).toISOString() : '',
     voteDeadline: isIso(s.voteDeadline) ? new Date(s.voteDeadline).toISOString() : '',
+    wildcardsBy: clean(s.wildcardsBy, 30),
     awards, wildcards, updatedAt: Date.now(),
   };
 }
@@ -175,7 +177,7 @@ export default async function handler(req, res) {
   if (b.action === 'archive') {
     const votes = await getAwEntries('votes', season.id);
     const r = computeResults(season, votes);
-    const archived = { id: season.id, label: season.label, theme: season.theme, totalVoters: r.totalVoters, awards: r.awards, wildcards: season.wildcards || [], archivedAt: Date.now() };
+    const archived = { id: season.id, label: season.label, theme: season.theme, totalVoters: r.totalVoters, awards: r.awards, wildcards: season.wildcards || [], wildcardsBy: season.wildcardsBy || '', archivedAt: Date.now() };
     await saveAwArchive(archived);
     await setAwSeason({ ...season, phase: 'revealed', updatedAt: Date.now() });
     return json(res, 200, { ok: true, archived: hallSummary(archived) });

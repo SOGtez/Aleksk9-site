@@ -23,6 +23,7 @@ const routes: RoutesConfig = {
   "/blog": true,
   "/calendar": true,
   "/credits": true,
+  "/awards": true,
   "/gallery": false,
 };
 

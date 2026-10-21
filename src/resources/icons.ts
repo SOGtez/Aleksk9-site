@@ -23,6 +23,7 @@ import {
   PiTrophyDuotone,
   PiTreeStructureDuotone,
   PiGameControllerDuotone,
+  PiMedalDuotone,
   PiSignInBold,
   PiShieldStarDuotone,
 } from "react-icons/pi";
@@ -73,6 +74,7 @@ export const iconLibrary: Record<string, IconType> = {
   trophy: PiTrophyDuotone,
   bracket: PiTreeStructureDuotone,
   game: PiGameControllerDuotone,
+  awards: PiMedalDuotone,
   signIn: PiSignInBold,
   admin: PiShieldStarDuotone,
 };

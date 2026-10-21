@@ -105,6 +105,7 @@ export const Header = () => {
               <Line background="neutral-alpha-medium" vert maxHeight="24" />
               {SHOW_TOURNAMENT && <NavItem icon="trophy" label="Tournament" href="/tournament" selected={false} page />}
               {SHOW_TOURNAMENT && <NavItem icon="bracket" label="Bracket" href="/bracket" selected={false} page />}
+              <NavItem icon="awards" label="Awards" href="/awards" selected={pathname.startsWith("/awards")} />
               <NavItem icon="game" label="Game" href="/game" selected={false} page />
             </Row>
           </Row>

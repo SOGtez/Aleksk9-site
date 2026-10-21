@@ -153,70 +153,108 @@ function useSubmit(action: "nominate" | "vote", reload: () => void, demo: boolea
   return { busy, note, done, send };
 }
 
+/* Nominations and voting go one award at a time, then a review screen with everything before submitting. */
+function Stepper({ i, total, onJump }: { i: number; total: number; onJump?: (k: number) => void }) {
+  return (
+    <div className={styles.stepper}>
+      <div className={styles.stepLbl}>{i < total ? <>Award <b>{i + 1}</b> of <b>{total}</b></> : <b>Review your picks</b>}</div>
+      <div className={styles.stepTrack} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={Math.min(i, total)}>
+        {Array.from({ length: total }, (_, k) => (
+          <button key={k} type="button" className={`${styles.stepDot} ${k < i ? styles.stepDone : ""} ${k === i ? styles.stepNow : ""}`} onClick={() => onJump && k < i && onJump(k)} aria-label={`Award ${k + 1}`} tabIndex={k < i ? 0 : -1} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Review({ s, rows, onEdit, label, busy, note, onSubmit }: { s: Season; rows: (string | undefined)[]; onEdit: (k: number) => void; label: string; busy: boolean; note: string; onSubmit: () => void }) {
+  return (
+    <div className={`${styles.award} ${styles.stepCard}`}>
+      <div className={styles.atitle}>Here is everything you picked</div>
+      <div className={styles.adesc}>Once you submit you can&apos;t change it, so check it over.</div>
+      <div className={styles.reviewList}>
+        {s.awards.map((a, k) => (
+          <div key={a.id} className={styles.reviewRow}>
+            <span className={styles.reviewAward}>{a.title}</span>
+            <b>{rows[k] || "—"}</b>
+            <button type="button" className={styles.linkBtn} onClick={() => onEdit(k)}>Edit</button>
+          </div>
+        ))}
+      </div>
+      {note && <div className={styles.note}>{note}</div>}
+      <button className={styles.btn} disabled={busy} onClick={onSubmit}>{busy ? "Submitting…" : label}</button>
+    </div>
+  );
+}
+
 function Nominate({ s, me, demo, reload }: { s: Season; me: Me; demo: boolean; reload: () => void }) {
   const [vals, setVals] = useState<Record<string, string>>({});
+  const [i, setI] = useState(0);
   const { busy, note, done, send } = useSubmit("nominate", reload, demo);
   const w = WORDS[s.theme];
   const mine = done || me.nominated;
   if (mine) return <Msg h="Your nominations are in" p="Thanks! When nominations close, the most-named picks become the finalists. Come back to vote."><Picks s={s} picks={mine} title="You nominated" names /></Msg>;
   if (!me.loggedIn || !me.follows) return <><Gate me={me} what="nominate" /><AwardList awards={s.awards} theme={s.theme} /></>;
-  const filled = s.awards.filter((a) => (vals[a.id] || "").trim()).length;
+  const n = s.awards.length, a = s.awards[i], v = a ? (vals[a.id] || "") : "";
+  const next = () => { if (v.trim()) setI(Math.min(n, i + 1)); };
   return (
-    <>
-      <p className={styles.intro}>Name one person for <b>every</b> award. The button unlocks once all {s.awards.length} are filled in.</p>
-      <div className={styles.awards}>
-        {s.awards.map((a, i) => (
-          <div key={a.id} className={styles.award}>
-            <div className={styles.anum}>{w.award} {pad2(i + 1)}</div>
-            <div className={styles.atitle}>{a.title}</div>
-            {a.description && <div className={styles.adesc}>{a.description}</div>}
-            <input className={styles.input} maxLength={60} autoComplete="off" spellCheck={false} placeholder={s.theme === "crime" ? "Who did it?" : "Who deserves this? Type a name"}
-              value={vals[a.id] || ""} onChange={(e) => setVals({ ...vals, [a.id]: e.target.value })} />
+    <div className={styles.stepWrap}>
+      <Stepper i={i} total={n} onJump={setI} />
+      {i < n ? (
+        <div key={a.id} className={`${styles.award} ${styles.stepCard}`}>
+          <div className={styles.anum}>{w.award} {pad2(i + 1)}</div>
+          <div className={styles.stepTitle}>{a.title}</div>
+          {a.description && <div className={styles.adesc}>{a.description}</div>}
+          <input className={styles.input} maxLength={60} autoComplete="off" spellCheck={false} autoFocus
+            placeholder={s.theme === "crime" ? "Who did it?" : "Who deserves this? Type a name"}
+            value={v} onChange={(e) => setVals({ ...vals, [a.id]: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") next(); }} />
+          <div className={styles.stepNav}>
+            <button type="button" className={styles.ghostBtn} disabled={i === 0} onClick={() => setI(i - 1)}>← Back</button>
+            <button type="button" className={styles.btn} disabled={!v.trim()} onClick={next}>{i === n - 1 ? "Review" : "Next →"}</button>
           </div>
-        ))}
-      </div>
-      <SubmitBar done={filled} total={s.awards.length} word="nominated" label="Submit nominations" busy={busy} note={note} onClick={() => send(vals)} />
-    </>
+        </div>
+      ) : (
+        <Review s={s} rows={s.awards.map((x) => vals[x.id])} onEdit={setI} label="Submit nominations" busy={busy} note={note} onSubmit={() => send(vals)} />
+      )}
+    </div>
   );
 }
 
 function Vote({ s, me, demo, reload }: { s: Season; me: Me; demo: boolean; reload: () => void }) {
   const [pick, setPick] = useState<Record<string, string>>({});
+  const [i, setI] = useState(0);
   const { busy, note, done, send } = useSubmit("vote", reload, demo);
   const w = WORDS[s.theme];
   const mine = done || me.voted;
   if (mine) return <Msg h={`Your ${w.ballot} is in`} p="Thanks for voting! You can't change your picks now. Here is what you chose:"><Picks s={s} picks={mine} title="Your ballot" /></Msg>;
   if (!me.loggedIn || !me.follows) return <><Gate me={me} what="vote" /><AwardList awards={s.awards} theme={s.theme} showNominees /></>;
-  const chosen = s.awards.filter((a) => pick[a.id]).length;
+  const n = s.awards.length, a = s.awards[i];
+  const choose = (id: string) => { setPick({ ...pick, [a.id]: id }); setTimeout(() => setI((x) => (x === i ? Math.min(n, i + 1) : x)), 380); };
   return (
-    <>
-      <div className={styles.awards}>
-        {s.awards.map((a, i) => (
-          <div key={a.id} className={styles.award}>
-            <div className={styles.anum}>{w.award} {pad2(i + 1)}</div>
-            <div className={styles.atitle}>{a.title}</div>
-            {a.description && <div className={styles.adesc}>{a.description}</div>}
-            <div className={styles.noms}>
-              {a.nominees.map((n) => (
-                <button key={n.id} type="button" className={`${styles.nom} ${pick[a.id] === n.id ? styles.sel : ""}`} onClick={() => setPick({ ...pick, [a.id]: n.id })} aria-pressed={pick[a.id] === n.id}>
-                  <Face n={n} size={40} /><span className={styles.nomName}>{n.name}</span>
-                  <span className={styles.tick} aria-hidden="true">✓</span>
-                </button>
-              ))}
-            </div>
+    <div className={styles.stepWrap}>
+      <Stepper i={i} total={n} onJump={setI} />
+      {i < n ? (
+        <div key={a.id} className={`${styles.award} ${styles.stepCard}`}>
+          <div className={styles.anum}>{w.award} {pad2(i + 1)}</div>
+          <div className={styles.stepTitle}>{a.title}</div>
+          {a.description && <div className={styles.adesc}>{a.description}</div>}
+          <div className={styles.stepNoms}>
+            {a.nominees.map((nm) => (
+              <button key={nm.id} type="button" className={`${styles.nom} ${styles.bigNom} ${pick[a.id] === nm.id ? styles.sel : ""}`} onClick={() => choose(nm.id)} aria-pressed={pick[a.id] === nm.id}>
+                <Face n={nm} size={56} /><span className={styles.nomName}>{nm.name}</span>
+                <span className={styles.tick} aria-hidden="true">✓</span>
+              </button>
+            ))}
           </div>
-        ))}
-      </div>
-      <SubmitBar done={chosen} total={s.awards.length} word="chosen" label={s.theme === "crime" ? "Submit case file" : "Submit ballot"} busy={busy} note={note} onClick={() => send(pick)} />
-    </>
-  );
-}
-
-function SubmitBar({ done, total, word, label, busy, note, onClick }: { done: number; total: number; word: string; label: string; busy: boolean; note: string; onClick: () => void }) {
-  return (
-    <div className={styles.submitBar}>
-      <div className={styles.prog}><b>{done}</b> of <b>{total}</b> awards {word}{note && <span className={styles.note}> · {note}</span>}</div>
-      <button className={styles.btn} disabled={done < total || busy} onClick={onClick}>{busy ? "Submitting…" : label}</button>
+          <div className={styles.stepNav}>
+            <button type="button" className={styles.ghostBtn} disabled={i === 0} onClick={() => setI(i - 1)}>← Back</button>
+            <button type="button" className={styles.btn} disabled={!pick[a.id]} onClick={() => setI(i + 1)}>{i === n - 1 ? "Review" : "Next →"}</button>
+          </div>
+        </div>
+      ) : (
+        <Review s={s} rows={s.awards.map((x) => x.nominees.find((nm) => nm.id === pick[x.id])?.name)} onEdit={setI}
+          label={s.theme === "crime" ? "Submit case file" : "Submit ballot"} busy={busy} note={note} onSubmit={() => send(pick)} />
+      )}
     </div>
   );
 }

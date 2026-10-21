@@ -12,6 +12,7 @@ export type Stage = "soon" | "nominate-soon" | "nominate" | "nominate-closed" | 
 export type Theme = "classic" | "crime" | "spooky";
 export type Season = {
   wildcardsBy?: string;
+  revealStyle?: "pumpkin" | "spotlight";
   id: string; label: string; theme: Theme; phase: string; stage: Stage;
   nominateOpen: string; nominateDeadline: string; voteDeadline: string;
   awards: Award[]; wildcards: Wildcard[]; counts?: { nominators: number; voters: number };

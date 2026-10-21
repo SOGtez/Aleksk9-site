@@ -111,6 +111,31 @@ button.nom:hover { border-color: var(--neutral-alpha-strong); }
 .hallMore { font-size: 13px; font-weight: 700; color: var(--aw-a); }
 .footNote { text-align: center; font-size: 12px; color: var(--neutral-on-background-weak); }
 
+
+/* one award at a time (nominate / vote) */
+.stepWrap { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.stepper { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.stepLbl { font-size: 13px; color: var(--neutral-on-background-weak); }
+.stepLbl b { color: var(--neutral-on-background-strong); }
+.stepTrack { display: flex; gap: 4px; width: 100%; }
+.stepDot { flex: 1; height: 6px; border-radius: 99px; border: 0; padding: 0; background: var(--neutral-alpha-medium); cursor: default; }
+.stepDone { background: var(--aw-a); cursor: pointer; }
+.stepNow { background: var(--aw-a); opacity: .45; }
+.stepCard { padding: 24px; gap: 10px; animation: rise .35s ease both; }
+.stepTitle { font-size: 26px; font-weight: 800; letter-spacing: -.03em; line-height: 1.15; }
+.stepCard .input { height: 52px; font-size: 17px; }
+.stepNoms { display: grid; gap: 10px; margin-top: 8px; }
+.bigNom { padding: 10px 14px; }
+.bigNom .nomName { font-size: 16px; }
+.stepNav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 8px; }
+.stepNav .btn { margin: 0; }
+.ghostBtn:disabled { opacity: .35; }
+button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: transparent; color: var(--neutral-on-background-strong); cursor: pointer; }
+.reviewList { display: grid; margin: 8px 0 4px; }
+.reviewRow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--neutral-alpha-weak); font-size: 14px; }
+.reviewAward { color: var(--neutral-on-background-weak); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.linkBtn { font: inherit; font-size: 12px; font-weight: 600; text-decoration: underline; background: none; border: 0; color: var(--neutral-on-background-weak); cursor: pointer; }
+
 /* ---------- reveal stage (shown on stream) ---------- */
 .stage { position: relative; width: 100%; min-height: calc(100vh - 140px); border-radius: var(--radius-l); overflow: hidden; display: flex; flex-direction: column; cursor: pointer; user-select: none;
   background: radial-gradient(ellipse at 50% 0%, var(--aw-soft), transparent 70%), var(--page-background); border: 1px solid var(--neutral-alpha-weak); }
@@ -143,6 +168,26 @@ button.nom:hover { border-color: var(--neutral-alpha-strong); }
 .stage:hover .sBar { opacity: 1; }
 .sBar button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--neutral-alpha-medium); background: transparent; color: var(--neutral-on-background-strong); cursor: pointer; }
 .sBar button:disabled { opacity: .35; cursor: default; }
+
+/* pumpkin smash reveal */
+.pkBtn { background: none; border: 0; padding: 0; cursor: pointer; margin: 8px 0 0; -webkit-tap-highlight-color: transparent; }
+.pumpkin { position: relative; width: min(360px, 70vw); aspect-ratio: 240 / 220; margin: 0 auto; }
+.pkWhole { width: 100%; height: 100%; filter: drop-shadow(0 0 40px rgba(255, 140, 20, .45)); animation: pkIn .5s cubic-bezier(.2, 1.4, .4, 1) both, pkFloat 2.6s ease-in-out .5s infinite; transform-origin: 50% 90%; }
+.pkHit { animation: pkShake .35s ease both; }
+.pkPiece { position: absolute; inset: 0; width: 100%; height: 100%; animation: pkFly .75s cubic-bezier(.2, .7, .4, 1) forwards; }
+@keyframes pkIn { from { opacity: 0; transform: scale(.4) translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes pkFloat { 50% { transform: translateY(-8px) rotate(-1.5deg); } }
+@keyframes pkShake { 0% { transform: scale(1); } 20% { transform: scale(.9, 1.08) rotate(-5deg); } 45% { transform: scale(1.07, .93) rotate(4deg); } 70% { transform: scale(.97, 1.03) rotate(-2deg); } 100% { transform: none; } }
+@keyframes pkFly { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(.7); opacity: 0; } }
+.sWinHero { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; margin-top: 10px; }
+.sWinOne { display: flex; flex-direction: column; align-items: center; gap: 12px; animation: winPop .6s cubic-bezier(.2, 1.5, .4, 1) both; }
+.sWinOne .face { box-shadow: 0 0 0 6px var(--aw-a), 0 0 80px -10px var(--aw-a); }
+.sWinName { font-size: clamp(30px, 4vw, 52px); font-weight: 800; letter-spacing: -.03em; word-break: break-word; }
+.sWinOne .stamp { font-size: 14px; padding: 5px 12px; }
+@keyframes winPop { from { opacity: 0; transform: scale(.3); } to { opacity: 1; transform: none; } }
+.sNomsSmall { gap: 12px; margin-top: 18px; }
+.sNomsSmall .sNom { width: 120px; padding: 10px 6px; }
+.sNomsSmall .sNomName { font-size: 14px; }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: breakpoints.$s) {
@@ -153,4 +198,4 @@ button.nom:hover { border-color: var(--neutral-alpha-strong); }
   .sNom { width: 130px; } .sWin { width: 200px; }
   .sBar { flex-wrap: wrap; opacity: 1; }
 }
-@media (prefers-reduced-motion: reduce) { .sIntro, .sAward { animation: none; } .sNom, .sNom .face { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .sIntro, .sAward, .pkWhole, .sWinOne, .stepCard { animation: none; } .sNom, .sNom .face { transition: none; } }

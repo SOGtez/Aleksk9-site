@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./awards.module.scss";
 import { Award, Face, Theme, Wildcard, WORDS, loginUrl, pad2, themeClass } from "./shared";
+import { Pumpkin } from "./Pumpkin";
 
 /* /awards/reveal: the page Aleks shows on stream to reveal the winners one award at a time.
    Before the winners are published only admins can open it; afterwards (or with ?season=<id>) anyone can
    replay it. Space / → next, ← back, F fullscreen. */
-type Show = { wildcardsBy?: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
+type Show = { revealStyle?: string; wildcardsBy?: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
 type Step = { kind: "intro" } | { kind: "award"; i: number } | { kind: "win"; i: number } | { kind: "wild" } | { kind: "outro" };
 
 let ac: AudioContext | null = null;
@@ -20,13 +21,26 @@ function tone(f: number, d = 0.08, type: OscillatorType = "triangle", v = 0.05) 
   } catch { /* no audio */ }
 }
 
+/* A short burst of noise: the pumpkin breaking. */
+function splat() {
+  try {
+    ac = ac || new AudioContext();
+    const len = ac.sampleRate * 0.35, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    f.type = "lowpass"; f.frequency.value = 1400; g.gain.value = 0.5;
+    src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
+  } catch { /* no audio */ }
+}
+
 export function RevealStage() {
   const [show, setShow] = useState<Show | null>(null);
   const [gate, setGate] = useState<"" | "login" | "admin" | "error">("");
   const [canPublish, setCanPublish] = useState(false);
   const [published, setPublished] = useState(false);
   const [step, setStep] = useState(0);
-  const [phase, setPhase] = useState<"idle" | "suspense" | "shown">("idle");
+  const [phase, setPhase] = useState<"idle" | "suspense" | "pumpkin" | "burst" | "shown">("idle");
+  const [hits, setHits] = useState(0);
   const [spot, setSpot] = useState(-1);
   const [sound, setSound] = useState(true);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -45,11 +59,11 @@ export function RevealStage() {
         if (a.ok) {
           const d = await a.json();
           if (!d.season || !d.results) { setGate("error"); return; }
-          setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards: d.results.awards, wildcards: d.season.wildcards || [], wildcardsBy: d.season.wildcardsBy });
+          setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards: d.results.awards, wildcards: d.season.wildcards || [], wildcardsBy: d.season.wildcardsBy, revealStyle: d.season.revealStyle });
           setCanPublish(!d.demo && d.stage !== "revealed"); return;
         }
         const p = await (await fetch("/api/awards", { cache: "no-store" })).json();
-        if (p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [], wildcardsBy: p.season.wildcardsBy }); return; }
+        if (p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [], wildcardsBy: p.season.wildcardsBy, revealStyle: p.season.revealStyle }); return; }
         setGate(p.me && p.me.loggedIn ? "admin" : "login");
       } catch { setGate("error"); }
     })();
@@ -70,6 +84,7 @@ export function RevealStage() {
     if (!show || !cur || cur.kind !== "win") { setPhase("idle"); setSpot(-1); return; }
     const a = show.awards[cur.i];
     if (!a.nominees.length || !(a.winnerIds || []).length) { setPhase("shown"); return; }
+    if ((show.revealStyle || "pumpkin") === "pumpkin") { setHits(0); setPhase("pumpkin"); return; }
     setPhase("suspense");
     const n = a.nominees.length, winIdx = a.nominees.findIndex((x) => (a.winnerIds || []).includes(x.id));
     let k = 0, delay = 90, timer: ReturnType<typeof setTimeout>;
@@ -83,10 +98,22 @@ export function RevealStage() {
     return () => clearTimeout(timer);
   }, [step, show]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /* Three hits break the pumpkin, then the winner pops out. */
+  const smash = useCallback(() => {
+    if (phase !== "pumpkin") return;
+    const h = hits + 1; setHits(h);
+    if (sound) { tone(110, 0.18, "sine", 0.25); tone(70, 0.22, "sine", 0.2); }
+    if (h >= 3) {
+      setPhase("burst"); if (sound) splat(); burst(["#ff8a1f", "#f47a12", "#b8460a", "#ffd34d", "#f4e3b5", "#5b7d1f"]);
+      setTimeout(() => { setPhase("shown"); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } burst(); }, 700);
+    }
+  }, [phase, hits, sound]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const next = useCallback(() => {
-    if (cur && cur.kind === "win" && phase === "suspense") return;   /* let the drumroll finish */
+    if (cur && cur.kind === "win" && phase === "pumpkin") { smash(); return; }
+    if (cur && cur.kind === "win" && (phase === "suspense" || phase === "burst")) return;   /* let the reveal finish */
     setStep((x) => Math.min(steps.length - 1, x + 1));
-  }, [cur, phase, steps.length]);
+  }, [cur, phase, steps.length, smash]);
   const back = useCallback(() => setStep((x) => Math.max(0, x - 1)), []);
   const full = useCallback(() => { const el = stageRef.current; if (!el) return; if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen?.(); }, []);
   useEffect(() => {
@@ -99,11 +126,11 @@ export function RevealStage() {
     addEventListener("keydown", k); return () => removeEventListener("keydown", k);
   }, [next, back, full]);
 
-  function burst() {
+  function burst(colors?: string[]) {
     const c = confettiRef.current; if (!c) return;
     const ctx = c.getContext("2d"); if (!ctx) return;
     const W = (c.width = c.clientWidth), H = (c.height = c.clientHeight);
-    const cols = ["#ffd166", "#ff3b30", "#fd6325", "#a78bfa", "#ffffff", "#4cc3ff"];
+    const cols = colors || ["#ffd166", "#ff3b30", "#fd6325", "#a78bfa", "#ffffff", "#4cc3ff"];
     const ps = Array.from({ length: 160 }, () => ({ x: W / 2, y: H * 0.45, vx: (Math.random() - 0.5) * 16, vy: -Math.random() * 14 - 4, r: 3 + Math.random() * 5, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6 }));
     let t = 0;
     const draw = () => {
@@ -143,6 +170,42 @@ export function RevealStage() {
           const winners = a.nominees.filter((n) => (a.winnerIds || []).includes(n.id));
           const shown = cur.kind === "win" && phase === "shown";
           const total = a.total || 0;
+          const pct = (v = 0) => (total ? ` · ${Math.round((v / total) * 100)}%` : "");
+          const word = w.winner.toLowerCase() === "guilty" ? "verdict" : "winner";
+          if (cur.kind === "win" && (show.revealStyle || "pumpkin") === "pumpkin" && winners.length) {
+            return (
+              <div className={styles.sAward}>
+                <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>
+                <div className={styles.sAwardTitle}>{a.title}</div>
+                {phase === "shown" ? (
+                  <div className={styles.sWinHero}>
+                    {winners.map((n) => (
+                      <div key={n.id} className={styles.sWinOne}>
+                        <Face n={n} size={180} />
+                        <div className={styles.stamp}>{w.winner}{winners.length > 1 ? " · tie" : ""}</div>
+                        <div className={styles.sWinName}>{n.name}</div>
+                        <div className={styles.sVotes}>{n.votes || 0} vote{n.votes === 1 ? "" : "s"}{pct(n.votes)}</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <button type="button" className={styles.pkBtn} onClick={smash} aria-label="Smash the pumpkin">
+                    <Pumpkin hits={hits} burst={phase === "burst"} />
+                  </button>
+                )}
+                {phase === "pumpkin" && <div className={styles.sHint}>smash the pumpkin to reveal the {word} · {3 - hits} hit{3 - hits === 1 ? "" : "s"} left</div>}
+                <div className={`${styles.sNoms} ${styles.sNomsSmall}`}>
+                  {a.nominees.filter((n) => phase !== "shown" || !winners.includes(n)).map((n) => (
+                    <div key={n.id} className={`${styles.sNom} ${phase === "shown" ? styles.sLose : ""}`}>
+                      <Face n={n} size={56} />
+                      <div className={styles.sNomName}>{n.name}</div>
+                      {phase === "shown" && <div className={styles.sVotes}>{n.votes || 0} vote{n.votes === 1 ? "" : "s"}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
           return (
             <div className={styles.sAward}>
               <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>

@@ -77,7 +77,7 @@ export function demoSeason(stage) {
   const phase = ['nominate-soon', 'nominate-closed'].includes(stage) ? 'nominate' : PHASES.includes(stage) ? stage : 'vote';
   const day = 86400e3, now = Date.now();
   const season = {
-    id: 'demo', label: 'Fall 2026 (sample)', theme: 'classic', phase,
+    id: 'demo', label: 'Fall 2026 (sample)', theme: 'classic', revealStyle: 'pumpkin', phase,
     nominateOpen: stage === 'nominate-soon' ? new Date(now + 2 * day).toISOString() : '',
     nominateDeadline: stage === 'nominate-closed' ? new Date(now - day).toISOString() : new Date(now + 5 * day).toISOString(),
     voteDeadline: new Date(now + 3 * day).toISOString(),

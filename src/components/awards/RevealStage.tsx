@@ -33,6 +33,33 @@ function splat() {
   } catch { /* no audio */ }
 }
 
+/* Text that appears one letter at a time. */
+function Letters({ text, delay = 0, step = 0.035, className }: { text: string; delay?: number; step?: number; className?: string }) {
+  return (
+    <span className={className} aria-label={text}>
+      {Array.from(text).map((ch, i) => (
+        <span key={i} aria-hidden="true" className={styles.letter} style={{ animationDelay: `${delay + i * step}s` }}>{ch === " " ? "\u00a0" : ch}</span>
+      ))}
+    </span>
+  );
+}
+/* A number that counts up from 0. */
+function CountUp({ to, ms = 1400, delay = 0 }: { to: number; ms?: number; delay?: number }) {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    /* a timer, not animation frames, so it still ends on the right number if the tab is in the background */
+    let iv: ReturnType<typeof setInterval> | undefined;
+    setV(0);
+    const start = setTimeout(() => {
+      const t0 = Date.now();
+      iv = setInterval(() => { const k = Math.min(1, (Date.now() - t0) / ms); setV(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k >= 1 && iv) clearInterval(iv); }, 30);
+    }, delay);
+    return () => { clearTimeout(start); if (iv) clearInterval(iv); };
+  }, [to, ms, delay]);
+  return <>{v}</>;
+}
+const titleTime = (t: string) => 0.25 + Array.from(t).length * 0.035;   /* seconds until a Letters title is done */
+
 export function RevealStage() {
   const [show, setShow] = useState<Show | null>(null);
   const [gate, setGate] = useState<"" | "login" | "admin" | "error">("");
@@ -41,6 +68,8 @@ export function RevealStage() {
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<"idle" | "suspense" | "pumpkin" | "burst" | "shown">("idle");
   const [hits, setHits] = useState(0);
+  const [shaking, setShaking] = useState(false);
+  const [flash, setFlash] = useState(0);
   const [spot, setSpot] = useState(-1);
   const [sound, setSound] = useState(true);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -98,14 +127,31 @@ export function RevealStage() {
     return () => clearTimeout(timer);
   }, [step, show]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /* A drum hit as each finalist flips in. */
+  useEffect(() => {
+    if (!show || !cur || cur.kind !== "award" || !sound) return;
+    const a = show.awards[cur.i], base = titleTime(a.title) + (a.description ? 0.6 : 0.2);
+    const ts = a.nominees.map((_, i) => setTimeout(() => tone(150 - i * 8, 0.12, "triangle", 0.12), (base + i * 0.45) * 1000));
+    return () => ts.forEach(clearTimeout);
+  }, [step, show, sound]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* Heartbeat while the pumpkin waits, faster after every hit. */
+  useEffect(() => {
+    if (phase !== "pumpkin" || !sound) return;
+    const gap = [1100, 760, 480][Math.min(2, hits)];
+    const beat = () => { tone(62, 0.14, "sine", 0.32); setTimeout(() => tone(55, 0.16, "sine", 0.24), 170); };
+    beat(); const t = setInterval(beat, gap);
+    return () => clearInterval(t);
+  }, [phase, hits, sound]);
+
   /* Three hits break the pumpkin, then the winner pops out. */
   const smash = useCallback(() => {
     if (phase !== "pumpkin") return;
-    const h = hits + 1; setHits(h);
+    const h = hits + 1; setHits(h); setShaking(false); requestAnimationFrame(() => setShaking(true)); setTimeout(() => setShaking(false), 450);
     if (sound) { tone(110, 0.18, "sine", 0.25); tone(70, 0.22, "sine", 0.2); }
     if (h >= 3) {
-      setPhase("burst"); if (sound) splat(); burst(["#ff8a1f", "#f47a12", "#b8460a", "#ffd34d", "#f4e3b5", "#5b7d1f"]);
-      setTimeout(() => { setPhase("shown"); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } burst(); }, 700);
+      setPhase("burst"); setFlash((x) => x + 1); if (sound) splat(); burst(["#ff8a1f", "#f47a12", "#b8460a", "#ffd34d", "#f4e3b5", "#5b7d1f"]);
+      setTimeout(() => { setPhase("shown"); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 700);
+      setTimeout(() => { burst(); if (sound) tone(1046, 0.4, "triangle", 0.05); }, 1500);   /* confetti when the stamp lands */
     }
   }, [phase, hits, sound]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -154,15 +200,17 @@ export function RevealStage() {
   const w = WORDS[show.theme];
 
   return (
-    <div className={`${styles.stage} ${themeClass(show.theme)}`} ref={stageRef} onClick={(e) => { if ((e.target as HTMLElement).closest("button,a")) return; next(); }}>
+    <div className={`${styles.stage} ${themeClass(show.theme)} ${cur.kind === "win" && phase !== "shown" ? styles.stageDim : ""} ${cur.kind === "win" && phase === "shown" ? styles.stageLit : ""}`} ref={stageRef} onClick={(e) => { if ((e.target as HTMLElement).closest("button,a")) return; next(); }}>
+      <div className={styles.sweep} aria-hidden="true" />
+      {flash > 0 && <div key={"f" + flash} className={styles.flashOverlay} aria-hidden="true" />}
       <canvas ref={confettiRef} className={styles.confetti} />
-      <div className={styles.stageInner}>
+      <div className={`${styles.stageInner} ${shaking ? styles.shakeIt : ""}`}>
         {cur.kind === "intro" && (
-          <div className={styles.sIntro}>
-            <div className={styles.kicker}>{w.kicker}…</div>
-            <div className={styles.sTitle}>AK9 Awards</div>
-            <div className={styles.sSub}>{show.label} · The winners</div>
-            <div className={styles.sHint}>{show.totalVoters} people voted · press space to begin</div>
+          <div key={"st" + step} className={styles.sIntro}>
+            <div className={`${styles.kicker} ${styles.fadeUp}`}>{w.kicker}…</div>
+            <Letters text="AK9 Awards" delay={0.4} step={0.09} className={styles.sTitle} />
+            <div className={`${styles.sSub} ${styles.fadeUp}`} style={{ animationDelay: "1.5s" }}>{show.label} · The winners</div>
+            <div className={`${styles.sHint} ${styles.fadeUp}`} style={{ animationDelay: "2.2s" }}><CountUp to={show.totalVoters} delay={2200} ms={1200} /> people voted · press space to begin</div>
           </div>
         )}
         {(cur.kind === "award" || cur.kind === "win") && (() => {
@@ -174,17 +222,18 @@ export function RevealStage() {
           const word = w.winner.toLowerCase() === "guilty" ? "verdict" : "winner";
           if (cur.kind === "win" && (show.revealStyle || "pumpkin") === "pumpkin" && winners.length) {
             return (
-              <div className={styles.sAward}>
+              <div key={"st" + step} className={styles.sAward}>
                 <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>
                 <div className={styles.sAwardTitle}>{a.title}</div>
                 {phase === "shown" ? (
                   <div className={styles.sWinHero}>
-                    {winners.map((n) => (
-                      <div key={n.id} className={styles.sWinOne}>
+                    <div className={styles.beam} aria-hidden="true" />
+                    {winners.map((n, wi) => (
+                      <div key={n.id} className={styles.sWinOne} style={{ animationDelay: `${wi * 0.25}s` }}>
                         <Face n={n} size={180} />
-                        <div className={styles.stamp}>{w.winner}{winners.length > 1 ? " · tie" : ""}</div>
-                        <div className={styles.sWinName}>{n.name}</div>
-                        <div className={styles.sVotes}>{n.votes || 0} vote{n.votes === 1 ? "" : "s"}{pct(n.votes)}</div>
+                        <div className={`${styles.stamp} ${styles.stampSlam}`}>{w.winner}{winners.length > 1 ? " · tie" : ""}</div>
+                        <Letters text={n.name} delay={0.35} step={0.045} className={styles.sWinName} />
+                        <div className={`${styles.sVotes} ${styles.fadeUp}`} style={{ animationDelay: "1s" }}><CountUp to={n.votes || 0} delay={1000} /> vote{n.votes === 1 ? "" : "s"}{pct(n.votes)}</div>
                       </div>
                     ))}
                   </div>
@@ -193,30 +242,32 @@ export function RevealStage() {
                     <Pumpkin hits={hits} burst={phase === "burst"} />
                   </button>
                 )}
-                {phase === "pumpkin" && <div className={styles.sHint}>smash the pumpkin to reveal the {word} · {3 - hits} hit{3 - hits === 1 ? "" : "s"} left</div>}
-                <div className={`${styles.sNoms} ${styles.sNomsSmall}`}>
-                  {a.nominees.filter((n) => phase !== "shown" || !winners.includes(n)).map((n) => (
-                    <div key={n.id} className={`${styles.sNom} ${phase === "shown" ? styles.sLose : ""}`}>
+                {phase === "pumpkin" && <div key={"h" + hits} className={`${styles.sHint} ${styles.pulse}`}>{["smash the pumpkin to reveal the " + word, "harder…", "one more!"][hits]} · {3 - hits} hit{3 - hits === 1 ? "" : "s"} left</div>}
+                <div className={`${styles.sNoms} ${styles.sNomsSmall} ${phase !== "shown" ? styles.nervous : ""}`}>
+                  {a.nominees.filter((n) => phase !== "shown" || !winners.includes(n)).map((n, ni) => (
+                    <div key={n.id} className={`${styles.sNom} ${phase === "shown" ? `${styles.sLose} ${styles.fadeUp}` : ""}`} style={phase === "shown" ? { animationDelay: `${1.6 + ni * 0.3}s` } : { animationDelay: `${ni * 0.15}s` }}>
                       <Face n={n} size={56} />
                       <div className={styles.sNomName}>{n.name}</div>
-                      {phase === "shown" && <div className={styles.sVotes}>{n.votes || 0} vote{n.votes === 1 ? "" : "s"}</div>}
+                      {phase === "shown" && <div className={styles.sVotes}><CountUp to={n.votes || 0} delay={1600 + ni * 300} ms={900} /> vote{n.votes === 1 ? "" : "s"}</div>}
                     </div>
                   ))}
                 </div>
               </div>
             );
           }
+          const tT = titleTime(a.title), dT = tT + (a.description ? 0.6 : 0.2);
+          const intro = cur.kind === "award";
           return (
-            <div className={styles.sAward}>
-              <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>
-              <div className={styles.sAwardTitle}>{a.title}</div>
-              {a.description && cur.kind === "award" && <div className={styles.sDesc}>{a.description}</div>}
+            <div key={"st" + step} className={styles.sAward}>
+              <div className={`${styles.anum} ${intro ? styles.fadeUp : ""}`}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>
+              {intro ? <Letters text={a.title} delay={0.25} className={styles.sAwardTitle} /> : <div className={styles.sAwardTitle}>{a.title}</div>}
+              {a.description && intro && <div className={`${styles.sDesc} ${styles.fadeUp}`} style={{ animationDelay: `${tT}s` }}>{a.description}</div>}
               <div className={styles.sNoms}>
                 {a.nominees.map((n, idx) => {
                   const isWin = winners.includes(n);
                   const cls = [styles.sNom, cur.kind === "win" && phase === "suspense" && spot === idx ? styles.spot : "", shown && isWin ? styles.sWin : "", shown && !isWin ? styles.sLose : ""].join(" ");
                   return (
-                    <div key={n.id} className={cls}>
+                    <div key={n.id} className={`${cls} ${intro ? styles.flipIn : ""}`} style={intro ? { animationDelay: `${dT + idx * 0.45}s` } : undefined}>
                       <Face n={n} size={shown && isWin ? 150 : 96} />
                       <div className={styles.sNomName}>{n.name}</div>
                       {shown && <div className={styles.sVotes}>{n.votes || 0} vote{n.votes === 1 ? "" : "s"}{total ? ` · ${Math.round(((n.votes || 0) / total) * 100)}%` : ""}</div>}
@@ -225,18 +276,18 @@ export function RevealStage() {
                   );
                 })}
               </div>
-              {cur.kind === "award" && <div className={styles.sHint}>press space to reveal the {w.winner.toLowerCase() === "guilty" ? "verdict" : "winner"}</div>}
+              {intro && <div className={`${styles.sHint} ${styles.fadeUp}`} style={{ animationDelay: `${dT + a.nominees.length * 0.45 + 0.3}s` }}>press space to reveal the {word}</div>}
               {cur.kind === "win" && phase === "suspense" && <div className={styles.sHint}>and the {w.winner.toLowerCase() === "guilty" ? "verdict" : "winner"} is…</div>}
               {shown && !winners.length && <div className={styles.sDesc}>No votes were cast for this one.</div>}
             </div>
           );
         })()}
         {cur.kind === "wild" && (
-          <div className={styles.sAward}>
-            <div className={styles.anum}>Wildcards · picked by {show.wildcardsBy || "Aleks"}</div>
+          <div key={"st" + step} className={styles.sAward}>
+            <div className={`${styles.anum} ${styles.fadeUp}`}>Wildcards · picked by {show.wildcardsBy || "Aleks"}</div>
             <div className={styles.sWildGrid}>
-              {show.wildcards.map((wc) => (
-                <div key={wc.title} className={styles.sWild}>
+              {show.wildcards.map((wc, wi) => (
+                <div key={wc.title} className={`${styles.sWild} ${styles.flipIn}`} style={{ animationDelay: `${0.5 + wi * 0.9}s` }}>
                   <div className={styles.sWildTitle}>{wc.title}</div>
                   <div className={styles.sWildPeople}>{(wc.people || wc.winners.map((name) => ({ name, image: "" }))).map((p) => <span key={p.name}><Face n={p} size={72} />@{p.name}</span>)}</div>
                 </div>
@@ -245,8 +296,8 @@ export function RevealStage() {
           </div>
         )}
         {cur.kind === "outro" && (
-          <div className={styles.sIntro}>
-            <div className={styles.sTitle}>That&apos;s a wrap</div>
+          <div key={"st" + step} className={styles.sIntro}>
+            <Letters text="That's a wrap" delay={0.2} step={0.06} className={styles.sTitle} />
             <div className={styles.sSub}>Thanks to all {show.totalVoters} voters · {show.label}</div>
             {canPublish && <button className={styles.btn} onClick={publish}>Publish the winners on the site</button>}
             {published && <div className={styles.sHint}>Published: the winners are on aleksk9.com/awards and in the Hall of Fame.</div>}

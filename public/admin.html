@@ -552,7 +552,7 @@
               <button class="link-btn danger" type="button" id="aw-clear-noms">Clear all nominations</button>
               <button class="link-btn danger" type="button" id="aw-clear-votes">Clear all votes</button>
             </div>
-            <p class="small" style="margin-top:10px">A new season keeps the Hall of Fame. You can copy this season's award titles into it.</p>
+            <p class="small" style="margin-top:10px">A new season keeps the Hall of Fame. It can start from the standard AK9 Awards list (16 awards), copy this season's awards, or start empty.</p>
           </div>
 
           <div class="aw-save"><span class="small" id="aw-dirty">All changes saved</span><button class="btn btn-sm btn-primary" type="button" id="aw-save">Save awards</button></div>
@@ -814,8 +814,9 @@
       };
       $('aw-new').onclick = function () {
         var label = prompt('Name of the new season (e.g. Winter 2026):'); if (!label) return;
-        var copy = S && S.awards && S.awards.length ? confirm('Copy this season\'s award titles into the new season? (OK = copy, Cancel = start empty)') : false;
-        api('/api/awards', { action: 'newSeason', label: label, copyAwards: copy }).then(function () { toast('New season started'); load(); }, function (e) { toast(e.message); });
+        var standard = confirm('Start with the standard AK9 Awards list (16 awards)? OK = standard list, Cancel = other options');
+        var copy = !standard && S && S.awards && S.awards.length ? confirm('Copy this season\'s awards instead? (OK = copy, Cancel = start empty)') : false;
+        api('/api/awards', { action: 'newSeason', label: label, standard: standard, copyAwards: copy }).then(function () { toast('New season started'); load(); }, function (e) { toast(e.message); });
       };
       function clearKind(kind, what) { if (!confirm('Delete every ' + what + ' for this season? This cannot be undone.')) return; api('/api/awards', { action: 'clear', kind: kind }).then(function () { toast('Cleared'); load(); }, function (e) { toast(e.message); }); }
       $('aw-clear-noms').onclick = function () { clearKind('noms', 'nomination'); };

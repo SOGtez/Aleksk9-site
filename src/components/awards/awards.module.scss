@@ -172,10 +172,10 @@ button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: 
 /* pumpkin smash reveal */
 .pkBtn { background: none; border: 0; padding: 0; cursor: pointer; margin: 8px 0 0; -webkit-tap-highlight-color: transparent; }
 .pumpkin { position: relative; width: min(360px, 70vw); aspect-ratio: 240 / 220; margin: 0 auto; }
-.pkWhole { width: 100%; height: 100%; filter: drop-shadow(0 0 40px rgba(255, 140, 20, .45)); animation: pkIn .5s cubic-bezier(.2, 1.4, .4, 1) both, pkFloat 2.6s ease-in-out .5s infinite; transform-origin: 50% 90%; }
+.pkWhole { width: 100%; height: 100%; filter: drop-shadow(0 0 40px rgba(255, 140, 20, .45)); animation: pkIn 1.1s cubic-bezier(.2, 1.3, .4, 1) .3s both, pkFloat 2.6s ease-in-out 1.4s infinite; transform-origin: 50% 90%; }
 .pkHit { animation: pkShake .35s ease both; }
 .pkPiece { position: absolute; inset: 0; width: 100%; height: 100%; animation: pkFly .75s cubic-bezier(.2, .7, .4, 1) forwards; }
-@keyframes pkIn { from { opacity: 0; transform: scale(.4) translateY(40px); } to { opacity: 1; transform: none; } }
+@keyframes pkIn { from { opacity: 0; transform: scale(.3) translateY(180px); filter: brightness(.2); } 70% { opacity: 1; } to { opacity: 1; transform: none; } }
 @keyframes pkFloat { 50% { transform: translateY(-8px) rotate(-1.5deg); } }
 @keyframes pkShake { 0% { transform: scale(1); } 20% { transform: scale(.9, 1.08) rotate(-5deg); } 45% { transform: scale(1.07, .93) rotate(4deg); } 70% { transform: scale(.97, 1.03) rotate(-2deg); } 100% { transform: none; } }
 @keyframes pkFly { to { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(.7); opacity: 0; } }
@@ -188,6 +188,40 @@ button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: 
 .sNomsSmall { gap: 12px; margin-top: 18px; }
 .sNomsSmall .sNom { width: 120px; padding: 10px 6px; }
 .sNomsSmall .sNomName { font-size: 14px; }
+
+/* suspense: letters, fades, flips, flash, shake, spotlight */
+span.sTitle, span.sAwardTitle, span.sWinName { display: block; }
+.letter { display: inline-block; opacity: 0; animation: letterIn .55s cubic-bezier(.2, 1.3, .4, 1) both; }
+@keyframes letterIn { from { opacity: 0; transform: translateY(.5em) rotate(8deg) scale(.6); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.fadeUp { opacity: 0; animation: fadeUp .6s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+.sLose.fadeUp { animation-name: fadeUpDim; }
+@keyframes fadeUpDim { from { opacity: 0; transform: translateY(16px) scale(.92); } to { opacity: .35; transform: scale(.92); } }
+.flipIn { opacity: 0; animation: flipIn .7s cubic-bezier(.2, 1.2, .4, 1) both; }
+@keyframes flipIn { from { opacity: 0; transform: perspective(600px) rotateY(90deg) translateY(30px) scale(.8); } to { opacity: 1; transform: none; } }
+.pulse { animation: hintPulse 1.2s ease-in-out infinite; }
+@keyframes hintPulse { 50% { opacity: .45; transform: scale(.97); } }
+.nervous .sNom { animation: nervous 2.4s ease-in-out infinite; }
+.nervous .sNom:nth-child(2n) { animation-delay: -.8s; }
+.nervous .sNom:nth-child(3n) { animation-delay: -1.5s; }
+@keyframes nervous { 0%, 100% { transform: none; } 25% { transform: translateY(-3px) rotate(-1.5deg); } 75% { transform: translateY(2px) rotate(1.5deg); } }
+.stage::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 25%, rgba(0, 0, 0, .85) 80%); opacity: 0; transition: opacity 1.2s ease; }
+.stageDim::before { opacity: 1; }
+.stageLit::before { opacity: .35; }
+.sweep { position: absolute; inset: -20% -10%; z-index: 1; pointer-events: none; background: conic-gradient(from 200deg at 50% -10%, transparent 0deg, var(--aw-soft) 12deg, transparent 24deg, transparent 336deg, var(--aw-soft) 348deg, transparent 360deg); animation: sweep 9s ease-in-out infinite alternate; opacity: .9; }
+@keyframes sweep { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+.flashOverlay { position: absolute; inset: 0; z-index: 5; pointer-events: none; background: #fff; animation: flashOut .7s ease-out forwards; }
+@keyframes flashOut { from { opacity: .9; } to { opacity: 0; } }
+.shakeIt { animation: stageShake .4s cubic-bezier(.36, .07, .19, .97) both; }
+@keyframes stageShake { 10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); } 30%, 50%, 70% { transform: translate(-7px, 3px) rotate(-.4deg); } 40%, 60% { transform: translate(7px, -3px) rotate(.4deg); } }
+.sWinHero { position: relative; }
+.beam { position: absolute; left: 50%; top: -140px; width: 520px; height: 620px; transform: translateX(-50%); pointer-events: none; z-index: -1;
+  background: linear-gradient(180deg, rgba(255, 240, 200, .32), rgba(255, 240, 200, 0) 85%); clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%); animation: beamOn 1s ease-out both; }
+@keyframes beamOn { from { opacity: 0; transform: translateX(-50%) scaleY(.2); transform-origin: top; } to { opacity: 1; transform: translateX(-50%); } }
+.sWinOne { animation: winDrop .8s cubic-bezier(.2, 1.5, .4, 1) both; }
+@keyframes winDrop { from { opacity: 0; transform: translateY(-60px) scale(.3); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+.stampSlam { animation: slam .45s cubic-bezier(.3, 1.6, .5, 1) 1.3s both; }
+@keyframes slam { from { opacity: 0; transform: scale(3.2) rotate(-18deg); } to { opacity: 1; transform: rotate(-4deg); } }
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 @media (max-width: breakpoints.$s) {
@@ -198,4 +232,4 @@ button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: 
   .sNom { width: 130px; } .sWin { width: 200px; }
   .sBar { flex-wrap: wrap; opacity: 1; }
 }
-@media (prefers-reduced-motion: reduce) { .sIntro, .sAward, .pkWhole, .sWinOne, .stepCard { animation: none; } .sNom, .sNom .face { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .sIntro, .sAward, .pkWhole, .sWinOne, .stepCard, .letter, .fadeUp, .flipIn, .sweep, .nervous .sNom, .shakeIt, .stampSlam, .beam { animation: none; opacity: 1; } .sNom, .sNom .face { transition: none; } }

@@ -5,7 +5,7 @@ import {
 } from '../../server/lib/store.js';
 import { profiles } from '../../server/lib/twitch.js';
 import {
-  THEMES, PHASES, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason,
+  THEMES, PHASES, STANDARD_AWARDS, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason,
 } from '../../server/lib/awards.js';
 
 /* AK9 Awards (/awards). One route for everything:
@@ -15,7 +15,7 @@ import {
    GET ?view=admin             admins: everything, incl. the nomination tally and live vote counts (the reveal page uses this)
    POST { action: 'nominate', choices: { awardId: name } }       followers, once, while nominations are open
    POST { action: 'vote', choices: { awardId: nomineeId } }      followers, once, while voting is open
-   POST admin: save { season } · newSeason { label, copyAwards } · archive · clear { kind: 'noms'|'votes' } · deleteArchive { id }
+   POST admin: save { season } · newSeason { label, standard | copyAwards } · archive · clear { kind: 'noms'|'votes' } · deleteArchive { id }
    Without a database (the test site) it serves a sample season: add ?demo=<stage> to preview a stage. */
 
 const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
@@ -171,7 +171,8 @@ export default async function handler(req, res) {
   if (b.action === 'newSeason') {
     const label = clean(b.label, 60);
     if (!label) return json(res, 400, { error: 'Give the season a name, like "Winter 2026"' });
-    const awards = b.copyAwards && season ? season.awards.map((a) => ({ id: rid('a'), title: a.title, description: a.description, nominees: [], winnerIds: [] })) : [];
+    const from = b.standard ? STANDARD_AWARDS : b.copyAwards && season ? season.awards : [];
+    const awards = from.map((a) => ({ id: rid('a'), title: a.title, description: a.description || '', nominees: [], winnerIds: [] }));
     const next = { id: slug(label) + '-' + Date.now().toString(36).slice(-4), label, theme: (season && season.theme) || 'classic', revealStyle: (season && season.revealStyle) || 'pumpkin', phase: 'soon', nominateOpen: '', nominateDeadline: '', voteDeadline: '', awards, wildcards: [], updatedAt: Date.now() };
     return json(res, 200, { ok: true, season: await setAwSeason(next) });
   }

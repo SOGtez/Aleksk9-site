@@ -70,6 +70,32 @@ export function hallSummary(s) {
 }
 export const pastSeasons = () => PAST_SEASONS;
 
+/* The standard AK9 Awards list a new season can start from: July 2026's awards without Chat MVP, Best Username
+   and The Most Supportive, plus the four added for the next season. Titles and descriptions can be edited per
+   season on the admin page. */
+const july = (title) => {
+  const a = PAST_SEASONS[0].awards.find((x) => x.title === title);
+  return { title: a.title, description: a.description };
+};
+export const STANDARD_AWARDS = [
+  july('Worst Gamer Award!'),
+  { title: 'Best Gamer Award', description: 'This award will go to the viewer who is the best gamer. No matter the game or the time, they will dominate any other player in the community.' },
+  july('The Funniest Community Meme Award!'),
+  july('The Night Owl Award!'),
+  { title: 'Bermuda Triangle Award', description: "Goes to the viewer who is known for being in the chat for a month and then disappearing for another. Chances are they won't even know they won this award." },
+  july('Comedian Award!'),
+  july('The Best AK9 Duo Award!'),
+  { title: 'Best AK9 Collab', description: 'This award will go to the stream / streamers who had the best collab with Aleks.' },
+  { title: 'Best AK9 Guest Award', description: "This award will go to the guest that the chat loved most. This person isn't a streamer but is someone who is always on Aleks's streams and always makes them better." },
+  july('The Best Upcoming Viewer Award!'),
+  july('The Best Mod Award!'),
+  july('The OG Viewer Award!'),
+  july('The Most Loved Viewer Award!'),
+  july('The Best AK9 Creator!'),
+  july('The Best Female Viewer!'),
+  july('The Best Viewer Award!'),
+];
+
 /* The test site has no database: a sample season built from July 2026 so every stage can be previewed with
    ?demo=soon|nominate|vote|closed|revealed. */
 export function demoSeason(stage) {
@@ -81,11 +107,17 @@ export function demoSeason(stage) {
     nominateOpen: stage === 'nominate-soon' ? new Date(now + 2 * day).toISOString() : '',
     nominateDeadline: stage === 'nominate-closed' ? new Date(now - day).toISOString() : new Date(now + 5 * day).toISOString(),
     voteDeadline: new Date(now + 3 * day).toISOString(),
-    awards: july.awards.slice(0, 6).map((a) => ({ id: a.id, title: a.title, description: a.description, nominees: a.nominees.map(({ votes, ...n }) => n) })),
-    wildcards: july.wildcards,
+    awards: [], wildcards: july.wildcards,
   };
+  /* Sample finalists and votes: July's for the awards July had, borrowed names for the new ones. */
+  const pool = july.awards[july.awards.length - 1].nominees;
+  const sample = STANDARD_AWARDS.map((std, i) => {
+    const old = july.awards.find((a) => a.title === std.title);
+    const noms = old ? old.nominees : pool.slice(i % 3, (i % 3) + 4).map((n, j) => ({ ...n, id: `s${i}-${j}`, votes: [12, 8, 5, 2][j] }));
+    return { id: old ? old.id : 'std' + i, title: std.title, description: std.description, noms };
+  });
+  season.awards = sample.map((a) => ({ id: a.id, title: a.title, description: a.description, nominees: a.noms.map(({ votes, ...n }) => n) }));
   const ballots = {};
-  /* fake ballots that reproduce July's numbers for the first six awards */
-  july.awards.slice(0, 6).forEach((a) => { let i = 0; for (const n of a.nominees) for (let v = 0; v < n.votes; v++) { const k = 'v' + i++; (ballots[k] = ballots[k] || { choices: {} }).choices[a.id] = n.id; } });
+  sample.forEach((a) => { let i = 0; for (const n of a.noms) for (let v = 0; v < n.votes; v++) { const k = 'v' + i++; (ballots[k] = ballots[k] || { choices: {} }).choices[a.id] = n.id; } });
   return { season, ballots };
 }

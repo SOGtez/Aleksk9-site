@@ -9,7 +9,7 @@
     var here = encodeURIComponent(location.pathname);
     fetch('/api/me', { cache: 'no-store', credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (me) {
       if (!me || !me.user) { el.innerHTML = '<a class="ou-tb" href="/api/auth/login?next=' + here + '">' + TW + '<span class="lbl">Log in</span></a>'; return; }
-      el.innerHTML = (me.role === 'admin' ? '<a class="ou-tb" href="/admin">' + SHIELD + '<span class="lbl">Admin</span></a>' : '') +
+      el.innerHTML = ((me.role === 'admin' || me.role === 'awards') ? '<a class="ou-tb" href="/admin">' + SHIELD + '<span class="lbl">Admin</span></a>' : '') +
         '<a class="ou-tb" href="/api/auth/logout?next=' + here + '" title="Log out ' + esc(me.user.name || me.user.login) + '">' +
         (me.user.avatar ? '<img src="' + esc(me.user.avatar) + '" alt="">' : '') + '<span class="lbl">Log out</span></a>';
     }).catch(function () {});

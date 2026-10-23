@@ -1,6 +1,6 @@
 import { json, readBody, whoami } from '../../server/lib/http.js';
 import {
-  hasDatabase, getAwSeason, setAwSeason, getAwEntries, addAwEntryOnce, clearAwEntries,
+  hasDatabase, getAwSeason, setAwSeason, getAwEntries, addAwEntryOnce, clearAwEntries, deleteAwEntry,
   listAwArchive, saveAwArchive, deleteAwArchive,
 } from '../../server/lib/store.js';
 import { profiles } from '../../server/lib/twitch.js';
@@ -12,10 +12,13 @@ import {
    GET                         the current season as visitors see it, your own nominations/ballot, the Hall of Fame list,
                                and the results once the season is revealed
    GET ?season=<id>            one finished season with its results (Hall of Fame page)
-   GET ?view=admin             admins: everything, incl. the nomination tally and live vote counts (the reveal page uses this)
+   GET ?view=admin             admins: everything, incl. the nomination tally, live vote counts and who voted (the reveal page uses this)
+   GET ?share=<key>            the current season's results through the unlisted link, before they are published
    POST { action: 'nominate', choices: { awardId: name } }       followers, once, while nominations are open
    POST { action: 'vote', choices: { awardId: nomineeId } }      followers, once, while voting is open
-   POST admin: save { season } · newSeason { label, standard | copyAwards } · archive · clear { kind: 'noms'|'votes' } · deleteArchive { id }
+   POST admin: save { season } · newSeason { label, standard | copyAwards } · archive · clear { kind: 'noms'|'votes' }
+               resetEntry { kind, login } · shareLink { on } · deleteArchive { id }
+   "Admin" here means a site admin or someone with the AK9 Awards role (Roles tab on the admin page).
    Without a database (the test site) it serves a sample season: add ?demo=<stage> to preview a stage. */
 
 const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
@@ -79,6 +82,7 @@ function sanitizeSeason(input, prev) {
     voteDeadline: isIso(s.voteDeadline) ? new Date(s.voteDeadline).toISOString() : '',
     wildcardsBy: clean(s.wildcardsBy, 30),
     revealStyle: s.revealStyle === 'spotlight' ? 'spotlight' : 'pumpkin',
+    shareKey: (prev && prev.shareKey) || '',
     awards, wildcards, updatedAt: Date.now(),
   };
 }
@@ -93,7 +97,7 @@ async function fillImages(season) {
 
 export default async function handler(req, res) {
   const me = await whoami(req);
-  const isAdmin = me.role === 'admin';
+  const isAdmin = me.role === 'admin' || me.role === 'awards';
 
   /* ---------- test site: sample data ---------- */
   if (!hasDatabase()) {
@@ -108,7 +112,8 @@ export default async function handler(req, res) {
     if (req.query.season) { const s = await findArchived(clean(req.query.season, 60)); if (!s) return json(res, 404, { error: 'Not found' }); return json(res, 200, { season: { ...s, wildcards: await wildcardsWithImages(s.wildcards) }, demo: true }); }
     const results = computeResults(season, ballots);
     const counts = { nominators: 31, voters: results.totalVoters };
-    if (req.query.view === 'admin') return json(res, 200, { season, stage, counts, results, tally: tallyNominations(season, {}), demo: true });
+    if (req.query.share) return json(res, 200, { preview: true, demo: true, season: { id: season.id, label: season.label, theme: season.theme, revealStyle: 'pumpkin', totalVoters: results.totalVoters, awards: results.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
+    if (req.query.view === 'admin') return json(res, 200, { season, stage, counts, results, tally: tallyNominations(season, {}), voters: [], nominators: [], demo: true });
     return json(res, 200, {
       demo: true, season: publicSeason(season, stage, counts),
       me: { loggedIn: true, login: 'demo_viewer', name: 'demo_viewer', avatar: '', follows: true, isAdmin: true, nominated: null, voted: null },
@@ -126,11 +131,18 @@ export default async function handler(req, res) {
       if (!s) return json(res, 404, { error: 'Not found' });
       return json(res, 200, { season: { ...s, wildcards: await wildcardsWithImages(s.wildcards) } });
     }
+    if (req.query.share) {
+      const key = clean(req.query.share, 40);
+      if (!season || !season.shareKey || key !== season.shareKey) return json(res, 404, { error: 'This link is not valid any more.' });
+      const r = computeResults(season, await getAwEntries('votes', season.id));
+      return json(res, 200, { preview: true, season: { id: season.id, label: season.label, theme: season.theme, wildcardsBy: season.wildcardsBy || '', revealStyle: season.revealStyle || 'pumpkin', totalVoters: r.totalVoters, awards: r.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
+    }
     const [noms, votes] = season ? await Promise.all([getAwEntries('noms', season.id), getAwEntries('votes', season.id)]) : [{}, {}];
     const counts = { nominators: Object.keys(noms).length, voters: Object.keys(votes).length };
     if (req.query.view === 'admin') {
       if (!isAdmin) return json(res, 403, { error: 'Admins only' });
-      return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {} });
+      const people = (h) => Object.entries(h).map(([login, e]) => ({ login, name: e.name || login, at: e.at || 0, choices: e.choices || {} })).sort((a, b) => b.at - a.at);
+      return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms) });
     }
     const mine = me.user && season ? { nominated: (noms[me.user.login] || {}).choices || null, voted: (votes[me.user.login] || {}).choices || null } : { nominated: null, voted: null };
     return json(res, 200, {
@@ -189,6 +201,16 @@ export default async function handler(req, res) {
     if (!['noms', 'votes'].includes(b.kind)) return json(res, 400, { error: 'kind must be noms or votes' });
     await clearAwEntries(b.kind, season.id);
     return json(res, 200, { ok: true });
+  }
+  if (b.action === 'resetEntry') {
+    if (!['noms', 'votes'].includes(b.kind)) return json(res, 400, { error: 'kind must be noms or votes' });
+    await deleteAwEntry(b.kind, season.id, clean(b.login, 40));
+    return json(res, 200, { ok: true });
+  }
+  if (b.action === 'shareLink') {
+    const shareKey = b.on ? (season.shareKey || Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2) + Date.now().toString(36)) : '';
+    await setAwSeason({ ...season, shareKey, updatedAt: Date.now() });
+    return json(res, 200, { ok: true, shareKey });
   }
   if (b.action === 'deleteArchive') {
     await deleteAwArchive(clean(b.id, 60));

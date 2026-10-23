@@ -251,6 +251,7 @@ export async function getAwEntries(kind, seasonId) { return (await redis().hgeta
 export async function getAwEntry(kind, seasonId, login) { return redis().hget(awKey(kind, seasonId), login); }
 /* Saves an entry only if this person has none yet; returns false when they already submitted. */
 export async function addAwEntryOnce(kind, seasonId, login, entry) { return !!(await redis().hsetnx(awKey(kind, seasonId), login, JSON.stringify(entry))); }
+export async function deleteAwEntry(kind, seasonId, login) { await redis().hdel(awKey(kind, seasonId), String(login).toLowerCase()); }
 export async function clearAwEntries(kind, seasonId) { await redis().del(awKey(kind, seasonId)); }
 export async function listAwArchive() { return Object.values((await redis().hgetall(KEY_AW_ARCHIVE)) || {}); }
 export async function saveAwArchive(season) { await redis().hset(KEY_AW_ARCHIVE, { [season.id]: season }); }

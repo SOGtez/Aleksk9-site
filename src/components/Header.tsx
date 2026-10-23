@@ -40,7 +40,7 @@ const Account = () => {
   }
   return (
     <Row gap="4" vertical="center">
-      {me.role === "admin" && <ToggleButton prefixIcon="admin" label="Admin" onClick={go("/admin")} />}
+      {(me.role === "admin" || me.role === "awards") && <ToggleButton prefixIcon="admin" label="Admin" onClick={go("/admin")} />}
       <ToggleButton onClick={go(`/api/auth/logout?next=${encodeURIComponent(here)}`)} aria-label="Log out">
         <Row gap="8" vertical="center">
           {me.user.avatar && (

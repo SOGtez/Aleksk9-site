@@ -3,7 +3,8 @@ import { getRoles, setRole, getState } from '../store.js';
 import { DEFAULT_STATE } from '../defaults.js';
 
 /* GET  → { roles: { login: role } }
-   POST { login, role } — role '' or null removes. Admin only. */
+   POST { login, role } — role '' or null removes. Admin only.
+   Roles: admin, helper, captain:<team>, awards (can only run the AK9 Awards tab). */
 export default async function handler(req, res) {
   const me = await requireRole(req, res, ['admin']);
   if (!me) return;
@@ -16,7 +17,7 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return json(res, 405, { error: 'GET or POST' });
   const b = readBody(req);
   const role = b.role || null;
-  if (role && !['helper', 'admin'].includes(role)) {
+  if (role && !['helper', 'admin', 'awards'].includes(role)) {
     const state = await getState();
     if (!role.startsWith('captain:') || !state.teams.some(t => t.id === role.slice(8))) return json(res, 400, { error: 'Bad role' });
   }

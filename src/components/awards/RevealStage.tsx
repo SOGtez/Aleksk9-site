@@ -76,9 +76,14 @@ export function RevealStage() {
   const confettiRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const q = new URLSearchParams(location.search), past = q.get("season");
+    const q = new URLSearchParams(location.search), past = q.get("season"), key = q.get("k");
     (async () => {
       try {
+        if (key) {
+          const r = await fetch("/api/awards?share=" + encodeURIComponent(key), { cache: "no-store" });
+          if (!r.ok) throw new Error();
+          const d = await r.json(); setShow(d.season); return;
+        }
         if (past) {
           const r = await fetch("/api/awards?season=" + encodeURIComponent(past), { cache: "no-store" });
           if (!r.ok) throw new Error();

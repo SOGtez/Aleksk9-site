@@ -70,30 +70,26 @@ export function hallSummary(s) {
 }
 export const pastSeasons = () => PAST_SEASONS;
 
-/* The standard AK9 Awards list a new season can start from: July 2026's awards without Chat MVP, Best Username
-   and The Most Supportive, plus the four added for the next season. Titles and descriptions can be edited per
-   season on the admin page. */
-const july = (title) => {
-  const a = PAST_SEASONS[0].awards.find((x) => x.title === title);
-  return { title: a.title, description: a.description };
-};
+/* The standard AK9 Seasonal Awards list a new season starts from (renamed for the Fall 2026 season).
+   `was` is the July 2026 title, only used to borrow July's finalists for the test-site sample season.
+   Titles and descriptions can be edited per season on the admin page. */
 export const STANDARD_AWARDS = [
-  july('Worst Gamer Award!'),
-  { title: 'Best Gamer Award', description: 'This award will go to the viewer who is the best gamer. No matter the game or the time, they will dominate any other player in the community.' },
-  july('The Funniest Community Meme Award!'),
-  july('The Night Owl Award!'),
-  { title: 'Bermuda Triangle Award', description: "Goes to the viewer who is known for being in the chat for a month and then disappearing for another. Chances are they won't even know they won this award." },
-  july('Comedian Award!'),
-  july('The Best AK9 Duo Award!'),
-  { title: 'Best AK9 Collab', description: 'This award will go to the stream / streamers who had the best collab with Aleks.' },
-  { title: 'Best AK9 Guest Award', description: "This award will go to the guest that the chat loved most. This person isn't a streamer but is someone who is always on Aleks's streams and always makes them better." },
-  july('The Best Upcoming Viewer Award!'),
-  july('The Best Mod Award!'),
-  july('The OG Viewer Award!'),
-  july('The Most Loved Viewer Award!'),
-  july('The Best AK9 Creator!'),
-  july('The Best Female Viewer!'),
-  july('The Best Viewer Award!'),
+  { title: "The Biggest Sellout Award", was: "Worst Gamer Award!", description: "This award goes to the gamer who somehow manages to sell every game they touch. Whether it's missing the easiest shots or making the worst decisions possible, watching them play is genuinely painful. They are the definition of throwing." },
+  { title: "The Elite Gamer Award", description: "This award goes to the most skilled gamer in the community. No matter the game or who they're up against, they always find a way to dominate. When it comes to gaming, they're simply on another level." },
+  { title: "The Hall of Fame Meme Award", was: "The Funniest Community Meme Award!", description: "This award recognizes the funniest inside joke or meme created within the AK9 community. A meme so iconic that it became part of the community's identity and will be remembered long after the season ends." },
+  { title: "The Midnight Legend Award", was: "The Night Owl Award!", description: "This award goes to the viewer who's always around, no matter how late it gets. Whether it's midnight or 5 in the morning, they're somehow still in chat. Sleep clearly isn't their biggest priority." },
+  { title: "The Bermuda Triangle Award", description: "This award goes to the viewer who disappears off the face of the earth without warning. They'll be active every day for a month and then vanish for the next three. There's a good chance they won't even know they were nominated." },
+  { title: "The Class Clown Award", was: "Comedian Award!", description: "This award goes to the naturally funniest person in the community. Whether it's their jokes, random comments, or perfectly timed messages, they always have chat laughing. You never know what they'll say next." },
+  { title: "The Unbreakable Duo Award", was: "The Best AK9 Duo Award!", description: "This award recognizes two people with one of the strongest bonds in the community. They're always together, have each other's backs, and bring out the best in one another. When you see one, the other probably isn't far behind." },
+  { title: "The Ultimate Collab Award", description: "This award goes to the streamer or group of streamers who had the most memorable collaboration with Aleks this season. Whether it was hilarious, chaotic, or just a great stream overall, this collab stood above the rest." },
+  { title: "The Fan Favorite Guest Award", description: "This award goes to the guest who made the biggest impression on the community. They might not be a streamer themselves, but whenever they join Aleks, they make the stream even better. Someone chat is always happy to see return." },
+  { title: "The Rising Star Award", was: "The Best Upcoming Viewer Award!", description: "This award recognizes a newer viewer who's quickly making a name for themselves. They might not have been around the longest, but their support, activity, and personality have already made them stand out. They're becoming a familiar face in AK9." },
+  { title: "The Outstanding Moderator Award", was: "The Best Mod Award!", description: "This award goes to the moderator who has gone above and beyond for the AK9 community. Whether it's keeping chat under control, helping viewers, or making sure streams run smoothly, they're always doing their part. Their consistency, dedication, and effort have earned them the respect of the community." },
+  { title: "The Day One Award", was: "The OG Viewer Award!", description: "This award goes to a viewer who's been part of AK9 since the very beginning. They've seen the highs, the lows, and everything in between, yet they're still here showing support. Not everyone can say they've been here since day one." },
+  { title: "The People's Favorite Award", was: "The Most Loved Viewer Award!", description: "This award goes to the viewer who has earned the love and respect of almost everyone in the community. They can get along with just about anybody, and their presence always makes the stream better. AK9 wouldn't feel the same without them." },
+  { title: "The Creator Spotlight Award", was: "The Best AK9 Creator!", description: "This award recognizes a creator who's making a name for themselves while still being a big part of AK9. They consistently put effort into their own content, build their own community, and continue supporting others along the way. Their hard work is starting to pay off." },
+  { title: "The Queen of AK9 Award", was: "The Best Female Viewer!", description: "This award recognizes the female viewer who has made the biggest impact on the community this season. Through her support, positivity, and dedication, she's become someone everyone recognizes and respects. Her presence goes beyond just AK9, making a difference in other communities as well." },
+  { title: "The AK9 MVP Award 👑", was: "The Best Viewer Award!", description: "The highest honor of the AK9 Seasonal Awards. This award recognizes the viewer who has truly stood above the rest this season. Through their loyalty, activity, positivity, and constant support, they've become someone the entire community respects. They represent what AK9 is all about, and without them, the streams simply wouldn't be the same." },
 ];
 
 /* The test site has no database: a sample season built from July 2026 so every stage can be previewed with
@@ -112,7 +108,7 @@ export function demoSeason(stage) {
   /* Sample finalists and votes: July's for the awards July had, borrowed names for the new ones. */
   const pool = july.awards[july.awards.length - 1].nominees;
   const sample = STANDARD_AWARDS.map((std, i) => {
-    const old = july.awards.find((a) => a.title === std.title);
+    const old = std.was ? july.awards.find((a) => a.title === std.was) : null;
     const noms = old ? old.nominees : pool.slice(i % 3, (i % 3) + 4).map((n, j) => ({ ...n, id: `s${i}-${j}`, votes: [12, 8, 5, 2][j] }));
     return { id: old ? old.id : 'std' + i, title: std.title, description: std.description, noms };
   });

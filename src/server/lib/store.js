@@ -237,3 +237,22 @@ export async function deleteGameScore(id) {
   await redis().zrem(KEY_GAME_RANK, id);
   await redis().hdel(KEY_GAME_ENTRIES, id);
 }
+
+/* ---------- AK9 Awards (/awards) ----------
+   One current season (config, awards and finalists) in aw:season. Each person's nominations and ballot are kept
+   per season (hash login -> entry), written once. Finished seasons are copied, with their results, into
+   aw:archive for the Hall of Fame. */
+const KEY_AW_SEASON = 'aw:season';
+const KEY_AW_ARCHIVE = 'aw:archive';
+const awKey = (kind, seasonId) => `aw:${kind}:${seasonId}`;   /* kind: noms | votes */
+export async function getAwSeason() { return redis().get(KEY_AW_SEASON); }
+export async function setAwSeason(season) { await redis().set(KEY_AW_SEASON, season); return season; }
+export async function getAwEntries(kind, seasonId) { return (await redis().hgetall(awKey(kind, seasonId))) || {}; }
+export async function getAwEntry(kind, seasonId, login) { return redis().hget(awKey(kind, seasonId), login); }
+/* Saves an entry only if this person has none yet; returns false when they already submitted. */
+export async function addAwEntryOnce(kind, seasonId, login, entry) { return !!(await redis().hsetnx(awKey(kind, seasonId), login, JSON.stringify(entry))); }
+export async function deleteAwEntry(kind, seasonId, login) { await redis().hdel(awKey(kind, seasonId), String(login).toLowerCase()); }
+export async function clearAwEntries(kind, seasonId) { await redis().del(awKey(kind, seasonId)); }
+export async function listAwArchive() { return Object.values((await redis().hgetall(KEY_AW_ARCHIVE)) || {}); }
+export async function saveAwArchive(season) { await redis().hset(KEY_AW_ARCHIVE, { [season.id]: season }); }
+export async function deleteAwArchive(id) { await redis().hdel(KEY_AW_ARCHIVE, id); }

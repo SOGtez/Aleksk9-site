@@ -121,6 +121,40 @@
     .cal-list .bar.stream { background: var(--brand-solid-strong, var(--accent)); } .cal-list .bar.event { background: var(--accent-solid-strong, #8b5cf6); }
     .cal-list b { display: block; font-size: 14px; } .cal-list small { display: block; font-size: 12px; color: var(--fg-muted); }
     .cal-list .acts { display: flex; gap: 10px; align-items: center; }
+    /* AK9 Awards role: only the awards tab */
+    .awards-only .tabs button:not([data-tab="awards"]), .awards-only .space-row { display: none; }
+    .awards-only .page-head h1 { visibility: hidden; height: 0; margin: 0; }
+    /* AK9 Awards tab */
+    .aw-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 0; }
+    .aw-table td, .aw-table th { padding: 8px 6px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+    .aw-table th { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-dim); }
+    .aw-table .picks { color: var(--fg-muted); font-size: 12px; line-height: 1.5; }
+    .aw-table .picks b { color: var(--fg); font-weight: 600; }
+    .aw-link { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .aw-link .field { flex: 1 1 260px; font-family: ui-monospace, Menlo, monospace; font-size: 12px; }
+    .aw-grid { display: grid; gap: 10px; }
+    .aw-grid .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .aw-grid .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    @media (max-width: 640px) { .aw-grid .two, .aw-grid .three { grid-template-columns: 1fr; } }
+    .aw-grid label { display: grid; gap: 4px; font-size: 12px; font-weight: 600; color: var(--fg-muted); }
+    .aw-stats { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 2px; }
+    .aw-stats span { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line-strong); }
+    .aw-stats span.on { border-color: var(--accent); color: var(--fg); }
+    .aw-award { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+    .aw-award .hd { display: flex; gap: 8px; align-items: center; }
+    .aw-award .hd .n { font-size: 11px; font-weight: 800; letter-spacing: .12em; color: var(--accent); white-space: nowrap; }
+    .aw-award .hd .field { font-weight: 700; }
+    .aw-noms { display: grid; gap: 6px; }
+    .aw-nom { display: grid; grid-template-columns: 32px 1fr 1fr auto auto; gap: 8px; align-items: center; }
+    .aw-nom img, .aw-nom .ph { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: var(--bg-elev-2); }
+    .aw-nom .votes { font-size: 12px; color: var(--fg-muted); white-space: nowrap; min-width: 54px; text-align: right; }
+    @media (max-width: 640px) { .aw-nom { grid-template-columns: 32px 1fr auto; } .aw-nom .lg { grid-column: 2; } }
+    .aw-tally { display: flex; flex-wrap: wrap; gap: 6px; }
+    .aw-tally button { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 999px; border: 1px dashed var(--line-strong); background: transparent; color: var(--fg); cursor: pointer; }
+    .aw-tally button:hover { border-color: var(--accent); }
+    .aw-tally button b { color: var(--accent); margin-left: 4px; }
+    .aw-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .aw-save { position: sticky; bottom: 10px; z-index: 5; display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 14px; border-radius: 14px; border: 1px solid var(--line-strong); background: var(--bg, #0b0b0b); box-shadow: 0 10px 30px -10px rgba(0,0,0,.6); }
     /* Overlays tab */
     .ov-preview { position: relative; width: 100%; aspect-ratio: 1200 / 520; border-radius: 12px; overflow: hidden; border: 1px solid var(--line-strong);
       background: repeating-conic-gradient(#1b1b1b 0% 25%, #232323 0% 50%) 0 0 / 24px 24px; }   /* checkerboard = transparent */
@@ -293,6 +327,7 @@
         <button data-tab="roles">Roles</button>
         <button data-tab="logins">Twitch logins</button>
         <button data-tab="calendar">Calendar</button>
+        <button data-tab="awards">AK9 Awards</button>
         <button data-tab="overlays">Overlays</button>
       </div></nav>
       <div class="space-bar" id="space-bar" hidden>
@@ -476,6 +511,84 @@
         </div>
       </section>
 
+      <section class="tab" id="tab-awards" hidden>
+        <div class="container" style="display:grid;gap:14px">
+          <div class="card pad">
+            <h3>AK9 Awards season</h3>
+            <p class="d">Runs <a href="/awards" target="_blank" rel="noopener" style="text-decoration:underline">aleksk9.com/awards</a>. Pick the phase to move the season along: nominations, then voting, then show the winners on stream with the <a href="/awards/reveal" target="_blank" rel="noopener" style="text-decoration:underline">reveal page</a> (its last screen publishes them to the site and the Hall of Fame).</p>
+            <p class="d" id="aw-empty" hidden>No season yet. Start one below.</p>
+            <div class="aw-grid" id="aw-season">
+              <div class="two">
+                <label>Season name<input class="field" id="aw-label" maxlength="60" placeholder="e.g. Fall 2026"></label>
+                <label>Theme<select class="field" id="aw-theme"><option value="classic">Classic</option><option value="crime">Crime scene</option><option value="spooky">Spooky</option></select></label>
+              </div>
+              <label>Winner reveal on stream<select class="field" id="aw-reveal"><option value="pumpkin">Pumpkin smash (hit it 3 times to reveal the winner)</option><option value="spotlight">Spotlight (jumps between the finalists, lands on the winner)</option></select></label>
+              <label>Phase<select class="field" id="aw-phase">
+                <option value="soon">Coming soon (only "opens soon" shows)</option>
+                <option value="nominate">Nominations open</option>
+                <option value="vote">Voting open (finalists below)</option>
+                <option value="closed">Voting closed (waiting for the reveal)</option>
+                <option value="revealed">Winners published</option>
+              </select></label>
+              <div class="three">
+                <label>Nominations open (optional)<input class="field" type="datetime-local" id="aw-nopen"></label>
+                <label>Nominations close<input class="field" type="datetime-local" id="aw-nclose"></label>
+                <label>Voting closes<input class="field" type="datetime-local" id="aw-vclose"></label>
+              </div>
+              <p class="small">Times are in your time zone (<span id="aw-tz"></span>). When a deadline passes, that step closes by itself; you still switch the phase to move on.</p>
+              <div class="aw-stats" id="aw-stats"></div>
+            </div>
+          </div>
+
+          <div class="card pad">
+            <h3>Awards and finalists</h3>
+            <p class="d">During nominations people type a name for every award; the names they typed show here with how many times. Click one to make them a finalist. A finalist's Twitch login fills in their picture when you save.</p>
+            <div class="aw-grid" id="aw-awards"></div>
+            <div class="aw-row" style="margin-top:12px"><button class="btn btn-sm" type="button" id="aw-add">+ Add an award</button></div>
+          </div>
+
+          <div class="card pad">
+            <h3>Wildcard awards</h3>
+            <p class="d">Picked by hand, not voted. They show after the voted awards on the reveal page and with the winners.</p>
+            <label class="f" style="max-width:320px">Picked by<input class="field" id="aw-wild-by" maxlength="30" placeholder="Aleks"></label>
+            <div class="aw-grid" id="aw-wild"></div>
+            <div class="aw-row" style="margin-top:12px"><button class="btn btn-sm" type="button" id="aw-add-wild">+ Add a wildcard</button></div>
+          </div>
+
+          <div class="card pad">
+            <h3>On stream and sharing</h3>
+            <div class="aw-row">
+              <a class="btn btn-sm btn-primary" href="/awards/reveal" target="_blank" rel="noopener">Open the reveal page</a>
+              <a class="btn btn-sm" href="/awards/print" target="_blank" rel="noopener">Print winner sheets</a>
+            </div>
+            <p class="small" style="margin-top:10px">The reveal page and the print sheets show the live results to admins, even before they are published.</p>
+            <h3 style="margin-top:18px">Unlisted results link</h3>
+            <p class="d">A secret link that shows this season's results before they are published, for co-hosts or helpers. Anyone with the link can see them, so turn it off when you're done.</p>
+            <div id="aw-share"></div>
+          </div>
+
+          <div class="card pad">
+            <h3>Voters</h3>
+            <p class="d" id="aw-voters-count">Who voted and what they picked. Reset clears one person's ballot so they can vote again.</p>
+            <div class="aw-row" style="margin-bottom:8px"><button class="btn btn-sm" type="button" id="aw-export">Export CSV</button></div>
+            <div class="table-wrap" id="aw-voters"></div>
+            <details style="margin-top:14px"><summary class="small" style="cursor:pointer">Nominations (who nominated what)</summary><div class="table-wrap" id="aw-nominators" style="margin-top:8px"></div></details>
+          </div>
+
+          <div class="card pad">
+            <h3>Season tools</h3>
+            <div class="aw-row">
+              <button class="btn btn-sm" type="button" id="aw-new">Start a new season…</button>
+              <button class="link-btn danger" type="button" id="aw-clear-noms">Clear all nominations</button>
+              <button class="link-btn danger" type="button" id="aw-clear-votes">Clear all votes</button>
+            </div>
+            <p class="small" style="margin-top:10px">A new season keeps the Hall of Fame. It can start from the standard AK9 Awards list (16 awards), copy this season's awards, or start empty.</p>
+          </div>
+
+          <div class="aw-save"><span class="small" id="aw-dirty">All changes saved</span><button class="btn btn-sm btn-primary" type="button" id="aw-save">Save awards</button></div>
+        </div>
+      </section>
+
       <section class="tab" id="tab-overlays" hidden>
         <div class="container grid2">
           <div class="card pad">
@@ -561,7 +674,7 @@
     function av(u) { return '<span class="avatar">' + (u.avatar ? '<img src="' + esc(u.avatar) + '" alt="">' : esc(String(u.name || '?').slice(0, 2).toUpperCase())) + '</span>'; }
     function fmt(ts) { if (!ts) return ''; var d = new Date(ts); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
     function teamById(id) { return (T && T.teams || []).filter(function (t) { return t.id === id; })[0]; }
-    function roleLabel(r) { if (r === 'admin') return 'Admin'; if (r === 'helper') return 'Helper'; if (r && r.indexOf('captain:') === 0) { var t = teamById(r.slice(8)); return 'Captain · ' + (t ? t.name : r.slice(8)); } return r; }
+    function roleLabel(r) { if (r === 'admin') return 'Admin'; if (r === 'helper') return 'Helper'; if (r === 'awards') return 'AK9 Awards only'; if (r && r.indexOf('captain:') === 0) { var t = teamById(r.slice(8)); return 'Captain · ' + (t ? t.name : r.slice(8)); } return r; }
 
     /* Live / test switch */
     function paintSpace() {
@@ -650,6 +763,143 @@
       };
       function load() { return fetch('/api/events', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) { EV = d.events || []; render(); }).catch(function () { $('cal-count').textContent = 'Could not load the calendar.'; }); }
       load(); syncAllDay();
+    })();
+
+    /* AK9 Awards: season, awards, finalists, wildcards (GET /api/awards?view=admin, POST /api/awards). */
+    (function () {
+      var $ = function (id) { return document.getElementById(id); };
+      var S = null, R = null, TALLY = {}, STAGE = '', COUNTS = {}, VOTERS = [], NOMINATORS = [], dirty = false;
+      try { $('aw-tz').textContent = new Intl.DateTimeFormat(undefined, { timeZoneName: 'short' }).formatToParts(new Date()).filter(function (p) { return p.type === 'timeZoneName'; })[0].value; } catch (e) {}
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+      function toLocal(iso) { if (!iso) return ''; var d = new Date(iso); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+      function fromLocal(v) { return v ? new Date(v).toISOString() : ''; }
+      function mark() { dirty = true; $('aw-dirty').textContent = 'Unsaved changes'; }
+      var LOGIN = /^[a-z0-9_]{3,25}$/;
+      function votesFor(aid, nid) { var a = R && (R.awards || []).filter(function (x) { return x.id === aid; })[0]; var n = a && a.nominees.filter(function (x) { return x.id === nid; })[0]; return n ? n.votes : null; }
+      function render() {
+        $('aw-empty').hidden = !!S; $('aw-season').hidden = !S;
+        if (!S) { $('aw-awards').innerHTML = ''; $('aw-wild').innerHTML = ''; return; }
+        $('aw-wild-by').value = S.wildcardsBy || '';
+        $('aw-label').value = S.label || ''; $('aw-theme').value = S.theme || 'classic'; $('aw-reveal').value = S.revealStyle || 'pumpkin'; $('aw-phase').value = S.phase || 'soon';
+        $('aw-nopen').value = toLocal(S.nominateOpen); $('aw-nclose').value = toLocal(S.nominateDeadline); $('aw-vclose').value = toLocal(S.voteDeadline);
+        var stageName = { soon: 'Coming soon', 'nominate-soon': 'Nominations not open yet', nominate: 'Nominations open', 'nominate-closed': 'Nominations closed (deadline passed)', vote: 'Voting open', closed: 'Voting closed', revealed: 'Winners published' }[STAGE] || STAGE;
+        $('aw-stats').innerHTML = '<span class="on">Visitors see: ' + esc(stageName) + '</span><span>' + (COUNTS.nominators || 0) + ' nominated</span><span>' + (COUNTS.voters || 0) + ' voted</span>';
+        $('aw-awards').innerHTML = (S.awards || []).map(function (a, i) {
+          var tally = (TALLY[a.id] || []).filter(function (t) { return !(a.nominees || []).some(function (n) { return n.name.toLowerCase() === t.name.toLowerCase() || (n.login && n.login === t.name.toLowerCase()); }); }).slice(0, 12);
+          var noms = (a.nominees || []).map(function (n, j) {
+            var v = votesFor(a.id, n.id);
+            return '<div class="aw-nom">' + (n.image ? '<img src="' + esc(n.image) + '" alt="">' : '<span class="ph"></span>') +
+              '<input class="field" data-a="' + i + '" data-n="' + j + '" data-k="name" value="' + esc(n.name) + '" placeholder="Name shown">' +
+              '<input class="field lg" data-a="' + i + '" data-n="' + j + '" data-k="login" value="' + esc(n.login || '') + '" placeholder="Twitch login (for the picture)">' +
+              '<span class="votes">' + (v == null ? '' : v + ' vote' + (v === 1 ? '' : 's')) + '</span>' +
+              '<button class="link-btn danger" data-rm-nom="' + i + ':' + j + '" type="button">Remove</button></div>';
+          }).join('');
+          var winOpts = '<option value="">Most votes (automatic)</option>' + (a.nominees || []).map(function (n) { return '<option value="' + esc(n.id) + '"' + ((a.winnerIds || [])[0] === n.id ? ' selected' : '') + '>' + esc(n.name) + '</option>'; }).join('');
+          return '<div class="aw-award"><div class="hd"><span class="n">AWARD ' + pad(i + 1) + '</span><input class="field" data-a="' + i + '" data-k="title" value="' + esc(a.title) + '" placeholder="Award name"></div>' +
+            '<textarea class="field" data-a="' + i + '" data-k="description" maxlength="400" placeholder="What the award is for (optional)">' + esc(a.description || '') + '</textarea>' +
+            '<div class="small">Finalists</div><div class="aw-noms">' + (noms || '<span class="small">No finalists yet.</span>') + '</div>' +
+            '<div class="aw-row"><button class="link-btn" type="button" data-add-nom="' + i + '">+ Add a finalist</button></div>' +
+            (tally.length ? '<div class="small">Nominated by viewers (click to add as a finalist)</div><div class="aw-tally">' + tally.map(function (t) { return '<button type="button" data-tally="' + i + '" data-name="' + esc(t.name) + '">' + esc(t.name) + '<b>' + t.count + '</b></button>'; }).join('') + '</div>' : '') +
+            '<div class="aw-row"><label class="small" style="display:flex;gap:8px;align-items:center">Winner if it\'s a tie <select class="field" style="width:auto" data-a="' + i + '" data-k="winner">' + winOpts + '</select></label>' +
+            '<span style="flex:1"></span><button class="link-btn" type="button" data-up="' + i + '"' + (i ? '' : ' disabled') + '>Move up</button><button class="link-btn danger" type="button" data-rm-award="' + i + '">Delete award</button></div></div>';
+        }).join('') || '<p class="small">No awards yet. Add the first one.</p>';
+        $('aw-wild').innerHTML = (S.wildcards || []).map(function (w, i) {
+          return '<div class="two" style="align-items:end"><label>Title<input class="field" data-w="' + i + '" data-k="title" value="' + esc(w.title) + '"></label>' +
+            '<label>Winners (Twitch logins, comma separated)<input class="field" data-w="' + i + '" data-k="winners" value="' + esc((w.winners || []).join(', ')) + '"></label>' +
+            '<div><button class="link-btn danger" type="button" data-rm-wild="' + i + '">Remove</button></div></div>';
+        }).join('') || '<p class="small">No wildcards.</p>';
+      }
+      function nameOf(aid, nid) { var a = (S && S.awards || []).filter(function (x) { return x.id === aid; })[0]; var n = a && (a.nominees || []).filter(function (x) { return x.id === nid; })[0]; return n ? n.name : '—'; }
+      function titleOf(aid) { var a = (S && S.awards || []).filter(function (x) { return x.id === aid; })[0]; return a ? a.title : aid; }
+      function peopleTable(list, kind) {
+        if (!list.length) return '<p class="small">' + (kind === 'votes' ? 'No votes yet.' : 'No nominations yet.') + '</p>';
+        return '<table class="aw-table"><tr><th>Who</th><th>Picks</th><th>When</th><th></th></tr>' + list.map(function (p) {
+          var picks = Object.keys(p.choices).map(function (aid) { return esc(titleOf(aid)) + ': <b>' + esc(kind === 'votes' ? nameOf(aid, p.choices[aid]) : p.choices[aid]) + '</b>'; }).join('<br>');
+          return '<tr><td><b>' + esc(p.name) + '</b><div class="small">@' + esc(p.login) + '</div></td><td class="picks">' + picks + '</td><td class="small">' + (p.at ? esc(new Date(p.at).toLocaleString()) : '') + '</td>' +
+            '<td><span id="aw-rs-' + kind + '-' + esc(p.login) + '"><button class="link-btn danger" type="button" data-reset="' + esc(p.login) + '" data-kind="' + kind + '">Reset</button></span></td></tr>';
+        }).join('') + '</table>';
+      }
+      function renderPeople() {
+        $('aw-voters-count').textContent = VOTERS.length + ' voted. Reset clears one person\'s ballot so they can vote again.';
+        $('aw-voters').innerHTML = peopleTable(VOTERS, 'votes'); $('aw-nominators').innerHTML = peopleTable(NOMINATORS, 'noms');
+      }
+      function onReset(e) {
+        var b = e.target.closest('[data-reset]'); if (!b) return;
+        var login = b.dataset.reset, kind = b.dataset.kind, wrap = $('aw-rs-' + kind + '-' + login);
+        wrap.innerHTML = '<button class="link-btn danger" type="button" data-yes>Yes, reset</button> <button class="link-btn" type="button" data-no>Keep</button>';
+        wrap.querySelector('[data-no]').onclick = renderPeople;
+        wrap.querySelector('[data-yes]').onclick = function () { api('/api/awards', { action: 'resetEntry', kind: kind, login: login }).then(function () { toast('@' + login + ' can ' + (kind === 'votes' ? 'vote' : 'nominate') + ' again'); load(); }, function (er) { toast(er.message); }); };
+      }
+      $('aw-voters').addEventListener('click', onReset); $('aw-nominators').addEventListener('click', onReset);
+      $('aw-export').onclick = function () {
+        if (!S) return;
+        var q = function (v) { return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; };
+        var rows = [['login', 'name', 'voted at'].concat(S.awards.map(function (a) { return a.title; })).map(q).join(',')];
+        VOTERS.forEach(function (p) { rows.push([p.login, p.name, p.at ? new Date(p.at).toISOString() : ''].concat(S.awards.map(function (a) { return nameOf(a.id, p.choices[a.id]); })).map(q).join(',')); });
+        var url = URL.createObjectURL(new Blob([rows.join('\n')], { type: 'text/csv' })), a = document.createElement('a');
+        a.href = url; a.download = 'ak9-awards-' + (S.id || 'votes') + '.csv'; a.click(); URL.revokeObjectURL(url);
+      };
+      function renderShare() {
+        var box = $('aw-share'); if (!S) { box.innerHTML = ''; return; }
+        if (!S.shareKey) { box.innerHTML = '<button class="btn btn-sm" type="button" id="aw-share-on">Create a link</button>'; $('aw-share-on').onclick = function () { setShare(true); }; return; }
+        var url = location.origin + '/awards/preview?k=' + S.shareKey;
+        box.innerHTML = '<div class="aw-link"><input class="field" id="aw-share-url" readonly value="' + esc(url) + '"><button class="btn btn-sm" type="button" id="aw-share-copy">Copy</button><button class="link-btn danger" type="button" id="aw-share-off">Turn off the link</button></div>';
+        $('aw-share-copy').onclick = function () { (navigator.clipboard ? navigator.clipboard.writeText(url) : Promise.reject()).then(function () { toast('Link copied'); }, function () { $('aw-share-url').select(); document.execCommand('copy'); toast('Link copied'); }); };
+        $('aw-share-off').onclick = function () { if (confirm('Turn off the link? Anyone who has it will lose access.')) setShare(false); };
+      }
+      function setShare(on) { api('/api/awards', { action: 'shareLink', on: on }).then(function () { toast(on ? 'Link created' : 'Link turned off'); load(); }, function (e) { toast(e.message); }); }
+      function readSeason() {
+        S.wildcardsBy = $('aw-wild-by').value;
+        S.label = $('aw-label').value; S.theme = $('aw-theme').value; S.revealStyle = $('aw-reveal').value; S.phase = $('aw-phase').value;
+        S.nominateOpen = fromLocal($('aw-nopen').value); S.nominateDeadline = fromLocal($('aw-nclose').value); S.voteDeadline = fromLocal($('aw-vclose').value);
+      }
+      ['aw-wild-by', 'aw-reveal', 'aw-label', 'aw-theme', 'aw-phase', 'aw-nopen', 'aw-nclose', 'aw-vclose'].forEach(function (id) { $(id).addEventListener('input', function () { readSeason(); mark(); }); });
+      function onEdit(e) {
+        var t = e.target, a = t.dataset.a, n = t.dataset.n, w = t.dataset.w, k = t.dataset.k;
+        if (a != null && n != null) { S.awards[a].nominees[n][k] = t.value; if (k === 'login') S.awards[a].nominees[n].image = ''; }
+        else if (a != null && k === 'winner') S.awards[a].winnerIds = t.value ? [t.value] : [];
+        else if (a != null) S.awards[a][k] = t.value;
+        else if (w != null) S.wildcards[w][k] = k === 'winners' ? t.value.split(',').map(function (x) { return x.trim(); }).filter(Boolean) : t.value;
+        mark();
+      }
+      $('aw-awards').addEventListener('input', onEdit); $('aw-wild').addEventListener('input', onEdit); $('aw-awards').addEventListener('change', onEdit);
+      $('aw-awards').addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return; var d = b.dataset;
+        if (d.addNom != null) { S.awards[d.addNom].nominees.push({ name: '', login: '' }); }
+        else if (d.tally != null) { var nm = d.name, lg = nm.toLowerCase().replace(/^@/, ''); S.awards[d.tally].nominees.push({ name: nm, login: LOGIN.test(lg) ? lg : '' }); }
+        else if (d.rmNom) { var p = d.rmNom.split(':'); S.awards[p[0]].nominees.splice(+p[1], 1); }
+        else if (d.up) { var i = +d.up, x = S.awards[i]; S.awards[i] = S.awards[i - 1]; S.awards[i - 1] = x; }
+        else if (d.rmAward != null) { if (!confirm('Delete "' + (S.awards[d.rmAward].title || 'this award') + '"?')) return; S.awards.splice(+d.rmAward, 1); }
+        else return;
+        mark(); render();
+      });
+      $('aw-wild').addEventListener('click', function (e) { var b = e.target.closest('[data-rm-wild]'); if (!b) return; S.wildcards.splice(+b.dataset.rmWild, 1); mark(); render(); });
+      $('aw-add').onclick = function () { if (!S) return toast('Start a season first'); S.awards.push({ title: '', description: '', nominees: [], winnerIds: [] }); mark(); render(); };
+      $('aw-add-wild').onclick = function () { if (!S) return toast('Start a season first'); S.wildcards = S.wildcards || []; S.wildcards.push({ title: '', winners: [] }); mark(); render(); };
+      $('aw-save').onclick = function () {
+        if (!S) return toast('Start a season first');
+        readSeason(); $('aw-save').disabled = true;
+        api('/api/awards', { action: 'save', season: S }).then(function () { dirty = false; $('aw-dirty').textContent = 'All changes saved'; toast('Awards saved'); return load(); }, function (e) { toast(e.message); }).finally(function () { $('aw-save').disabled = false; });
+      };
+      $('aw-new').onclick = function () {
+        var label = prompt('Name of the new season (e.g. Winter 2026):'); if (!label) return;
+        var standard = confirm('Start with the standard AK9 Awards list (16 awards)? OK = standard list, Cancel = other options');
+        var copy = !standard && S && S.awards && S.awards.length ? confirm('Copy this season\'s awards instead? (OK = copy, Cancel = start empty)') : false;
+        api('/api/awards', { action: 'newSeason', label: label, standard: standard, copyAwards: copy }).then(function () { toast('New season started'); load(); }, function (e) { toast(e.message); });
+      };
+      function clearKind(kind, what) { if (!confirm('Delete every ' + what + ' for this season? This cannot be undone.')) return; api('/api/awards', { action: 'clear', kind: kind }).then(function () { toast('Cleared'); load(); }, function (e) { toast(e.message); }); }
+      $('aw-clear-noms').onclick = function () { clearKind('noms', 'nomination'); };
+      $('aw-clear-votes').onclick = function () { clearKind('votes', 'vote'); };
+      window.addEventListener('beforeunload', function (e) { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
+      function load() {
+        return api('/api/awards?view=admin').then(function (d) {
+          S = d.season || null; R = d.results; TALLY = d.tally || {}; STAGE = d.stage; COUNTS = d.counts || {}; VOTERS = d.voters || []; NOMINATORS = d.nominators || [];
+          renderPeople(); renderShare();
+          if (S) { S.awards = S.awards || []; S.wildcards = S.wildcards || []; }
+          render();
+        }).catch(function (e) { $('aw-awards').innerHTML = '<p class="small">' + esc(e.message) + '</p>'; });
+      }
+      load();
     })();
 
     /* Overlays: preview scaled to the card, copyable browser-source URLs. */
@@ -986,7 +1236,7 @@
     /* ---------- Roles ---------- */
     function renderRoles() {
       var rs = document.getElementById('role-role');
-      rs.innerHTML = (T ? T.teams : []).map(function (t) { return '<option value="captain:' + esc(t.id) + '">Captain · ' + esc(t.name) + '</option>'; }).join('') + '<option value="helper">Helper</option><option value="admin">Admin</option>';
+      rs.innerHTML = (T ? T.teams : []).map(function (t) { return '<option value="captain:' + esc(t.id) + '">Captain · ' + esc(t.name) + '</option>'; }).join('') + '<option value="helper">Helper</option><option value="awards">AK9 Awards only</option><option value="admin">Admin</option>';
       api('/api/admin/roles').then(function (d) {
         var html = '';
         (d.alwaysAdmin || []).forEach(function (l) { html += '<li><b>' + esc(l) + '</b><span class="rl">Admin</span><span class="lock">set in Vercel</span></li>'; });
@@ -1021,6 +1271,14 @@
     /* ---------- Boot ---------- */
     api('/api/me').then(function (m) {
       ME = m;
+      if (m.user && m.role === 'awards') {
+        /* AK9 Awards role: the admin page shows only the AK9 Awards tab. */
+        document.body.classList.add('awards-only');
+        document.getElementById('panel').hidden = false;
+        document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + ' · AK9 Awards access.';
+        document.querySelector('.tabs button[data-tab="awards"]').click();
+        return;
+      }
       if (!m.user || m.role !== 'admin') {
         document.getElementById('gate').hidden = false;
         if (m.user) { document.getElementById('gate-msg').textContent = 'You are logged in as ' + m.user.name + ' but not an admin.'; var b = document.getElementById('gate-btn'); b.textContent = 'Log out'; b.href = '/api/auth/logout?next=/admin'; }

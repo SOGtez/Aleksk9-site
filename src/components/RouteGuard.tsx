@@ -11,7 +11,7 @@ const RouteGuard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const enabled =
     pathname in routes
       ? routes[pathname as keyof typeof routes]
-      : pathname.startsWith("/blog") && routes["/blog"];
+      : (pathname.startsWith("/blog/") && routes["/blog"]) || (pathname.startsWith("/awards/") && routes["/awards"]);
   return <>{enabled ? children : <NotFound />}</>;
 };
 

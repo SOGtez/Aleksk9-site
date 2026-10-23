@@ -41,6 +41,7 @@ export function clearSession(res) {
   res.setHeader('Set-Cookie', cookieHeader(COOKIE, '', { maxAge: 0 }));
 }
 export function getSession(req) {
-  return verify(req.cookies?.[COOKIE]);
+  /* No SESSION_SECRET (the test site): nobody is logged in, instead of an error. */
+  try { return verify(req.cookies?.[COOKIE]); } catch { return null; }
 }
 export function randomState() { return crypto.randomBytes(16).toString('hex'); }

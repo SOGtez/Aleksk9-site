@@ -141,7 +141,7 @@ export default async function handler(req, res) {
     const counts = { nominators: Object.keys(noms).length, voters: Object.keys(votes).length };
     if (req.query.view === 'admin') {
       if (!isAdmin) return json(res, 403, { error: 'Admins only' });
-      const people = (h) => Object.entries(h).map(([login, e]) => ({ login, name: e.name || login, at: e.at || 0, choices: e.choices || {} })).sort((a, b) => b.at - a.at);
+      const people = (h) => Object.entries(h).map(([login, e]) => ({ login, name: e.name || login, avatar: e.avatar || '', at: e.at || 0, choices: e.choices || {} })).sort((a, b) => b.at - a.at);
       return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms) });
     }
     const mine = me.user && season ? { nominated: (noms[me.user.login] || {}).choices || null, voted: (votes[me.user.login] || {}).choices || null } : { nominated: null, voted: null };
@@ -169,7 +169,7 @@ export default async function handler(req, res) {
       for (const a of awards) { const v = clean(c[a.id], 40); if (!(a.nominees || []).some((n) => n.id === v)) return json(res, 400, { error: 'Pick a finalist for every award' }); choices[a.id] = v; }
     }
     const kind = b.action === 'nominate' ? 'noms' : 'votes';
-    const ok = await addAwEntryOnce(kind, season.id, me.user.login, { choices, name: me.user.name || me.user.login, at: Date.now() });
+    const ok = await addAwEntryOnce(kind, season.id, me.user.login, { choices, name: me.user.name || me.user.login, avatar: me.user.avatar || '', at: Date.now() });
     if (!ok) return json(res, 409, { error: b.action === 'nominate' ? 'already_nominated' : 'already_voted' });
     return json(res, 200, { ok: true, choices });
   }

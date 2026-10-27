@@ -4,11 +4,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./awards.module.scss";
 import { Award, Face, Theme, Wildcard, WORDS, loginUrl, pad2, themeClass } from "./shared";
 import { Pumpkin } from "./Pumpkin";
+import { EvidenceBag, BagStage } from "./EvidenceBag";
 
 /* /awards/reveal: the page Aleks shows on stream to reveal the winners one award at a time.
    Before the winners are published only admins can open it; afterwards (or with ?season=<id>) anyone can
    replay it. Space / → next, ← back, F fullscreen. */
 type Show = { revealStyle?: string; wildcardsBy?: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
+/* Which reveal to play: the season's choice, else the evidence bag for the crime theme and the pumpkin otherwise. */
+type RevealStyle = "pumpkin" | "spotlight" | "evidence";
+const styleOf = (s: Show | null): RevealStyle => (s?.revealStyle === "spotlight" || s?.revealStyle === "evidence" || s?.revealStyle === "pumpkin") ? s.revealStyle : s?.theme === "crime" ? "evidence" : "pumpkin";
 type Step = { kind: "intro" } | { kind: "award"; i: number } | { kind: "win"; i: number } | { kind: "wild" } | { kind: "outro" };
 
 let ac: AudioContext | null = null;
@@ -29,6 +33,24 @@ function splat() {
     for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
     const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
     f.type = "lowpass"; f.frequency.value = 1400; g.gain.value = 0.5;
+    src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
+  } catch { /* no audio */ }
+}
+
+/* Scissor snips and the rustle of the bag opening. */
+function snip() {
+  try {
+    ac = ac || new AudioContext();
+    for (let i = 0; i < 6; i++) setTimeout(() => { tone(2400 + Math.random() * 600, 0.03, "square", 0.04); tone(900, 0.05, "triangle", 0.03); }, i * 150);
+  } catch { /* no audio */ }
+}
+function rustle() {
+  try {
+    ac = ac || new AudioContext();
+    const len = ac.sampleRate * 0.9, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) { const k = i / len; d[i] = (Math.random() * 2 - 1) * Math.sin(k * Math.PI) * (0.5 + 0.5 * Math.sin(i / 90)); }
+    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    f.type = "highpass"; f.frequency.value = 1800; g.gain.value = 0.18;
     src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
   } catch { /* no audio */ }
 }
@@ -68,6 +90,7 @@ export function RevealStage() {
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<"idle" | "suspense" | "pumpkin" | "burst" | "shown">("idle");
   const [hits, setHits] = useState(0);
+  const [bagOpen, setBagOpen] = useState(false);
   const [shaking, setShaking] = useState(false);
   const [flash, setFlash] = useState(0);
   const [spot, setSpot] = useState(-1);
@@ -118,7 +141,8 @@ export function RevealStage() {
     if (!show || !cur || cur.kind !== "win") { setPhase("idle"); setSpot(-1); return; }
     const a = show.awards[cur.i];
     if (!a.nominees.length || !(a.winnerIds || []).length) { setPhase("shown"); return; }
-    if ((show.revealStyle || "pumpkin") === "pumpkin") { setHits(0); setPhase("pumpkin"); return; }
+    const rs = styleOf(show);
+    if (rs === "pumpkin" || rs === "evidence") { setHits(0); setBagOpen(false); setPhase("pumpkin"); return; }
     setPhase("suspense");
     const n = a.nominees.length, winIdx = a.nominees.findIndex((x) => (a.winnerIds || []).includes(x.id));
     let k = 0, delay = 90, timer: ReturnType<typeof setTimeout>;
@@ -160,11 +184,21 @@ export function RevealStage() {
     }
   }, [phase, hits, sound]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /* Scissors along the dotted line, the bag drifts open, the case file slides out, GUILTY settles on last. */
+  const cut = useCallback(() => {
+    if (phase !== "pumpkin") return;
+    setPhase("burst"); setBagOpen(false); if (sound) snip();
+    setTimeout(() => { setBagOpen(true); if (sound) rustle(); }, 1050);
+    setTimeout(() => { setPhase("shown"); if (sound) { tone(95, 0.3, "sine", 0.35); tone(60, 0.35, "sine", 0.25); } }, 2500);
+    setTimeout(() => { burst(["#b81c14", "#d8342a", "#ffd400", "#eceae3", "#111111"]); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 3100);
+  }, [phase, sound]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const revealStyle = styleOf(show);
   const next = useCallback(() => {
-    if (cur && cur.kind === "win" && phase === "pumpkin") { smash(); return; }
+    if (cur && cur.kind === "win" && phase === "pumpkin") { if (revealStyle === "evidence") cut(); else smash(); return; }
     if (cur && cur.kind === "win" && (phase === "suspense" || phase === "burst")) return;   /* let the reveal finish */
     setStep((x) => Math.min(steps.length - 1, x + 1));
-  }, [cur, phase, steps.length, smash]);
+  }, [cur, phase, steps.length, smash, cut, revealStyle]);
   const back = useCallback(() => setStep((x) => Math.max(0, x - 1)), []);
   const full = useCallback(() => { const el = stageRef.current; if (!el) return; if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen?.(); }, []);
   useEffect(() => {
@@ -225,7 +259,26 @@ export function RevealStage() {
           const total = a.total || 0;
           const pct = (v = 0) => (total ? ` · ${Math.round((v / total) * 100)}%` : "");
           const word = w.winner.toLowerCase() === "guilty" ? "verdict" : "winner";
-          if (cur.kind === "win" && (show.revealStyle || "pumpkin") === "pumpkin" && winners.length) {
+          if (cur.kind === "win" && revealStyle === "evidence" && winners.length) {
+            const bagStage: BagStage = phase === "shown" ? "revealed" : phase === "burst" ? (bagOpen ? "open" : "cutting") : "sealed";
+            return (
+              <div key={"st" + step} className={styles.sAward}>
+                <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)} · {a.title}</div>
+                <EvidenceBag a={a} i={cur.i} label={show.label} verdict={w.winner} stage={bagStage} onCut={cut} />
+                {phase === "pumpkin" && <div className={`${styles.sHint} ${styles.pulse}`}>tap the evidence bag to cut it open</div>}
+                <div className={`${styles.sNoms} ${styles.sNomsSmall} ${phase !== "shown" ? styles.nervous : ""}`}>
+                  {a.nominees.filter((n) => phase !== "shown" || !winners.includes(n)).map((n, ni) => (
+                    <div key={n.id} className={`${styles.sNom} ${phase === "shown" ? `${styles.sLose} ${styles.fadeUp}` : ""}`} style={phase === "shown" ? { animationDelay: `${0.6 + ni * 0.3}s` } : { animationDelay: `${ni * 0.15}s` }}>
+                      <Face n={n} size={56} />
+                      <div className={styles.sNomName}>{n.name}</div>
+                      {phase === "shown" && <div className={styles.sVotes}><CountUp to={n.votes || 0} delay={600 + ni * 300} ms={900} /> vote{n.votes === 1 ? "" : "s"}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          if (cur.kind === "win" && revealStyle === "pumpkin" && winners.length) {
             return (
               <div key={"st" + step} className={styles.sAward}>
                 <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>

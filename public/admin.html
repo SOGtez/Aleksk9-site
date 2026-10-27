@@ -613,7 +613,7 @@
                   <label>Season name<input class="field" id="aw-label" maxlength="60" placeholder="e.g. Fall 2026"></label>
                   <label>Theme<select class="field" id="aw-theme"><option value="classic">Classic</option><option value="crime">Crime scene</option><option value="spooky">Spooky</option></select></label>
                 </div>
-                <label>Winner reveal on stream<select class="field" id="aw-reveal"><option value="pumpkin">Pumpkin smash (hit it 3 times to reveal the winner)</option><option value="spotlight">Spotlight (jumps between the finalists, lands on the winner)</option></select></label>
+                <label>Winner reveal on stream<select class="field" id="aw-reveal"><option value="">Match the theme (crime: evidence bag, otherwise pumpkin)</option><option value="evidence">Evidence bag (cut it open, the case file slides out with the winner)</option><option value="pumpkin">Pumpkin smash (hit it 3 times to reveal the winner)</option><option value="spotlight">Spotlight (jumps between the finalists, lands on the winner)</option></select></label>
                 <label>Phase<select class="field" id="aw-phase">
                   <option value="soon">Coming soon (only "opens soon" shows)</option>
                   <option value="nominate">Nominations open</option>
@@ -997,7 +997,7 @@
         $('aw-season').hidden = !S;
         if (!S) { $('aw-awards').innerHTML = ''; $('aw-wild').innerHTML = ''; renderLive(); renderTally(); return; }
         $('aw-wild-by').value = S.wildcardsBy || '';
-        $('aw-label').value = S.label || ''; $('aw-theme').value = S.theme || 'classic'; $('aw-reveal').value = S.revealStyle || 'pumpkin'; $('aw-phase').value = S.phase || 'soon';
+        $('aw-label').value = S.label || ''; $('aw-theme').value = S.theme || 'classic'; $('aw-reveal').value = S.revealStyle || ''; $('aw-phase').value = S.phase || 'soon';
         $('aw-nopen').value = toLocal(S.nominateOpen); $('aw-nclose').value = toLocal(S.nominateDeadline); $('aw-vclose').value = toLocal(S.voteDeadline);
         $('aw-awards').innerHTML = (S.awards || []).map(function (a, i) {
           var tally = (TALLY[a.id] || []).filter(function (t) { return !(a.nominees || []).some(function (n) { return norm(n.name) === norm(t.name) || (n.login && n.login === norm(t.name)); }); }).slice(0, 12);

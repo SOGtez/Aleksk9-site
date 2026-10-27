@@ -5,7 +5,7 @@ import {
 } from '../../server/lib/store.js';
 import { profiles } from '../../server/lib/twitch.js';
 import {
-  THEMES, PHASES, STANDARD_AWARDS, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason,
+  THEMES, PHASES, STANDARD_AWARDS, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason, revealStyleFor,
 } from '../../server/lib/awards.js';
 
 /* AK9 Awards (/awards). One route for everything:
@@ -35,7 +35,7 @@ function publicSeason(season, stage, counts) {
     awards: (season.awards || []).map((a) => ({ id: a.id, title: a.title, description: a.description || '', nominees: showsFinalists(stage) ? a.nominees || [] : [] })),
     wildcards: stage === 'revealed' ? season.wildcards || [] : [],
     wildcardsBy: season.wildcardsBy || '',
-    revealStyle: season.revealStyle || 'pumpkin',
+    revealStyle: revealStyleFor(season),
     counts,
   };
 }
@@ -81,7 +81,7 @@ function sanitizeSeason(input, prev) {
     nominateDeadline: isIso(s.nominateDeadline) ? new Date(s.nominateDeadline).toISOString() : '',
     voteDeadline: isIso(s.voteDeadline) ? new Date(s.voteDeadline).toISOString() : '',
     wildcardsBy: clean(s.wildcardsBy, 30),
-    revealStyle: s.revealStyle === 'spotlight' ? 'spotlight' : 'pumpkin',
+    revealStyle: ['spotlight', 'evidence', 'pumpkin'].includes(s.revealStyle) ? s.revealStyle : revealStyleFor(s),
     shareKey: (prev && prev.shareKey) || '',
     awards, wildcards, updatedAt: Date.now(),
   };
@@ -112,7 +112,7 @@ export default async function handler(req, res) {
     if (req.query.season) { const s = await findArchived(clean(req.query.season, 60)); if (!s) return json(res, 404, { error: 'Not found' }); return json(res, 200, { season: { ...s, wildcards: await wildcardsWithImages(s.wildcards) }, demo: true }); }
     const results = computeResults(season, ballots);
     const counts = { nominators: 31, voters: results.totalVoters };
-    if (req.query.share) return json(res, 200, { preview: true, demo: true, season: { id: season.id, label: season.label, theme: season.theme, revealStyle: 'pumpkin', totalVoters: results.totalVoters, awards: results.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
+    if (req.query.share) return json(res, 200, { preview: true, demo: true, season: { id: season.id, label: season.label, theme: season.theme, revealStyle: revealStyleFor(season), totalVoters: results.totalVoters, awards: results.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
     if (req.query.view === 'admin') return json(res, 200, { season, stage, counts, results, tally: tallyNominations(season, {}), voters: [], nominators: [], demo: true });
     return json(res, 200, {
       demo: true, season: publicSeason(season, stage, counts),
@@ -135,7 +135,7 @@ export default async function handler(req, res) {
       const key = clean(req.query.share, 40);
       if (!season || !season.shareKey || key !== season.shareKey) return json(res, 404, { error: 'This link is not valid any more.' });
       const r = computeResults(season, await getAwEntries('votes', season.id));
-      return json(res, 200, { preview: true, season: { id: season.id, label: season.label, theme: season.theme, wildcardsBy: season.wildcardsBy || '', revealStyle: season.revealStyle || 'pumpkin', totalVoters: r.totalVoters, awards: r.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
+      return json(res, 200, { preview: true, season: { id: season.id, label: season.label, theme: season.theme, wildcardsBy: season.wildcardsBy || '', revealStyle: revealStyleFor(season), totalVoters: r.totalVoters, awards: r.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
     }
     const [noms, votes] = season ? await Promise.all([getAwEntries('noms', season.id), getAwEntries('votes', season.id)]) : [{}, {}];
     const counts = { nominators: Object.keys(noms).length, voters: Object.keys(votes).length };
@@ -192,7 +192,7 @@ export default async function handler(req, res) {
   if (b.action === 'archive') {
     const votes = await getAwEntries('votes', season.id);
     const r = computeResults(season, votes);
-    const archived = { id: season.id, label: season.label, theme: season.theme, totalVoters: r.totalVoters, awards: r.awards, wildcards: season.wildcards || [], wildcardsBy: season.wildcardsBy || '', revealStyle: season.revealStyle || 'pumpkin', archivedAt: Date.now() };
+    const archived = { id: season.id, label: season.label, theme: season.theme, totalVoters: r.totalVoters, awards: r.awards, wildcards: season.wildcards || [], wildcardsBy: season.wildcardsBy || '', revealStyle: revealStyleFor(season), archivedAt: Date.now() };
     await saveAwArchive(archived);
     await setAwSeason({ ...season, phase: 'revealed', updatedAt: Date.now() });
     return json(res, 200, { ok: true, archived: hallSummary(archived) });

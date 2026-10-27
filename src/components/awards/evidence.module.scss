@@ -1,0 +1,101 @@
+/* The forensics evidence bag used on the reveal page (crime theme). Ported from the old
+   tezcreations.com/ak9awards results page. Fonts come from next/font in src/app/awards/reveal/page.tsx;
+   the fallbacks keep it readable anywhere else. */
+$fd: var(--ev-fd, Impact, "Arial Narrow Bold", sans-serif);          // display: Anton
+$fo: var(--ev-fo, "Arial Narrow", sans-serif);                        // labels: Oswald
+$ft: var(--ev-ft, "Courier New", monospace);                          // typewriter: Special Elite
+$fm: var(--ev-fm, ui-monospace, Menlo, monospace);                    // mono: Space Mono
+$paper: #eceae3;
+$ink: #141414;
+$red: #b81c14;
+$h: 400px;                                                            // height of the sealed bag
+
+.rc { position: relative; width: min(600px, 94vw); margin: 10px auto 0; text-align: left; cursor: default; }
+
+/* the paper (case file) */
+.paperWrap { display: grid; grid-template-rows: 0fr; min-height: $h; transition: grid-template-rows 1.5s cubic-bezier(.22, 1, .36, 1); }
+.open .paperWrap { grid-template-rows: 1fr; }
+.paper { overflow: hidden; opacity: 0; transform: translateY(16px) scale(.985); transition: opacity 1s ease .45s, transform 1.1s cubic-bezier(.22, 1, .36, 1) .45s; }
+.open .paper { opacity: 1; transform: none; }
+
+.bag { position: relative; background: $paper; color: $ink; border-radius: 4px; overflow: hidden;
+  box-shadow: 0 24px 54px -20px rgba(0, 0, 0, .92), inset 0 0 0 1px rgba(0, 0, 0, .1); }
+.bag::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 5;
+  background: linear-gradient(125deg, rgba(255, 255, 255, .55), transparent 26%, transparent 74%, rgba(255, 255, 255, .4)); }
+.strip { background: #d8342a; padding: 5px 0 4px; }
+.brand { font-family: $fm; font-weight: 700; font-style: italic; font-size: 8px; letter-spacing: .1em; color: rgba(255, 255, 255, .9); white-space: nowrap; overflow: hidden; text-align: center; }
+.targets { display: flex; justify-content: space-around; align-items: center; color: #fff; font-size: 14px; padding: 2px 8px; }
+.sidewarn { position: absolute; top: 66px; bottom: 16px; width: 20px; display: flex; align-items: center; justify-content: center; font-family: $fm; font-size: 8px; letter-spacing: .14em; color: #3a3a3a; writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; z-index: 3; }
+.sidewarn.l { left: 3px; }
+.sidewarn.r { right: 3px; transform: rotate(180deg); }
+.body { position: relative; padding: 16px 32px 12px; z-index: 2; }
+.barrow { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid $ink; padding: 6px 10px; margin-bottom: 8px; }
+.caseno { font-family: $fm; font-weight: 700; font-size: 17px; letter-spacing: .04em; }
+.barcode { flex: 1; height: 26px; background-image: repeating-linear-gradient(90deg, #000 0 2px, #fff 2px 3px, #000 3px 4px, #fff 4px 7px, #000 7px 9px, #fff 9px 11px, #000 11px 12px, #fff 12px 15px); }
+.title { font-family: $fd; font-size: 42px; letter-spacing: .02em; text-align: center; margin: 4px 0 10px; color: $ink; line-height: 1.1; }
+.photo { position: absolute; top: 70px; right: 34px; width: 110px; transform: rotate(3deg); z-index: 4; }
+.ptape { position: absolute; top: -9px; left: 50%; transform: translateX(-50%) rotate(-4deg); width: 48px; height: 16px; background: rgba(242, 193, 21, .72); box-shadow: 0 2px 4px rgba(0, 0, 0, .2); z-index: 1; }
+.frame { display: block; background: #fff; padding: 6px 6px 8px; box-shadow: 0 8px 18px rgba(0, 0, 0, .45); }
+.mugimg { width: 100%; aspect-ratio: 1; background: repeating-linear-gradient(0deg, #3a3a3a 0 14px, #2c2c2c 14px 15px); display: flex; align-items: center; justify-content: center; font-family: $fd; font-size: 36px; color: #eee; overflow: hidden; }
+.mugimg img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cap { display: block; font-family: $fm; font-size: 8px; letter-spacing: .1em; text-align: center; color: $ink; margin-top: 5px; word-break: break-word; }
+.f { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin: 8px 0; max-width: calc(100% - 110px); }
+.f label { font-family: $fo; font-weight: 600; font-size: 12px; letter-spacing: .02em; color: $ink; white-space: nowrap; }
+.val { flex: 1; min-width: 70px; border-bottom: 1px solid $ink; font-family: $ft; font-size: 14px; line-height: 1.5; padding-bottom: 1px; }
+.susp { font-weight: 700; font-size: 16px; color: $red; }
+.notes { font-size: 12px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.coc { margin-top: 12px; }
+.coc h5 { font-family: $fd; font-size: 17px; font-weight: 400; text-align: center; letter-spacing: .03em; margin: 0 0 5px; color: $ink; }
+.coc table { width: 100%; border-collapse: collapse; font-family: $fm; font-size: 10.5px; }
+.coc th, .coc td { border: 1px solid $ink; padding: 4px 8px; text-align: left; }
+.guilty { position: absolute; bottom: 104px; left: 30px; transform: rotate(-11deg); z-index: 4; font-family: $fd; font-size: 30px; color: $red; border: 5px solid $red; border-radius: 8px; padding: 1px 15px; opacity: .8; letter-spacing: .06em; text-transform: uppercase; }
+.paper .guilty { opacity: 0; transform: rotate(-11deg) scale(1.55); }
+.paper.revealed .guilty { opacity: .84; transform: rotate(-11deg) scale(1); transition: opacity .5s ease, transform .62s cubic-bezier(.18, 1.4, .34, 1); }
+.cut { border-top: 2px dashed $ink; margin-top: 12px; padding-top: 6px; font-family: $fm; font-size: 9px; letter-spacing: .1em; text-align: center; color: #333; }
+
+/* the sealed bag: two clipped copies of the same face, so it splits along the dotted line */
+.seal { all: unset; box-sizing: border-box; position: absolute; left: 0; right: 0; top: 0; height: $h; z-index: 3; cursor: pointer; overflow: visible; transition: opacity .4s ease; -webkit-tap-highlight-color: transparent; }
+.open .seal { height: 0; pointer-events: none; }
+.sealface { position: absolute; left: 0; right: 0; top: 0; height: $h; overflow: hidden; background: $paper; color: $ink; border-radius: 4px;
+  box-shadow: 0 22px 50px -20px rgba(0, 0, 0, .92), inset 0 0 0 1px rgba(0, 0, 0, .1);
+  transition: transform 1.75s cubic-bezier(.42, .04, .24, 1), opacity 1.2s ease .45s, box-shadow .6s ease; will-change: transform; }
+.sealface::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 2; background: linear-gradient(125deg, rgba(255, 255, 255, .4), transparent 30%, transparent 72%, rgba(255, 255, 255, .28)); }
+.sfTop { clip-path: inset(0 0 20% 0); }
+.sfBottom { clip-path: inset(80% 0 0 0); }
+.open .sealface { box-shadow: 0 44px 88px -22px rgba(0, 0, 0, .95); }
+.open .sfTop { transform: translateY(-55%) rotate(-6deg); opacity: 0; }
+.open .sfBottom { transform: translateY(55%) rotate(5deg); opacity: 0; }
+.sealface .body { padding: 14px 32px 0; }
+.sealface .title { font-size: 34px; margin: 2px 0 6px; }
+.redact { margin: 12px 8px 0; text-align: center; }
+.rb { display: block; height: 26px; width: 56%; margin: 0 auto 8px; background: #111; border-radius: 2px; box-shadow: 0 0 0 4px $paper, 0 0 0 5px #111; }
+.rl { display: block; font-family: $fd; font-size: 20px; color: #111; letter-spacing: .04em; line-height: 1.15; }
+.rl2 { display: block; font-family: $ft; font-size: 12px; color: #555; margin-top: 3px; }
+.taphint { text-align: center; font-family: $fd; font-size: 18px; color: $red; letter-spacing: .05em; animation: tapPulse 1.8s ease-in-out infinite; margin-top: 12px; }
+.cutting .taphint { animation: none; opacity: .4; }
+.cutLine { position: absolute; left: 0; right: 0; top: 80%; margin: 0; padding-top: 7px; border-top: 2px dashed #111; font-family: $fm; font-size: 9px; letter-spacing: .1em; text-align: center; color: #333; }
+.sealBtm { position: absolute; left: 0; right: 0; top: 80%; bottom: 0; display: flex; align-items: center; justify-content: center; font-family: $fm; font-size: 10px; letter-spacing: .16em; color: #777; text-transform: uppercase; }
+.sidew { position: absolute; top: 62px; bottom: 14px; width: 20px; font-family: $fm; font-size: 8px; letter-spacing: .14em; color: #3a3a3a; writing-mode: vertical-rl; white-space: nowrap; overflow: hidden; display: flex; align-items: center; justify-content: center; z-index: 1; }
+.sidew.l { left: 3px; }
+.sidew.r { right: 3px; transform: rotate(180deg); }
+@keyframes tapPulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+/* the cut: a dotted red line draws itself while the scissors run across */
+.cutline { position: absolute; top: 80%; left: 0; right: 0; height: 2px; transform: scaleX(0); transform-origin: left; z-index: 6;
+  background: repeating-linear-gradient(90deg, #d8342a 0 8px, transparent 8px 14px); box-shadow: 0 0 8px rgba(213, 52, 42, .5); }
+.cutting .cutline { transform: scaleX(1); transition: transform .95s cubic-bezier(.6, 0, .28, 1); }
+.scissors { position: absolute; top: calc(80% - 15px); left: -10px; font-size: 22px; line-height: 1; z-index: 7; opacity: 0; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)); color: #111; }
+.cutting .scissors { animation: snip .95s cubic-bezier(.6, 0, .28, 1) forwards; }
+@keyframes snip { 0% { left: -10px; opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { left: calc(100% - 12px); opacity: 0; } }
+
+@media (max-width: 640px) {
+  .body { padding: 12px 24px 10px; }
+  .photo { width: 84px; right: 24px; top: 64px; }
+  .f { max-width: calc(100% - 84px); }
+  .title { font-size: 34px; }
+  .guilty { font-size: 24px; left: 20px; bottom: 96px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .paperWrap, .paper, .sealface, .cutline, .paper .guilty { transition: none; }
+  .scissors, .taphint { animation: none; }
+}

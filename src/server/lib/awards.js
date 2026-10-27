@@ -21,6 +21,9 @@ export function stageOf(season) {
   }
 }
 export const showsFinalists = (stage) => ['vote', 'closed', 'revealed'].includes(stage);
+/* How the winners are revealed on stream: the season's choice, else the evidence bag for the crime theme
+   (as on the old tezcreations page) and the pumpkin smash otherwise. */
+export const revealStyleFor = (s) => (s && s.revealStyle) || (s && s.theme === 'crime' ? 'evidence' : 'pumpkin');
 
 /* Names typed in nominations, made comparable: "@Pedro  Sahur " and "pedro sahur" count together. */
 export const normName = (s) => String(s || '').trim().replace(/^@+/, '').replace(/\s+/g, ' ').toLowerCase();

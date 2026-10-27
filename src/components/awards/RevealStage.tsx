@@ -5,6 +5,7 @@ import styles from "./awards.module.scss";
 import { Award, Face, Theme, Wildcard, WORDS, loginUrl, pad2, themeClass } from "./shared";
 import { Pumpkin } from "./Pumpkin";
 import { EvidenceBag, BagStage } from "./EvidenceBag";
+import { CountUp, Gate, Letters, PUMPKIN_COLORS, confetti, rustle, snip, splat, titleTime, tone } from "./stage-bits";
 
 /* /awards/reveal: the page Aleks shows on stream to reveal the winners one award at a time.
    Before the winners are published only admins can open it; afterwards (or with ?season=<id>) anyone can
@@ -14,73 +15,6 @@ type Show = { revealStyle?: string; wildcardsBy?: string; label: string; theme: 
 type RevealStyle = "pumpkin" | "spotlight" | "evidence";
 const styleOf = (s: Show | null): RevealStyle => (s?.revealStyle === "spotlight" || s?.revealStyle === "evidence" || s?.revealStyle === "pumpkin") ? s.revealStyle : s?.theme === "crime" ? "evidence" : "pumpkin";
 type Step = { kind: "intro" } | { kind: "award"; i: number } | { kind: "win"; i: number } | { kind: "wild" } | { kind: "outro" };
-
-let ac: AudioContext | null = null;
-function tone(f: number, d = 0.08, type: OscillatorType = "triangle", v = 0.05) {
-  try {
-    ac = ac || new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-    const o = ac.createOscillator(), g = ac.createGain();
-    o.type = type; o.frequency.value = f; g.gain.value = v; g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + d);
-    o.connect(g).connect(ac.destination); o.start(); o.stop(ac.currentTime + d);
-  } catch { /* no audio */ }
-}
-
-/* A short burst of noise: the pumpkin breaking. */
-function splat() {
-  try {
-    ac = ac || new AudioContext();
-    const len = ac.sampleRate * 0.35, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2.5);
-    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-    f.type = "lowpass"; f.frequency.value = 1400; g.gain.value = 0.5;
-    src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
-  } catch { /* no audio */ }
-}
-
-/* Scissor snips and the rustle of the bag opening. */
-function snip() {
-  try {
-    ac = ac || new AudioContext();
-    for (let i = 0; i < 6; i++) setTimeout(() => { tone(2400 + Math.random() * 600, 0.03, "square", 0.04); tone(900, 0.05, "triangle", 0.03); }, i * 150);
-  } catch { /* no audio */ }
-}
-function rustle() {
-  try {
-    ac = ac || new AudioContext();
-    const len = ac.sampleRate * 0.9, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) { const k = i / len; d[i] = (Math.random() * 2 - 1) * Math.sin(k * Math.PI) * (0.5 + 0.5 * Math.sin(i / 90)); }
-    const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-    f.type = "highpass"; f.frequency.value = 1800; g.gain.value = 0.18;
-    src.buffer = buf; src.connect(f).connect(g).connect(ac.destination); src.start();
-  } catch { /* no audio */ }
-}
-
-/* Text that appears one letter at a time. */
-function Letters({ text, delay = 0, step = 0.035, className }: { text: string; delay?: number; step?: number; className?: string }) {
-  return (
-    <span className={className} aria-label={text}>
-      {Array.from(text).map((ch, i) => (
-        <span key={i} aria-hidden="true" className={styles.letter} style={{ animationDelay: `${delay + i * step}s` }}>{ch === " " ? "\u00a0" : ch}</span>
-      ))}
-    </span>
-  );
-}
-/* A number that counts up from 0. */
-function CountUp({ to, ms = 1400, delay = 0 }: { to: number; ms?: number; delay?: number }) {
-  const [v, setV] = useState(0);
-  useEffect(() => {
-    /* a timer, not animation frames, so it still ends on the right number if the tab is in the background */
-    let iv: ReturnType<typeof setInterval> | undefined;
-    setV(0);
-    const start = setTimeout(() => {
-      const t0 = Date.now();
-      iv = setInterval(() => { const k = Math.min(1, (Date.now() - t0) / ms); setV(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k >= 1 && iv) clearInterval(iv); }, 30);
-    }, delay);
-    return () => { clearTimeout(start); if (iv) clearInterval(iv); };
-  }, [to, ms, delay]);
-  return <>{v}</>;
-}
-const titleTime = (t: string) => 0.25 + Array.from(t).length * 0.035;   /* seconds until a Letters title is done */
 
 export function RevealStage() {
   const [show, setShow] = useState<Show | null>(null);
@@ -178,7 +112,7 @@ export function RevealStage() {
     const h = hits + 1; setHits(h); setShaking(false); requestAnimationFrame(() => setShaking(true)); setTimeout(() => setShaking(false), 450);
     if (sound) { tone(110, 0.18, "sine", 0.25); tone(70, 0.22, "sine", 0.2); }
     if (h >= 3) {
-      setPhase("burst"); setFlash((x) => x + 1); if (sound) splat(); burst(["#ff8a1f", "#f47a12", "#b8460a", "#ffd34d", "#f4e3b5", "#5b7d1f"]);
+      setPhase("burst"); setFlash((x) => x + 1); if (sound) splat(); burst(PUMPKIN_COLORS);
       setTimeout(() => { setPhase("shown"); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 700);
       setTimeout(() => { burst(); if (sound) tone(1046, 0.4, "triangle", 0.05); }, 1500);   /* confetti when the stamp lands */
     }
@@ -211,20 +145,7 @@ export function RevealStage() {
     addEventListener("keydown", k); return () => removeEventListener("keydown", k);
   }, [next, back, full]);
 
-  function burst(colors?: string[]) {
-    const c = confettiRef.current; if (!c) return;
-    const ctx = c.getContext("2d"); if (!ctx) return;
-    const W = (c.width = c.clientWidth), H = (c.height = c.clientHeight);
-    const cols = colors || ["#ffd166", "#ff3b30", "#fd6325", "#a78bfa", "#ffffff", "#4cc3ff"];
-    const ps = Array.from({ length: 160 }, () => ({ x: W / 2, y: H * 0.45, vx: (Math.random() - 0.5) * 16, vy: -Math.random() * 14 - 4, r: 3 + Math.random() * 5, c: cols[(Math.random() * cols.length) | 0], a: Math.random() * 6 }));
-    let t = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, W, H);
-      for (const p of ps) { p.x += p.vx; p.y += p.vy; p.vy += 0.35; p.vx *= 0.99; p.a += 0.2; ctx.fillStyle = p.c; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a); ctx.fillRect(-p.r, -p.r / 2, p.r * 2, p.r); ctx.restore(); }
-      if (++t < 150) requestAnimationFrame(draw); else ctx.clearRect(0, 0, W, H);
-    };
-    draw();
-  }
+  function burst(colors?: string[]) { confetti(confettiRef.current, colors); }
 
   async function publish() {
     if (!confirm("Publish the winners on aleksk9.com/awards and add this season to the Hall of Fame?")) return;
@@ -369,17 +290,6 @@ export function RevealStage() {
         <button onClick={() => setSound(!sound)}>{sound ? "Sound on" : "Sound off"}</button>
         <button onClick={full}>Fullscreen (F)</button>
       </div>
-    </div>
-  );
-}
-
-function Gate({ h, p, children }: { h: string; p: string; children?: React.ReactNode }) {
-  return (
-    <div className={`${styles.panel} ${styles.center}`}>
-      <div className={styles.msgH}>{h}</div>
-      <p className={styles.msgP}>{p}</p>
-      {children}
-      <p className={styles.msgP}><a href="/awards">Back to the awards</a></p>
     </div>
   );
 }

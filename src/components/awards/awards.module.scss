@@ -261,3 +261,46 @@ span.sTitle, span.sAwardTitle, span.sWinName { display: block; }
   .sBar { flex-wrap: wrap; opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .sIntro, .sAward, .pkWhole, .sWinOne, .stepCard, .letter, .fadeUp, .flipIn, .sweep, .nervous .sNom, .shakeIt, .stampSlam, .beam { animation: none; opacity: 1; } .sNom, .sNom .face { transition: none; } }
+
+/* ---------- finalists reveal (/awards/finalists): one pumpkin per finalist ---------- */
+.fnRow { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 10px 18px; margin-top: 10px; width: 100%; }
+.fnSlot { width: clamp(150px, 17vw, 230px); display: flex; flex-direction: column; align-items: center; gap: 6px; transition: filter .5s ease, transform .5s ease; }
+.fnRowTight .fnSlot { width: clamp(118px, 12vw, 170px); }
+.fnSlot .pkBtn { margin: 0; width: 100%; }
+.fnSlot .pumpkin { width: 100%; }
+.fnSlot .pkWhole { animation-delay: var(--pk-delay, .3s), calc(var(--pk-delay, .3s) + 1.1s); filter: drop-shadow(0 0 18px rgba(255, 140, 20, .25)); transition: filter .5s ease; }
+.fnUp .pkWhole { filter: drop-shadow(0 0 44px rgba(255, 160, 40, .7)); }
+.fnUp .pkBtn { cursor: pointer; }
+.fnWait { filter: saturate(.35) brightness(.5); transform: scale(.92); }
+.fnWait .pkBtn { cursor: default; }
+.fnWait .pkWhole { animation-name: pkIn, none; }
+.fnOut { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0 6px; animation: winDrop .8s cubic-bezier(.2, 1.5, .4, 1) both; }
+.fnOut .face { box-shadow: 0 0 0 5px var(--aw-a), 0 0 70px -10px var(--aw-a); }
+.fnName { display: block; font-size: clamp(16px, 1.7vw, 22px); font-weight: 800; letter-spacing: -.02em; word-break: break-word; max-width: 100%; }
+.fnNum { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--neutral-on-background-weak); }
+.fnUp .fnNum { color: var(--aw-a); }
+
+/* ---------- the private finalists list (/awards/finalists/sheet) ---------- */
+.fnSheet { display: flex; flex-direction: column; gap: 18px; }
+.fnSheetBar { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: flex-start; justify-content: space-between; border: 1px solid var(--neutral-alpha-weak); background: var(--surface-background); border-radius: var(--radius-l); padding: 22px 24px; }
+.fnSheetBar .msgP { margin-top: 6px; max-width: 720px; }
+.fnSheetBar .btn { margin-top: 4px; }
+.fnLive b { color: var(--neutral-on-background-strong); }
+.fnCards { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.fnCard { border: 1px solid var(--neutral-alpha-weak); background: var(--surface-background); border-radius: 18px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; transition: border-color .3s ease, box-shadow .3s ease; }
+.fnCardNow { border-color: var(--aw-a); box-shadow: 0 0 0 3px var(--aw-soft), 0 10px 40px -20px var(--aw-a); }
+.fnCardDone { opacity: .55; }
+.fnCardTitle { font-size: 18px; font-weight: 800; letter-spacing: -.02em; line-height: 1.2; }
+.fnList { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.fnItem { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-radius: 12px; border: 2px solid transparent; transition: all .3s ease; }
+.fnItemNext { border-color: var(--aw-a); background: var(--aw-soft); }
+.fnItemDone { opacity: .45; }
+.fnBadge { width: 24px; height: 24px; border-radius: 50%; background: var(--neutral-alpha-medium); display: inline-grid; place-items: center; font-weight: 800; font-size: 12px; flex: 0 0 auto; }
+.fnItemNext .fnBadge { background: var(--aw-a); color: #111; }
+.fnItemName { font-weight: 700; font-size: 15px; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.fnLogin { font-weight: 500; font-size: 13px; color: var(--neutral-on-background-weak); }
+.fnTick { font-weight: 800; color: var(--aw-a); }
+@media (max-width: breakpoints.$s) {
+  .fnSlot, .fnRowTight .fnSlot { width: 42vw; }
+  .fnSheetBar { padding: 18px; }
+}

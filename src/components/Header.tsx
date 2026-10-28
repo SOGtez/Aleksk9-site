@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Fade, Flex, Line, Row, ToggleButton, Text } from "@once-ui-system/core";
 
 import { routes, about, blog, calendar } from "@/resources";
+import { useSeason } from "@/components/Providers";
 import styles from "./Header.module.scss";
 
 /* Tournament and Bracket are hidden from the menu for now (the pages still work by link). The static pages
@@ -71,6 +72,7 @@ const NavItem = ({ icon, label, href, selected, page }: { icon: string; label: s
 
 export const Header = () => {
   const pathname = usePathname() ?? "";
+  const season = useSeason();
 
   return (
     <>
@@ -91,7 +93,7 @@ export const Header = () => {
         <Row paddingLeft="12" fillWidth vertical="center" s={{ hide: true }}>
           <a href="/" aria-label="AleksK9 home" style={{ display: "inline-flex" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/ak9-logo-halloween-nav.png" alt="AleksK9" height={40} style={{ height: 40, width: "auto" }} />
+            <img src={season.logo.nav} data-logo="nav" alt="AleksK9" height={40} style={{ height: 40, width: "auto" }} />
           </a>
         </Row>
         <Row fillWidth horizontal="center">

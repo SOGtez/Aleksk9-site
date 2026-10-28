@@ -256,3 +256,7 @@ export async function clearAwEntries(kind, seasonId) { await redis().del(awKey(k
 export async function listAwArchive() { return Object.values((await redis().hgetall(KEY_AW_ARCHIVE)) || {}); }
 export async function saveAwArchive(season) { await redis().hset(KEY_AW_ARCHIVE, { [season.id]: season }); }
 export async function deleteAwArchive(id) { await redis().hdel(KEY_AW_ARCHIVE, id); }
+
+/* ---------- Site theme (holiday looks, src/resources/seasons.ts) ---------- */
+export async function getSiteThemeRaw() { return redis().get('site:theme'); }
+export async function setSiteThemeRaw(v) { await redis().set('site:theme', v); return v; }

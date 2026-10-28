@@ -16,6 +16,11 @@ import {
 } from "@once-ui-system/core";
 import { Footer, Header, RouteGuard, Providers } from "@/components";
 import { baseURL, effects, fonts, style, dataStyle, home, person } from "@/resources";
+import { resolveSeason } from "@/resources/seasons";
+import { readSiteThemeSetting } from "@/server/lib/site-theme";
+
+/* The site theme (holiday look) is read from the database; pages are rebuilt at most every 30 seconds to follow it. */
+export const revalidate = 30;
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -32,11 +37,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const season = resolveSeason(await readSiteThemeSetting());
   return (
     <Flex
       suppressHydrationWarning
       as="html"
       lang={person.locale ?? "en"}
+      data-season={season.id}
       fillWidth
       className={classNames(
         fonts.heading.variable,
@@ -46,6 +53,7 @@ export default async function RootLayout({
       )}
     >
       <head>
+        <script id="season-init" dangerouslySetInnerHTML={{ __html: `window.__AK9_SEASON=${JSON.stringify(season)};` }} />
         <script
           id="theme-init"
           dangerouslySetInnerHTML={{
@@ -57,9 +65,9 @@ export default async function RootLayout({
                   
                   // Set defaults from config
                   const config = ${JSON.stringify({
-                    brand: style.brand,
-                    accent: style.accent,
-                    neutral: style.neutral,
+                    brand: season.brand,
+                    accent: season.accent,
+                    neutral: season.neutral,
                     solid: style.solid,
                     "solid-style": style.solidStyle,
                     border: style.border,
@@ -104,7 +112,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <Providers>
+      <Providers season={season}>
         <Column
           as="body"
           background="page"
@@ -156,9 +164,9 @@ export default async function RootLayout({
               }}
             />
           </RevealFx>
-          {/* Halloween dot art (public/theme/halloween-dots.js) is drawn here: above the glow, below the content. */}
+          {/* Holiday dot art and falling snow/leaves (public/theme/season.js) are drawn here: above the glow, below the content. */}
           <div id="ak9-dots-slot" aria-hidden="true" />
-          <Script src="/theme/halloween-dots.js" strategy="afterInteractive" />
+          <Script src="/theme/season.js" strategy="afterInteractive" />
           <Flex fillWidth minHeight="16" s={{ hide: true }} />
           <Header />
           <Flex position="relative" zIndex={1} fillWidth padding="l" horizontal="center" flex={1}>

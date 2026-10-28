@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark" data-brand="orange" data-accent="violet" data-neutral="gray" data-solid="color" data-solid-style="flat" data-border="playful" data-surface="translucent" data-transition="all" data-scaling="100">
 <head>
   <meta charset="UTF-8">
+  <script>/* site theme colours before first paint (public/theme/season.js does the rest) */try{var _s=JSON.parse(localStorage.getItem('ak9.season')||'null');if(_s&&_s.id){var _r=document.documentElement;_r.setAttribute('data-season',_s.id);['brand','accent','neutral'].forEach(function(k){if(_s[k])_r.setAttribute('data-'+k,_s[k]);});}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin — AleksK9</title>
   <meta name="robots" content="noindex">
@@ -123,6 +124,18 @@
     .cal-list .acts { display: flex; gap: 10px; align-items: center; }
     /* AK9 Awards role: only the awards tab */
     .awards-only .tabs button:not([data-tab="awards"]), .awards-only .space-row { display: none; }
+    /* Site theme tab */
+    .th-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+    .th-card { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: var(--radius); border: 1px solid var(--line); background: rgb(255 255 255 / .02); }
+    .th-card.is-on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .th-logo { height: 92px; display: grid; place-items: center; border-radius: 12px; background: #0d0b0c; overflow: hidden; }
+    .th-logo img { max-height: 84px; max-width: 92%; }
+    .th-logo .auto { font-size: 13px; color: var(--fg-muted); text-align: center; padding: 0 10px; line-height: 1.45; }
+    .th-card h4 { font-size: 16px; letter-spacing: -0.01em; display: flex; align-items: center; gap: 8px; }
+    .th-card .tag { font-size: 10px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 2px 7px; border-radius: 6px; background: var(--accent); color: #fff; }
+    .th-sw { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--fg-dim); }
+    .th-sw i { width: 18px; height: 18px; border-radius: 50%; border: 1px solid rgb(255 255 255 / .15); display: inline-block; }
+    .th-card .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: auto; }
     .awards-only .page-head h1 { visibility: hidden; height: 0; margin: 0; }
     /* AK9 Awards tab */
     .aw-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 0; }
@@ -317,7 +330,7 @@
   <div class="ou-fade" aria-hidden="true"></div>
   <!-- Shared header (same as the Next.js pages). The Tournament link keeps id="nav-tournament": the test-mode scripts change its href. -->
   <header class="ou-header" data-border="rounded">
-    <div class="side left"><a class="logo" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-halloween-nav.png" alt="AleksK9" width="66" height="40"></a></div>
+    <div class="side left"><a class="logo" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-halloween-nav.png" data-logo="nav" alt="AleksK9" width="66" height="40"></a></div>
     <nav class="ou-pill" aria-label="Primary">
       <a class="ou-tb" href="/" aria-label="Home"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"></path><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"></path></svg></a>
       <span class="ou-sep" aria-hidden="true"></span>
@@ -358,6 +371,7 @@
         <button data-tab="logins">Twitch logins</button>
         <button data-tab="calendar">Calendar</button>
         <button data-tab="awards">AK9 Awards</button>
+        <button data-tab="theme">Site theme</button>
         <button data-tab="overlays">Overlays</button>
       </div></nav>
       <div class="space-bar" id="space-bar" hidden>
@@ -537,6 +551,17 @@
             <p class="d" id="cal-count">Loading…</p>
             <ul class="cal-list" id="cal-list"></ul>
             <p style="margin-top:12px"><button class="link-btn" id="cal-past-toggle" hidden>Show past events</button></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-theme" hidden>
+        <div class="container">
+          <div class="card pad">
+            <h3>Site theme</h3>
+            <p class="d">The holiday look of the whole site: colours, the logo, the dot art in the background and, for Thanksgiving and Christmas, falling leaves or snow. Switching takes effect for everyone within about 30 seconds. Use <b>Preview</b> to look around the site in a theme first; only you see it, in that tab, until you open any page with <code>?theme=live</code>.</p>
+            <p class="small" id="th-status" style="margin-bottom:14px">Loading…</p>
+            <div class="th-grid" id="th-grid"></div>
           </div>
         </div>
       </section>
@@ -1462,6 +1487,36 @@
       api('/api/admin/roles', { login: login, role: r }).then(function () { toast(login + ' is now ' + roleLabel(r)); document.getElementById('role-login').value = ''; renderRoles(); }).catch(function (err) { toast(err.message); });
     };
 
+    /* ---------- Site theme ---------- */
+    var TH = null;
+    var SW = { red: '#e5484d', orange: '#f76b15', violet: '#8e4ec6', yellow: '#ffc53d', green: '#30a46c', gray: '#8b8d98', sand: '#8d8d86' };
+    var TH_NOTE = { auto: 'Follows the calendar (LA time): Halloween in October, Thanksgiving in November, Christmas in December, normal the rest of the year.' };
+    function renderTheme() {
+      if (!TH) return;
+      var now = TH.season, setting = TH.setting;
+      document.getElementById('th-status').innerHTML = 'Live now: <b>' + esc(now.label) + '</b>' + (setting === 'auto' ? ' (automatic by date)' : '') +
+        (TH.by ? ' · switched by ' + esc(TH.by) + (TH.at ? ' on ' + fmt(TH.at) : '') : '') + (TH.demo ? ' · test site without a database, switching is not saved here' : '');
+      document.getElementById('th-grid').innerHTML = TH.settings.map(function (id) {
+        var s = id === 'auto' ? TH.seasons[TH.autoNow] : TH.seasons[id], on = id === setting;
+        var title = id === 'auto' ? 'Automatic by date' : s.label;
+        var logo = id === 'auto' ? '<span class="auto">' + TH_NOTE.auto + '<br>Right now: <b>' + esc(s.label) + '</b></span>' : '<img src="' + esc(s.logo.hero) + '" alt="">';
+        var extras = id === 'auto' ? '' : '<div class="th-sw"><i style="background:' + (SW[s.brand] || '#888') + '"></i><i style="background:' + (SW[s.accent] || '#888') + '"></i><span>' + esc(s.brand) + ' and ' + esc(s.accent) + (s.dots ? ' · dot art' : '') + (s.fall === 'snow' ? ' · snow' : s.fall === 'leaves' ? ' · falling leaves' : '') + '</span></div>';
+        return '<div class="th-card' + (on ? ' is-on' : '') + '"><div class="th-logo">' + logo + '</div><h4>' + esc(title) + (on ? ' <span class="tag">Live</span>' : '') + '</h4>' + extras +
+          '<div class="row">' + (on ? '<span class="small">This is what everyone sees.</span>' : '<button class="btn btn-sm btn-primary" type="button" data-th="' + id + '">Switch the site to this</button>') +
+          (id === 'auto' ? '' : '<a class="link-btn" href="/?theme=' + id + '" target="_blank" rel="noopener">Preview ↗</a>') + '</div></div>';
+      }).join('');
+      document.querySelectorAll('[data-th]').forEach(function (b) {
+        b.onclick = function () {
+          b.disabled = true;
+          api('/api/site-theme', { theme: b.dataset.th }).then(function (r) {
+            toast('Site theme: ' + (b.dataset.th === 'auto' ? 'automatic (' + r.season.label + ' now)' : r.season.label) + '. Live for everyone within about 30 seconds.');
+            return loadTheme();
+          }).catch(function (e) { b.disabled = false; toast(e.message); });
+        };
+      });
+    }
+    function loadTheme() { return api('/api/site-theme?view=admin').then(function (d) { TH = d; renderTheme(); }).catch(function (e) { document.getElementById('th-status').textContent = 'Could not load: ' + e.message; }); }
+
     /* ---------- Boot ---------- */
     api('/api/me').then(function (m) {
       ME = m;
@@ -1481,10 +1536,10 @@
       document.getElementById('panel').hidden = false; paintSpace();
       document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
       var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();
-      return Promise.all([loadT(), loadApps(), loadAI()]);
+      return Promise.all([loadT(), loadApps(), loadAI(), loadTheme()]);
     }).catch(function (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = 'Could not reach the server: ' + e.message; });
   </script>
-  <script src="/theme/halloween-dots.js" defer></script>
+  <script src="/theme/season.js" defer></script>
   <script src="/theme/site.js" defer></script>
 </body>
 </html>

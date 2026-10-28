@@ -14,6 +14,7 @@ import { home, about, person, baseURL, routes } from "@/resources";
 import { Posts } from "@/components/blog/Posts";
 import { StreamSection } from "@/components/StreamSection";
 import { EventCard } from "@/components/EventCard";
+import { SeasonLogo, SeasonOnly } from "@/components/SeasonLogo";
 
 export async function generateMetadata() {
   return Meta.generate({
@@ -45,7 +46,9 @@ export default function Home() {
       {/* Hero */}
       <Column fillWidth horizontal="center" gap="m">
         <Column maxWidth="s" horizontal="center" align="center">
+          {/* The featured badge is the Spooktober one, so it shows only in the Halloween theme. */}
           {home.featured.display && (
+            <SeasonOnly in={["halloween"]}>
             <RevealFx fillWidth horizontal="center" paddingTop="16" paddingBottom="24" paddingLeft="12">
               <Badge
                 background="brand-alpha-weak"
@@ -59,10 +62,10 @@ export default function Home() {
                 <Row paddingY="2">{home.featured.title}</Row>
               </Badge>
             </RevealFx>
+            </SeasonOnly>
           )}
           <RevealFx translateY="4" fillWidth horizontal="center" paddingBottom="8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/ak9-logo-halloween-hero.png" alt="" width={300} height={182} style={{ width: 300, height: "auto" }} />
+            <SeasonLogo kind="hero" width={300} />
           </RevealFx>
           <RevealFx translateY="4" fillWidth horizontal="center" paddingBottom="16">
             <Heading wrap="balance" variant="display-strong-l">

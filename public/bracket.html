@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark" data-brand="orange" data-accent="violet" data-neutral="gray" data-solid="color" data-solid-style="flat" data-border="playful" data-surface="translucent" data-transition="all" data-scaling="100">
 <head>
   <meta charset="UTF-8">
+  <script>/* site theme colours before first paint (public/theme/season.js does the rest) */try{var _s=JSON.parse(localStorage.getItem('ak9.season')||'null');if(_s&&_s.id){var _r=document.documentElement;_r.setAttribute('data-season',_s.id);['brand','accent','neutral'].forEach(function(k){if(_s[k])_r.setAttribute('data-'+k,_s[k]);});}}catch(e){}</script>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Bracket — AleksK9</title>
   <meta name="description" content="Live playoff bracket for AleksK9's R6 5v5 Tournament. Scores update as maps are played.">
@@ -389,7 +390,7 @@
   <div class="ou-fade" aria-hidden="true"></div>
   <!-- Shared header (same as the Next.js pages). The Tournament link keeps id="nav-tournament": the test-mode scripts change its href. -->
   <header class="ou-header" data-border="rounded">
-    <div class="side left"><a class="logo" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-halloween-nav.png" alt="AleksK9" width="66" height="40"></a></div>
+    <div class="side left"><a class="logo" href="/" aria-label="AleksK9 home"><img src="/assets/ak9-logo-halloween-nav.png" data-logo="nav" alt="AleksK9" width="66" height="40"></a></div>
     <nav class="ou-pill" aria-label="Primary">
       <a class="ou-tb" href="/" aria-label="Home"><svg fill="currentColor" viewBox="0 0 256 256" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path d="M216,120v96H152V152H104v64H40V120a8,8,0,0,1,2.34-5.66l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,216,120Z" opacity="0.2"></path><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"></path></svg></a>
       <span class="ou-sep" aria-hidden="true"></span>
@@ -1014,7 +1015,7 @@
     }
     boot();
   </script>
-  <script src="/theme/halloween-dots.js" defer></script>
+  <script src="/theme/season.js" defer></script>
   <script src="/theme/site.js" defer></script>
 </body>
 </html>

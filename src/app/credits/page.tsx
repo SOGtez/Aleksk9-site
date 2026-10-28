@@ -2,7 +2,7 @@ import { Column, Heading, Meta, SmartLink, Text } from "@once-ui-system/core";
 import { baseURL } from "@/resources";
 
 /* Credits for the work this site is built on. The Magic Portfolio credit is required by its CC BY-NC 4.0
-   license (the footer links here), and the game-icons shapes in the Halloween background need CC BY 3.0 credit. */
+   license (the footer links here), and the game-icons shapes in the holiday backgrounds need CC BY 3.0 credit. */
 export async function generateMetadata() {
   return Meta.generate({
     title: "Credits",
@@ -26,10 +26,10 @@ const CREDITS: { title: string; body: React.ReactNode }[] = [
     ),
   },
   {
-    title: "Halloween background art",
+    title: "Holiday background art",
     body: (
       <>
-        Pumpkin, ghost, bat and other shapes from <SmartLink href="https://game-icons.net">game-icons.net</SmartLink>, licensed under{" "}
+        Pumpkin, ghost, bat, turkey, leaf, snowflake, tree, gift and other shapes in the Halloween, Thanksgiving and Christmas backgrounds come from <SmartLink href="https://game-icons.net">game-icons.net</SmartLink>, licensed under{" "}
         <SmartLink href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</SmartLink>. They were redrawn as dot art for this site.
       </>
     ),

@@ -24,7 +24,11 @@
     var imgs = document.querySelectorAll('img[data-logo]');
     for (var i = 0; i < imgs.length; i++) {
       var src = s.logo && s.logo[imgs[i].getAttribute('data-logo')];
-      if (src && imgs[i].getAttribute('src') !== src) imgs[i].setAttribute('src', src);
+      if (src && imgs[i].getAttribute('src') !== src) {
+        imgs[i].setAttribute('src', src);
+        // Theme logos differ in shape; keep the height and let the width follow.
+        if (imgs[i].hasAttribute('height')) imgs[i].style.width = 'auto';
+      }
     }
   }
 

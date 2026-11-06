@@ -24,14 +24,15 @@ export function deviceId(req) {
 }
 export function newDeviceId() { return crypto.randomBytes(5).toString('hex'); }
 
-/* who: { login, name, role } (or a whoami() result). opts.once = seconds: log this action for this person at most once per window. */
+/* who: { login, name, role } (or a whoami() result). opts.once = seconds: log this action (with these details,
+   or opts.onceKey) for this person at most once per window. */
 export async function logActivity(req, who, action, detail = '', opts = {}) {
   try {
     if (!hasDatabase()) return;
     const u = who?.user || who || {};
     const login = String(u.login || '').toLowerCase();
     const dev = opts.dev || deviceId(req);
-    if (opts.once && !(await onceEvery(`${action}:${login || dev}:${opts.onceKey || ''}`, opts.once))) return;
+    if (opts.once && !(await onceEvery(`${action}:${login || dev}:${opts.onceKey || detail || ''}`, opts.once))) return;
     let from = '';
     try { from = new URL(req.headers.referer || '').pathname; } catch { /* none */ }
     await pushActivity({

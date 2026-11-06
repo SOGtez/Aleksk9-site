@@ -1,6 +1,7 @@
 import { json, readBody, whoami } from '../../server/lib/http.js';
 import { hasDatabase, getSiteThemeRaw, setSiteThemeRaw } from '../../server/lib/store.js';
 import { parseSetting } from '../../server/lib/site-theme.js';
+import { logActivity } from '../../server/lib/activity.js';
 import { SEASONS, SETTINGS, DEFAULT_SETTING, isSeasonId, isSetting, resolveSeason, seasonForDate } from '../../resources/seasons';
 
 /* The site theme (holiday look).
@@ -32,6 +33,7 @@ export default async function handler(req, res) {
   if (!isSetting(b.theme)) return json(res, 400, { error: 'Pick auto, normal, halloween, thanksgiving or christmas' });
   if (!hasDatabase()) return json(res, 400, { error: 'The test site has no database, so the theme cannot be saved here.' });
   await setSiteThemeRaw({ theme: b.theme, by: (me.user && me.user.login) || '', at: Date.now() });
+  await logActivity(req, me, 'change', `site theme → ${b.theme}`);
   /* Rebuild the main pages now instead of waiting for their 30 s cache. Best effort. */
   await Promise.all(['/', '/about', '/blog', '/calendar', '/awards', '/credits'].map((p) => res.revalidate(p).catch(() => {})));
   return json(res, 200, { ok: true, setting: b.theme, season: resolveSeason(b.theme) });

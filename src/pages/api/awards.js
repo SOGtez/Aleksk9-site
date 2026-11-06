@@ -7,6 +7,7 @@ import { profiles } from '../../server/lib/twitch.js';
 import {
   THEMES, PHASES, STANDARD_AWARDS, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason, revealStyleFor,
 } from '../../server/lib/awards.js';
+import { logActivity } from '../../server/lib/activity.js';
 
 /* AK9 Awards (/awards). One route for everything:
    GET                         the current season as visitors see it, your own nominations/ballot, the Hall of Fame list,
@@ -133,17 +134,20 @@ export default async function handler(req, res) {
       return json(res, 200, { season: { ...s, wildcards: await wildcardsWithImages(s.wildcards) } });
     }
     if (req.query.share) {
-      if (!me.user) return json(res, 401, { error: 'Log in with Twitch to open this link.' });
-      if (!isAdmin) return json(res, 403, { error: 'This link only works for AK9 Awards admins.' });
+      if (!me.user) { await logActivity(req, me, 'awards_refused', 'share link, not logged in', { once: 600 }); return json(res, 401, { error: 'Log in with Twitch to open this link.' }); }
+      if (!isAdmin) { await logActivity(req, me, 'awards_refused', 'share link', { once: 600 }); return json(res, 403, { error: 'This link only works for AK9 Awards admins.' }); }
       const key = clean(req.query.share, 40);
-      if (!season || !season.shareKey || key !== season.shareKey) return json(res, 404, { error: 'This link is not valid any more.' });
+      if (!season || !season.shareKey || key !== season.shareKey) { await logActivity(req, me, 'awards_refused', 'dead share link', { once: 600 }); return json(res, 404, { error: 'This link is not valid any more.' }); }
+      await logActivity(req, me, 'awards_results', 'share link', { once: 1800 });
       const r = computeResults(season, await getAwEntries('votes', season.id));
       return json(res, 200, { preview: true, season: { id: season.id, label: season.label, theme: season.theme, wildcardsBy: season.wildcardsBy || '', revealStyle: revealStyleFor(season), totalVoters: r.totalVoters, awards: r.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
     }
     const [noms, votes] = season ? await Promise.all([getAwEntries('noms', season.id), getAwEntries('votes', season.id)]) : [{}, {}];
     const counts = { nominators: Object.keys(noms).length, voters: Object.keys(votes).length };
     if (req.query.view === 'admin') {
-      if (!isAdmin) return json(res, 403, { error: 'Admins only' });
+      /* Behind-the-scenes awards data: logged once per half hour per person (the admin tab refreshes often). */
+      if (!isAdmin) { await logActivity(req, me, 'awards_refused', me.user ? 'results' : 'results, not logged in', { once: 600 }); return json(res, 403, { error: 'Admins only' }); }
+      await logActivity(req, me, 'awards_results', '', { once: 1800 });
       const people = (h) => Object.entries(h).map(([login, e]) => ({ login, name: e.name || login, avatar: e.avatar || '', at: e.at || 0, choices: e.choices || {} })).sort((a, b) => b.at - a.at);
       return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms) });
     }
@@ -174,11 +178,13 @@ export default async function handler(req, res) {
     const kind = b.action === 'nominate' ? 'noms' : 'votes';
     const ok = await addAwEntryOnce(kind, season.id, me.user.login, { choices, name: me.user.name || me.user.login, avatar: me.user.avatar || '', at: Date.now() });
     if (!ok) return json(res, 409, { error: b.action === 'nominate' ? 'already_nominated' : 'already_voted' });
+    await logActivity(req, me, b.action === 'nominate' ? 'nominated' : 'voted', season.label);
     return json(res, 200, { ok: true, choices });
   }
 
   /* ---------- admins ---------- */
-  if (!isAdmin) return json(res, 403, { error: 'Admins only' });
+  if (!isAdmin) { await logActivity(req, me, 'awards_refused', 'change: ' + clean(b.action, 30)); return json(res, 403, { error: 'Admins only' }); }
+  await logActivity(req, me, 'change', `awards: ${clean(b.action, 30)}${b.action === 'save' && b.season && b.season.phase ? ' (phase ' + clean(b.season.phase, 20) + ')' : ''}${b.action === 'shareLink' ? (b.on ? ' on' : ' off') : ''}${b.login ? ' @' + clean(b.login, 40) : ''}${b.kind ? ' ' + clean(b.kind, 10) : ''}`);
   if (b.action === 'save') {
     const next = await fillImages(sanitizeSeason(b.season, season));
     return json(res, 200, { ok: true, season: await setAwSeason(next) });

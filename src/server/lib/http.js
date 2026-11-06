@@ -2,6 +2,7 @@ import { getSession } from './session.js';
 import { roleFor, withSpace } from './store.js';
 import { CHANNEL_LOGIN } from './twitch.js';
 import { DEFAULT_STATE } from './defaults.js';
+import { logActivity } from './activity.js';
 
 export function json(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
@@ -38,8 +39,15 @@ export async function requireRole(req, res, allowed) {
   const me = await whoami(req);
   if (!me.user) { json(res, 401, { error: 'Log in with Twitch first' }); return null; }
   const ok = allowed.includes(me.role) || (allowed.includes('captain') && me.role.startsWith('captain:'));
-  if (!ok) { json(res, 403, { error: 'You do not have permission to do that' }); return null; }
+  const path = String(req.url || '').split('?')[0];
+  if (!ok) { await logActivity(req, me, 'refused', `${req.method} ${path}`, { once: 600, onceKey: path }); json(res, 403, { error: 'You do not have permission to do that' }); return null; }
+  /* Activity log: opening a protected area once per half hour, and every change with its main fields. */
+  if (req.method === 'GET') await logActivity(req, me, 'opened', path, { once: 1800, onceKey: path });
+  else await logActivity(req, me, 'change', `${path} ${summary(readBody(req))}`.trim());
   return me;
+}
+function summary(b) {
+  return ['action', 'login', 'role', 'playerId', 'team', 'id', 'status', 'theme'].filter(k => b && b[k] != null && typeof b[k] !== 'object').map(k => `${k}=${String(b[k]).slice(0, 40)}`).join(' ');
 }
 export function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;

@@ -2,6 +2,7 @@ import { setSession, cookieHeader, getSession } from '../session.js';
 import { baseUrl, PUBLIC_HOSTS } from '../http.js';
 import { followsChannel } from '../twitch.js';
 import { cacheSet, recordLogin } from '../store.js';
+import { logActivity, DEVICE_COOKIE, newDeviceId } from '../activity.js';
 
 export default async function handler(req, res) {
   const { code, state, error } = req.query;
@@ -12,7 +13,7 @@ export default async function handler(req, res) {
   let back = (bar >= 0 ? nextRaw.slice(bar + 1) : nextRaw) || '/tournament';
   if (!/^\/[a-z0-9\-\/]*$/i.test(back)) back = '/tournament';
   const clear = [cookieHeader('ak9_oauth_state', '', { maxAge: 0 }), cookieHeader('ak9_oauth_next', '', { maxAge: 0 }), cookieHeader('ak9_oauth_redir', '', { maxAge: 0 })];
-  const fail = why => { res.setHeader('Set-Cookie', clear); res.redirect(302, `${back}?login=${why}`); };
+  const fail = async why => { await logActivity(req, null, 'login_failed', why); res.setHeader('Set-Cookie', clear); res.redirect(302, `${back}?login=${why}`); };
 
   if (error) return fail('denied');
   const expected = req.cookies?.ak9_oauth_state;
@@ -55,7 +56,11 @@ export default async function handler(req, res) {
   }
 
   try { await recordLogin({ id: u.id, login: u.login, name: u.display_name, avatar: u.profile_image_url }, wantChat); } catch { /* never block login on bookkeeping */ }
+  /* A long-lived browser id for the activity log: the same id on two accounts means the same browser. */
+  const dev = /^[a-z0-9]{6,16}$/i.test(req.cookies?.[DEVICE_COOKIE] || '') ? req.cookies[DEVICE_COOKIE] : newDeviceId();
+  const scopes = [wantFollows && 'follow check', wantChat && 'chat'].filter(Boolean).join(', ');
+  await logActivity(req, { login: u.login, name: u.display_name }, 'login', `to ${back}${scopes ? ' · ' + scopes : ''}`, { dev });
   setSession(res, { id: u.id, login: u.login.toLowerCase(), name: u.display_name, avatar: u.profile_image_url, ...follow });
-  res.setHeader('Set-Cookie', [res.getHeader('Set-Cookie'), ...clear]);
+  res.setHeader('Set-Cookie', [res.getHeader('Set-Cookie'), ...clear, cookieHeader(DEVICE_COOKIE, dev, { maxAge: 60 * 60 * 24 * 400 })]);
   res.redirect(302, `${back}?login=ok`);
 }

@@ -241,6 +241,21 @@
     .danger { border-color: rgb(var(--accent-rgb) / .35); }
     .confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
     .empty { padding: 28px; text-align: center; color: var(--fg-muted); font-size: 14px; }
+    /* activity log (Twitch logins tab) */
+    .act-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .act-bar .field { flex: 1 1 260px; width: auto; }
+    .act-alerts { display: grid; gap: 8px; margin-bottom: 12px; }
+    .act-alert { padding: 10px 14px; border-radius: 10px; border: 1px solid rgb(var(--accent-rgb) / .45); background: rgb(var(--accent-rgb) / .08); font-size: 13px; line-height: 1.5; }
+    .act-alert b { color: var(--fg); }
+    .act-what { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line-strong); white-space: nowrap; }
+    .act-what.bad { color: var(--accent); border-color: rgb(var(--accent-rgb) / .5); }
+    .act-what.awards { color: #c4a7ff; border-color: rgba(196,167,255,.45); }
+    .act-what.change { color: #ffd166; border-color: rgba(255,209,102,.45); }
+    .act-dev { display: inline-flex; align-items: center; gap: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; cursor: pointer; }
+    .act-dev i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .act-acc { cursor: pointer; }
+    #act-table td { white-space: nowrap; }
+    #act-table td.det { white-space: normal; min-width: 220px; color: var(--fg-muted); }
     .lk-card { margin-top: 6px; }
     .lk-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 16px; }
     .lk-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
@@ -515,6 +530,15 @@
 
       <section class="tab" id="tab-logins" hidden>
         <div class="container">
+          <div id="act-wrap" hidden>
+            <div class="head"><h2>Activity</h2><div class="tools" id="act-filters">
+              <button class="chip is-on" data-f="all">All</button><button class="chip" data-f="log">Logins</button><button class="chip" data-f="awards">AK9 Awards</button><button class="chip" data-f="change">Changes</button><button class="chip" data-f="bad">Refused</button>
+            </div></div>
+            <div class="act-bar"><input class="field" id="act-q" type="search" placeholder="Search an account, browser id or place"><button class="btn btn-sm" type="button" id="act-refresh">Refresh</button><span class="muted small" id="act-note"></span></div>
+            <div class="act-alerts" id="act-alerts"></div>
+            <div class="card table-wrap" id="act-table"></div>
+            <p class="small" style="margin:10px 0 28px">Every login, logout, refused page, look at the AK9 Awards results (once per half hour per person), ballot and admin change. <b>Browser</b> is an id saved in that browser at login: the same id on two accounts means both were used in the same browser. Ids starting with ~ are a guess from the internet connection (people who haven't logged in since this log was added). Places come from the internet connection and can be off. Tap an account or browser id to filter by it. The last 5,000 entries are kept.</p>
+          </div>
           <div class="head"><h2>Twitch logins</h2><span class="muted" id="logins-note"></span></div>
           <div class="card table-wrap" id="logins-table"></div>
           <p class="small" style="margin-top:10px">Everyone who has logged in with Twitch on the site since this list was added. Use the dropdown to link a login to a player in the pool or a captain: their Twitch picture then shows on the draft board, and a linked captain gets their draft controls automatically.</p>
@@ -1220,12 +1244,13 @@
       document.getElementById('logins-note').textContent = list.length + ' login' + (list.length === 1 ? '' : 's') + ' recorded';
       var wrap = document.getElementById('logins-table');
       if (!list.length) { wrap.innerHTML = '<div class="empty">Nobody has logged in since this list was added. Earlier logins were not recorded.</div>'; return; }
-      var h = '<table><thead><tr><th>Twitch</th><th>Last login</th><th>Logins</th><th>Chat</th><th>Linked to</th></tr></thead><tbody>';
+      var h = '<table><thead><tr><th>Twitch</th><th>Last login</th><th>Logins</th><th>Browsers</th><th>Chat</th><th>Linked to</th></tr></thead><tbody>';
+      var devs = actDevicesByLogin();
       list.forEach(function (l) {
         var cur = byLogin[l.login];
         var opts = '<option value="">— not linked —</option>' + people.map(function (p) { return '<option value="' + esc(p.id) + '"' + (cur && cur.id === p.id ? ' selected' : '') + (p.twitch && !(cur && cur.id === p.id) ? ' disabled' : '') + '>' + esc(p.label) + (p.twitch && !(cur && cur.id === p.id) ? ' · ' + esc(p.twitch) : '') + '</option>'; }).join('');
         h += '<tr><td class="who">' + av(l) + '<span><b>' + esc(l.name) + '</b><small>' + esc(l.login) + '</small></span></td>' +
-          '<td>' + esc(fmt(l.lastAt)) + '<span class="sub">first ' + esc(fmt(l.firstAt)) + '</span></td><td>' + (l.count || 1) + '</td><td>' + (l.chat ? 'enabled' : '') + '</td>' +
+          '<td>' + esc(fmt(l.lastAt)) + '<span class="sub">first ' + esc(fmt(l.firstAt)) + '</span></td><td>' + (l.count || 1) + '</td><td>' + actDevCell(devs[l.login]) + '</td><td>' + (l.chat ? 'enabled' : '') + '</td>' +
           '<td><select class="field" data-link-login="' + esc(l.login) + '" data-prev="' + esc(cur ? cur.id : '') + '">' + opts + '</select></td></tr>';
       });
       wrap.innerHTML = h + '</tbody></table>';
@@ -1240,6 +1265,68 @@
         };
       });
     }
+
+    /* ---------- Activity log (GET /api/admin/activity) ---------- */
+    var ACT = null, ACTF = 'all', ACTQ = '', ACTN = 300;
+    var ACT_LABEL = {
+      login: ['Logged in', 'log'], login_failed: ['Login failed', 'bad'], logout: ['Logged out', 'log'],
+      opened: ['Opened', ''], change: ['Changed', 'change'], refused: ['Refused', 'bad'],
+      awards_results: ['Saw awards results', 'awards'], awards_refused: ['Refused: awards results', 'bad'],
+      nominated: ['Nominated', 'awards'], voted: ['Voted', 'awards']
+    };
+    function actKind(a) { return (ACT_LABEL[a.action] || [a.action, ''])[1]; }
+    function actWhen(ts) { var d = new Date(ts); return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }); }
+    function actHue(dev) { var h = 0; for (var i = 0; i < dev.length; i++) h = (h * 31 + dev.charCodeAt(i)) % 360; return h; }
+    function actDev(dev, title) { return dev ? '<span class="act-dev" data-dev="' + esc(dev) + '" title="' + esc(title || (dev.charAt(0) === '~' ? 'Guessed from the internet connection' : 'Browser id')) + '"><i style="background:hsl(' + actHue(dev) + ' 80% 60%)"></i>' + esc(dev) + '</span>' : ''; }
+    /* login → { dev: last seen } from the log, for the logins table. */
+    function actDevicesByLogin() {
+      var out = {}; (ACT || []).forEach(function (a) { if (!a.login || !a.dev) return; var m = out[a.login] = out[a.login] || {}; if (!m[a.dev]) m[a.dev] = a.at; });
+      return out;
+    }
+    function actDevCell(m) { if (!m) return ''; return Object.keys(m).map(function (d) { return actDev(d); }).join(' '); }
+    function actMatches(a) {
+      if (ACTF !== 'all' && actKind(a) !== ACTF && !(ACTF === 'awards' && a.action === 'awards_refused')) return false;
+      if (!ACTQ) return true;
+      return [a.login, a.name, a.dev, a.where, a.device, a.detail].join(' ').toLowerCase().indexOf(ACTQ) >= 0;
+    }
+    function renderActivity() {
+      if (!ACT) return;
+      var logins = {}; ((A && A.logins) || []).forEach(function (l) { logins[l.login] = l; });
+      /* Browsers used by more than one account. */
+      var byDev = {};
+      ACT.forEach(function (a) { if (!a.login || !a.dev) return; var d = byDev[a.dev] = byDev[a.dev] || { accounts: {}, last: 0, device: a.device, where: a.where }; d.accounts[a.login] = Math.max(d.accounts[a.login] || 0, a.at); if (a.at > d.last) d.last = a.at; });
+      var shared = Object.keys(byDev).filter(function (k) { return Object.keys(byDev[k].accounts).length > 1; }).sort(function (a, b) { return byDev[b].last - byDev[a].last; });
+      document.getElementById('act-alerts').innerHTML = shared.slice(0, 8).map(function (k) {
+        var d = byDev[k], accs = Object.keys(d.accounts);
+        return '<div class="act-alert">' + (k.charAt(0) === '~' ? 'Same internet connection and browser' : 'Same browser') + ' used by ' + accs.map(function (l) { return '<b>@' + esc(l) + '</b>'; }).join(', ') +
+          ' · ' + esc(d.device) + (d.where ? ' · ' + esc(d.where) : '') + ' · last ' + esc(actWhen(d.last)) + ' · ' + actDev(k) + '</div>';
+      }).join('');
+      var rows = ACT.filter(actMatches);
+      document.getElementById('act-note').textContent = rows.length + ' of ' + ACT.length + ' entries';
+      var wrap = document.getElementById('act-table');
+      if (!rows.length) { wrap.innerHTML = '<div class="empty">' + (ACT.length ? 'Nothing matches.' : 'Nothing logged yet. Entries start from when this log was added.') + '</div>'; return; }
+      var h = '<table><thead><tr><th>When</th><th>Account</th><th>What</th><th>Details</th><th>Browser</th><th>Device</th><th>Place</th></tr></thead><tbody>';
+      rows.slice(0, ACTN).forEach(function (a) {
+        var lab = ACT_LABEL[a.action] || [a.action, ''], l = logins[a.login] || { name: a.name || a.login || '?', avatar: '' };
+        var who = a.login ? '<td class="who act-acc" data-acc="' + esc(a.login) + '">' + av(l) + '<span><b>' + esc(a.name || a.login) + '</b><small>' + esc(a.login) + (a.role && a.role !== 'viewer' ? ' · ' + esc(roleLabel(a.role)) : '') + '</small></span></td>' : '<td class="muted">not logged in</td>';
+        var det = esc(a.detail || '') + (a.from ? '<span class="sub">on ' + esc(a.from) + '</span>' : '');
+        h += '<tr><td>' + esc(actWhen(a.at)) + '</td>' + who + '<td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + det + '</td><td>' + actDev(a.dev) + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(a.where || '') + '</td></tr>';
+      });
+      wrap.innerHTML = h + '</tbody></table>' + (rows.length > ACTN ? '<div class="empty"><button class="btn btn-sm" type="button" id="act-more">Show more</button></div>' : '');
+      if (rows.length > ACTN) document.getElementById('act-more').onclick = function () { ACTN += 300; renderActivity(); };
+    }
+    function actSearch(q) { var f = document.getElementById('act-q'); f.value = q; ACTQ = q.toLowerCase(); ACTN = 300; renderActivity(); document.getElementById('act-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    document.getElementById('tab-logins').addEventListener('click', function (e) {
+      var d = e.target.closest('[data-dev]'); if (d) { actSearch(d.dataset.dev); return; }
+      var c = e.target.closest('[data-acc]'); if (c) actSearch(c.dataset.acc);
+    });
+    document.getElementById('act-q').oninput = function (e) { ACTQ = e.target.value.trim().toLowerCase(); ACTN = 300; renderActivity(); };
+    document.querySelectorAll('#act-filters .chip').forEach(function (c) { c.onclick = function () { ACTF = c.dataset.f; ACTN = 300; document.querySelectorAll('#act-filters .chip').forEach(function (x) { x.classList.toggle('is-on', x === c); }); renderActivity(); }; });
+    function loadActivity() {
+      document.getElementById('act-wrap').hidden = false;
+      return api('/api/admin/activity').then(function (d) { ACT = d.activity || []; renderActivity(); renderLogins(); }).catch(function (e) { document.getElementById('act-table').innerHTML = '<div class="empty">Could not load: ' + esc(e.message) + '</div>'; });
+    }
+    document.getElementById('act-refresh').onclick = loadActivity;
 
     /* ---------- Settings ---------- */
     function renderSettings() {
@@ -1538,7 +1625,7 @@
       document.getElementById('panel').hidden = false; paintSpace();
       document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
       var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();
-      return Promise.all([loadT(), loadApps(), loadAI(), loadTheme()]);
+      return Promise.all([loadT(), loadApps(), loadAI(), loadTheme(), m.awards ? loadActivity() : null]);
     }).catch(function (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = 'Could not reach the server: ' + e.message; });
   </script>
   <script src="/theme/season.js" defer></script>

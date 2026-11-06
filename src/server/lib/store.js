@@ -204,6 +204,22 @@ export async function recordLogin(u, chat) {
   await redis().hset(KEY_LOGINS, { [key]: { id: u.id, login: key, name: u.name, avatar: u.avatar, firstAt: prev.firstAt || now, lastAt: now, count: (prev.count || 0) + 1, chat: !!(prev.chat || chat) } });
 }
 export async function getLogins() { return (await redis().hgetall(KEY_LOGINS)) || {}; }
+
+/* ---------- activity log (newest first, last ACTIVITY_MAX kept) ---------- */
+const KEY_ACTIVITY = 'log:activity';
+const ACTIVITY_MAX = 5000;
+export async function pushActivity(entry) {
+  const p = redis().pipeline();
+  p.lpush(KEY_ACTIVITY, JSON.stringify(entry));
+  p.ltrim(KEY_ACTIVITY, 0, ACTIVITY_MAX - 1);
+  await p.exec();
+}
+export async function getActivity(limit = 1000) {
+  const rows = (await redis().lrange(KEY_ACTIVITY, 0, Math.min(limit, ACTIVITY_MAX) - 1)) || [];
+  return rows.map(r => (typeof r === 'string' ? JSON.parse(r) : r));
+}
+/* True the first time in `seconds` for this key, so repeated page loads are logged once. */
+export async function onceEvery(key, seconds) { return (await redis().set('log:once:' + key, 1, { nx: true, ex: seconds })) === 'OK'; }
 export async function getPlayerLinks() { return (await redis().hgetall(KEY_PLAYER_TWITCH)) || {}; }
 export async function setPlayerLink(playerId, login) {
   if (!login) return redis().hdel(KEY_PLAYER_TWITCH, playerId);

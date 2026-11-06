@@ -177,7 +177,8 @@
     .aw-sub button.is-on { color: var(--fg); border-bottom-color: var(--accent); }
     .aw-pane { display: grid; gap: 14px; }
     /* Grid children default to min-width:auto, so a wide table (voters, picks) stretched the whole tab past the phone screen. */
-    #tab-awards .container > *, .aw-pane > * { min-width: 0; }
+    #tab-awards .container > *, .aw-pane > *, .aw-award, .aw-award > *, .aw-nom > * { min-width: 0; }
+    .aw-row > * { max-width: 100%; } .aw-row label .field { min-width: 0; flex: 1 1 auto; }
     .aw-pane[hidden] { display: none; }
     .aw-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
     .aw-tools .field { flex: 1 1 220px; width: auto; }

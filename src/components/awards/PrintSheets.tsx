@@ -3,16 +3,22 @@
 import { useEffect, useState } from "react";
 import styles from "./awards.module.scss";
 import { Award, Theme, Wildcard, loginUrl, themeClass } from "./shared";
+import { SheetData, SpookySheet } from "./SpookySheet";
 
 /* /awards/print: one certificate-style sheet per winner, made for printing or "Save as PDF".
-   ?season=<id> a finished season · ?k=<key> the unlisted link · nothing: the current season (admins). */
+   ?season=<id> a finished season · ?k=<key> the unlisted link · nothing: the current season (admins).
+   ?style=classic for the plain certificate; Halloween is the default. */
 type Data = { label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[]; wildcardsBy?: string };
 
 export function PrintSheets() {
   const [d, setD] = useState<Data | null>(null);
   const [err, setErr] = useState("");
+  const [style, setStyle] = useState<"halloween" | "classic">("halloween");
+  const [date, setDate] = useState("");
   useEffect(() => {
     const q = new URLSearchParams(location.search), season = q.get("season"), k = q.get("k");
+    if (q.get("style") === "classic") setStyle("classic");
+    setDate(new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }));
     (async () => {
       try {
         if (season || k) {
@@ -33,7 +39,7 @@ export function PrintSheets() {
   if (err) return <div className={`${styles.panel} ${styles.center}`}><p className={styles.msgP}>{err}</p></div>;
   if (!d) return <div className={styles.spin} aria-label="Loading" />;
 
-  const sheets: { award: string; desc: string; name: string; image: string; line: string; kind: string }[] = [];
+  const sheets: SheetData[] = [];
   for (const a of d.awards) {
     const winners = a.nominees.filter((n) => (a.winnerIds || []).includes(n.id));
     for (const n of winners) sheets.push({ award: a.title, desc: a.description || "", name: n.name, image: n.image || "", kind: winners.length > 1 ? "Joint winner" : "Winner", line: `${n.votes || 0} of ${a.total || 0} votes${a.total ? ` · ${Math.round(((n.votes || 0) / a.total) * 100)}%` : ""}` });
@@ -47,10 +53,17 @@ export function PrintSheets() {
     <div className={`${styles.printWrap} ${themeClass(d.theme)}`}>
       <div className={styles.printBar}>
         <div><b>{sheets.length} winner sheets</b> · AK9 Awards {d.label}. Print them, or pick &quot;Save as PDF&quot; in the print window.</div>
-        <button className={styles.btn} onClick={() => window.print()}>Print / Save as PDF</button>
+        <div className={styles.printOpts}>
+          <div className={styles.printSeg} role="group" aria-label="Sheet style">
+            <button aria-pressed={style === "halloween"} onClick={() => setStyle("halloween")}>Halloween</button>
+            <button aria-pressed={style === "classic"} onClick={() => setStyle("classic")}>Classic</button>
+          </div>
+          {style === "halloween" && <input value={date} onChange={(e) => setDate(e.target.value)} aria-label="Date on the sheets" title="Date on the sheets" />}
+          <button className={styles.btn} onClick={() => window.print()}>Print / Save as PDF</button>
+        </div>
       </div>
       <div className={styles.sheets}>
-        {sheets.map((s, i) => (
+        {sheets.map((s, i) => style === "halloween" ? <SpookySheet key={i} s={s} label={d.label} date={date} /> : (
           <section key={i} className={styles.sheet}>
             <div className={styles.sheetFrame}>
               <div className={styles.sheetTop}>AK9 AWARDS · {d.label.toUpperCase()}</div>

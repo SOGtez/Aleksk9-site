@@ -142,7 +142,7 @@ button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: 
 .printBar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: var(--radius-l); border: 1px solid var(--neutral-alpha-medium); background: var(--surface-background); font-size: 14px; }
 .printBar .btn { margin: 0; }
 .sheets { display: grid; gap: 24px; }
-.sheet { background: #fffdf7; color: #1a1410; border-radius: 6px; aspect-ratio: 297 / 210; width: 100%; max-width: 980px; margin: 0 auto; padding: 22px; box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .7); }
+.sheet { background: #fffdf7; color: #1a1410; border-radius: 6px; aspect-ratio: 11 / 8.5; width: 100%; max-width: 980px; margin: 0 auto; padding: 22px; box-shadow: 0 20px 50px -20px rgba(0, 0, 0, .7); }
 .sheetFrame { height: 100%; border: 3px double var(--aw-a); border-radius: 4px; outline: 1px solid var(--aw-a); outline-offset: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 18px 40px; }
 .theme_classic .sheetFrame { border-color: #c9a13b; outline-color: #c9a13b; }
 .sheetTop { font-size: 13px; font-weight: 800; letter-spacing: .3em; color: #6b5a3a; }
@@ -156,12 +156,49 @@ button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: 
 .sheetSign { margin-top: 14px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .sheetSign span { font-family: "Brush Script MT", "Segoe Script", cursive; font-size: 30px; border-bottom: 1px solid #1a1410; padding: 0 30px; }
 .sheetSign small { font-size: 10px; letter-spacing: .14em; color: #6b5a3a; text-transform: uppercase; }
+/* the Halloween sheet (SpookySheet.tsx); sizes are in cqw so it looks the same on screen and on paper */
+.hwSheet { container-type: inline-size; aspect-ratio: 11 / 8.5; padding: 2.2cqw; color: #1a1410; font-family: var(--hw-fell), Georgia, serif;
+  background: radial-gradient(ellipse at 50% 45%, #fffaf0 55%, #f6e3c0 100%); }
+.hwFrame { position: relative; height: 100%; border: .55cqw solid #1a1410; outline: .2cqw solid #f47a12; outline-offset: -1.1cqw; border-radius: .6cqw; overflow: hidden; }
+.hwWeb { position: absolute; top: 0; width: 15cqw; height: 15cqw; opacity: .8; }
+.hwWebL { left: 0; }
+.hwWebR { right: 0; transform: scaleX(-1); }
+.hwSpider { position: absolute; top: 0; left: 10.5cqw; width: 2.6cqw; height: 8cqw; }
+.hwBats { position: absolute; top: 3cqw; right: 15cqw; width: 12cqw; }
+.hwGround { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 8cqw; }
+.hwBody { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2.4cqw 9cqw 8cqw; }
+.hwKicker { font-size: 1.3cqw; letter-spacing: .4em; text-transform: uppercase; color: #6b4a2a; }
+.hwTitle { font-family: var(--hw-creep), fantasy; font-size: 6.4cqw; line-height: 1; color: #f47a12; -webkit-text-stroke: .14cqw #1a1410; letter-spacing: .04em; margin-top: .3cqw; }
+.hwSeason { font-style: italic; font-size: 1.75cqw; color: #3a2a1a; margin-top: .5cqw; }
+.hwPumpkin { position: relative; margin: 1.8cqw 0 .6cqw; }
+.hwStem { position: absolute; left: 50%; top: -2.6cqw; width: 4.4cqw; transform: translateX(-46%); }
+.hwFace { display: grid; place-items: center; width: 12.5cqw; height: 11cqw; border-radius: 50%; object-fit: cover; background: #f6e3c0; font-size: 5cqw; font-weight: 700;
+  border: .75cqw solid #f47a12; box-shadow: 0 0 0 .22cqw #1a1410, inset 0 0 0 .22cqw #1a1410; }
+.hwName { font-family: var(--hw-creep), fantasy; line-height: 1.05; letter-spacing: .03em; white-space: nowrap; color: #1a1410; }
+.hwFor { font-style: italic; font-size: 1.7cqw; color: #5a3f24; margin-top: .3cqw; }
+.hwAward { margin-top: .9cqw; padding: .55cqw 4cqw; font-size: 2.3cqw; font-weight: 700; color: #fffaf0; background: #1a1410; letter-spacing: .02em;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 1.6cqw) 50%, 100% 100%, 0 100%, 1.6cqw 50%); box-shadow: inset 0 -.3cqw 0 #f47a12; }
+.hwDesc { font-size: 1.15cqw; line-height: 1.45; color: #5a4632; max-width: 62cqw; margin-top: .8cqw; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hwLine { font-size: 1.3cqw; font-weight: 700; color: #b8460a; margin-top: .6cqw; letter-spacing: .04em; }
+.hwFoot { display: flex; align-items: flex-end; justify-content: center; gap: 6cqw; margin-top: 1.2cqw; }
+.hwSign { display: flex; flex-direction: column; align-items: center; gap: .2cqw; min-width: 18cqw; }
+.hwSign span { font-family: "Brush Script MT", "Segoe Script", cursive; font-size: 2.8cqw; line-height: 1.2; border-bottom: .12cqw solid #1a1410; padding: 0 2cqw; width: 100%; }
+.hwSign span.hwDate { font-family: var(--hw-fell), Georgia, serif; font-style: italic; font-size: 1.9cqw; padding-bottom: .4cqw; }
+.hwSign small { font-size: 1cqw; letter-spacing: .2em; text-transform: uppercase; color: #6b4a2a; }
+.hwSeal { width: 9cqw; height: 9cqw; transform: rotate(-8deg); }
+.printOpts { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.printOpts input { font: inherit; font-size: 13px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--neutral-alpha-medium); background: var(--page-background); color: inherit; width: 170px; }
+.printSeg { display: inline-flex; border: 1px solid var(--neutral-alpha-medium); border-radius: 999px; overflow: hidden; }
+.printSeg button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border: 0; background: none; color: inherit; cursor: pointer; }
+.printSeg button[aria-pressed="true"] { background: var(--aw-a); color: #fff; }
 @media print {
-  @page { size: A4 landscape; margin: 0; }
-  :global(body) * { visibility: hidden !important; }
-  .sheets, .sheets * { visibility: visible !important; }
-  .sheets { position: absolute; left: 0; top: 0; width: 100%; gap: 0; }
-  .sheet { box-shadow: none; border-radius: 0; max-width: none; width: 100vw; height: 100vh; aspect-ratio: auto; break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  @page { size: letter landscape; margin: 0; }
+  /* Only the sheets print: everything else is removed (hidden-but-there content added a blank page). */
+  :global(body) *:not(:has(.sheets)):not(.sheets):not(.sheets *) { display: none !important; }
+  :global(body), :global(body) *:has(.sheets) { margin: 0 !important; padding: 0 !important; border: 0 !important; min-height: 0 !important; max-width: none !important; width: auto !important; position: static !important; display: block !important; background: none !important; }
+  .sheets { display: block; gap: 0; }
+  .sheet { box-sizing: border-box; overflow: hidden; box-shadow: none; border-radius: 0; max-width: none; width: 100vw; height: 100vh; aspect-ratio: auto; break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet:last-child { break-after: auto; page-break-after: auto; }
 }
 
 /* ---------- reveal stage (shown on stream) ---------- */

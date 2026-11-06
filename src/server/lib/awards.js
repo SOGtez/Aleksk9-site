@@ -34,7 +34,13 @@ export function computeResults(season, ballots) {
   const awards = (season.awards || []).map((a) => {
     const counts = {}; let total = 0;
     for (const b of list) { const pick = b.choices && b.choices[a.id]; if (pick) { counts[pick] = (counts[pick] || 0) + 1; total++; } }
-    const nominees = (a.nominees || []).map((n) => ({ ...n, votes: counts[n.id] || 0 })).sort((x, y) => y.votes - x.votes);
+    /* votesShown { nomineeId: n } replaces the counted votes on the reveal, results and winner sheets; the
+       counted number stays in `actual`. Set by hand in the data, there is no admin control for it. */
+    const shown = a.votesShown || {};
+    const nominees = (a.nominees || []).map((n) => {
+      const real = counts[n.id] || 0;
+      return Number.isInteger(shown[n.id]) ? { ...n, votes: shown[n.id], actual: real } : { ...n, votes: real };
+    }).sort((x, y) => y.votes - x.votes);
     const top = nominees.length ? nominees[0].votes : 0;
     const manual = (a.winnerIds || []).filter((id) => nominees.some((n) => n.id === id));
     const winnerIds = manual.length ? manual : top > 0 ? nominees.filter((n) => n.votes === top).map((n) => n.id) : [];

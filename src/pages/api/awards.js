@@ -68,8 +68,10 @@ function sanitizeSeason(input, prev) {
       return { id: clean(n.id, 40) || rid('n'), name: clean(n.name, 60) || login, login: LOGIN_RE.test(login) ? login : '', image: /^https:\/\//.test(clean(n.image, 400)) ? clean(n.image, 400) : '' };
     }).filter((n) => n.name);
     const ids = nominees.map((n) => n.id);
+    const shown = a.votesShown && typeof a.votesShown === 'object' ? Object.fromEntries(Object.entries(a.votesShown).filter(([id, v]) => ids.includes(id) && Number.isInteger(v) && v >= 0 && v < 100000)) : {};
     return { id: clean(a.id, 60) || rid('a'), title: clean(a.title, 80), description: clean(a.description, 400), nominees,
-      winnerIds: (Array.isArray(a.winnerIds) ? a.winnerIds : []).map((x) => clean(x, 40)).filter((x) => ids.includes(x)) };
+      winnerIds: (Array.isArray(a.winnerIds) ? a.winnerIds : []).map((x) => clean(x, 40)).filter((x) => ids.includes(x)),
+      ...(Object.keys(shown).length ? { votesShown: shown } : {}) };
   }).filter((a) => a.title);
   const wildcards = (Array.isArray(s.wildcards) ? s.wildcards : []).slice(0, 10).map((w) => ({
     title: clean(w.title, 80), winners: (Array.isArray(w.winners) ? w.winners : []).map((x) => clean(x, 40).replace(/^@/, '')).filter(Boolean).slice(0, 4),

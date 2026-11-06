@@ -1,7 +1,7 @@
 import { json, requireRole, readBody } from '../http.js';
 import { getActivity, getLogins, getSeen, getWatch, setWatch, roleFor, getAwSeason, getAwEntry } from '../store.js';
 import { twitchUsers } from '../twitch.js';
-import { logActivity } from '../activity.js';
+import { logActivity, OLD_NET, OLD_DEV } from '../activity.js';
 
 /* The owners' watch list (admin Watch tab). Site owners only (defaults.js owners).
    GET  → { watch: [profile] }: Twitch account, site logins, last seen, AK9 Awards ballots, every activity entry,
@@ -11,9 +11,9 @@ const LOGIN_RE = /^[a-z0-9_]{2,25}$/;
 
 async function profile(login, log, logins, seen, season) {
   const mine = log.filter(a => a.login === login);
-  const devs = new Set(mine.map(a => a.dev).filter(Boolean)), nets = new Set(mine.map(a => a.net).filter(Boolean));
+  const devs = new Set(mine.map(a => a.dev).filter(d => d && !OLD_DEV(d))), nets = new Set(mine.map(a => a.net).filter(n => n && !OLD_NET(n)));
   const s = seen[login];
-  if (s) { if (s.dev) devs.add(s.dev); if (s.net) nets.add(s.net); }
+  if (s) { if (s.dev && !OLD_DEV(s.dev)) devs.add(s.dev); if (s.net && !OLD_NET(s.net)) nets.add(s.net); }
   /* Other accounts on one of their browsers or connections. */
   const linked = {};
   const link = (other, how, at) => {

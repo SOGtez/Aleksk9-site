@@ -13,20 +13,33 @@ function device(ua) {
   const br = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '';
   return [br, os].filter(Boolean).join(' on ') || 'Unknown';
 }
+/* The site runs behind Cloudflare, so Vercel's own location headers describe Cloudflare's server (everyone came out
+   as New Haven, CT). Behind Cloudflare use its visitor headers: cf-ipcountry always, and cf-ipcity / cf-region-code
+   once "Add visitor location headers" is on (Cloudflare → Rules → Transform Rules → Managed Transforms). */
 function place(h) {
   const dec = (v) => { try { return decodeURIComponent(String(v || '')); } catch { return String(v || ''); } };
+  if (h['cf-connecting-ip']) {
+    const c = h['cf-ipcountry'] && !['XX', 'T1'].includes(h['cf-ipcountry']) ? h['cf-ipcountry'] : '';
+    return [dec(h['cf-ipcity']), h['cf-region-code'], c].filter(Boolean).join(', ');
+  }
   return [dec(h['x-vercel-ip-city']), h['x-vercel-ip-country-region'], h['x-vercel-ip-country']].filter(Boolean).join(', ');
 }
 export function deviceId(req) {
   const c = req.cookies?.[DEVICE_COOKIE];
   if (c && /^[a-z0-9]{6,16}$/i.test(c)) return c;
   const ip = ipOf(req);
-  return '~' + crypto.createHash('sha256').update((process.env.SESSION_SECRET || '') + ip + (req.headers['user-agent'] || '')).digest('hex').slice(0, 7);
+  return '~~' + crypto.createHash('sha256').update((process.env.SESSION_SECRET || '') + ip + (req.headers['user-agent'] || '')).digest('hex').slice(0, 7);
 }
-const ipOf = (req) => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+/* The visitor's address: Cloudflare's header first (x-forwarded-for is Cloudflare's own server, the same for everyone). */
+const ipOf = (req) => String(req.headers['cf-connecting-ip'] || String(req.headers['x-forwarded-for'] || '').split(',')[0]).trim();
+/* 'c' ids are real connections. Ids logged before Nov 6 2026 start with 'n' and were Cloudflare's server for everyone,
+   so they never link accounts (OLD_NET). */
+export const OLD_NET = (net) => typeof net === 'string' && net[0] === 'n';
+/* Same for browser ids guessed without a cookie: before the fix they were '~' + hash of Cloudflare's address; now '~~'. */
+export const OLD_DEV = (dev) => typeof dev === 'string' && dev[0] === '~' && dev[1] !== '~';
 export function netId(req) {
   const ip = ipOf(req);
-  return ip ? 'n' + crypto.createHash('sha256').update('net' + (process.env.SESSION_SECRET || '') + ip).digest('hex').slice(0, 7) : '';
+  return ip ? 'c' + crypto.createHash('sha256').update('net' + (process.env.SESSION_SECRET || '') + ip).digest('hex').slice(0, 7) : '';
 }
 /* Last seen: at most one write per account per 5 minutes. */
 export async function touchSeen(req, me) {

@@ -1311,7 +1311,7 @@
       var young = Date.now() - t < 90 * 864e5;
       return '<span class="' + (young ? 'age-new' : '') + '" title="Twitch account made ' + esc(new Date(t).toLocaleDateString()) + '">' + esc(ageText(iso)) + (young ? ' · new' : '') + '</span><span class="sub">' + esc(fmt(t)) + '</span>';
     }
-    function seenCell(s) { return s ? esc(actWhen(s.at)) + '<span class="sub">' + esc(s.device || '') + (s.where ? ' · ' + esc(s.where) : '') + '</span>' : '<span class="muted">—</span>'; }
+    function seenCell(s) { return s ? esc(actWhen(s.at)) + '<span class="sub">' + esc(s.device || '') + (actWhere(s) ? ' · ' + esc(actWhere(s)) : '') + '</span>' : '<span class="muted">—</span>'; }
     var ACT_LABEL = {
       login: ['Logged in', 'log'], login_failed: ['Login failed', 'bad'], logout: ['Logged out', 'log'],
       opened: ['Opened', ''], change: ['Changed', 'change'], refused: ['Refused', 'bad'],
@@ -1321,6 +1321,7 @@
     function actKind(a) { return (ACT_LABEL[a.action] || [a.action, ''])[1]; }
     function actWhen(ts) { var d = new Date(ts); return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' }); }
     function actHue(dev) { var h = 0; for (var i = 0; i < dev.length; i++) h = (h * 31 + dev.charCodeAt(i)) % 360; return h; }
+    function actWhere(a) { return a.net && a.net.charAt(0) === 'n' ? '' : (a.where || ''); }   /* before the Cloudflare fix every place was New Haven, CT */
     function actDev(dev, title) { return dev ? '<span class="act-dev" data-dev="' + esc(dev) + '" title="' + esc(title || (dev.charAt(0) === '~' ? 'Guessed from the internet connection' : 'Browser id')) + '"><i style="background:hsl(' + actHue(dev) + ' 80% 60%)"></i>' + esc(dev) + '</span>' : ''; }
     /* login → { dev: last seen } from the log, for the logins table. */
     function actDevicesByLogin() {
@@ -1337,13 +1338,16 @@
       if (!ACT) return;
       var logins = {}; ((A && A.logins) || []).forEach(function (l) { logins[l.login] = l; });
       /* Browsers used by more than one account. */
+      /* Ids logged before the Cloudflare fix (connection 'n…', guessed browser '~' but not '~~') were the same for
+         everyone, so they never count as shared. Their places were Cloudflare's server too (New Haven, CT). */
+      var oldNet = function (n) { return !!n && n.charAt(0) === 'n'; }, oldDev = function (d) { return !!d && d.charAt(0) === '~' && d.charAt(1) !== '~'; };
       var byDev = {};
-      ACT.forEach(function (a) { if (!a.login || !a.dev) return; var d = byDev[a.dev] = byDev[a.dev] || { accounts: {}, last: 0, device: a.device, where: a.where }; d.accounts[a.login] = Math.max(d.accounts[a.login] || 0, a.at); if (a.at > d.last) d.last = a.at; });
+      ACT.forEach(function (a) { if (!a.login || !a.dev || oldDev(a.dev)) return; var d = byDev[a.dev] = byDev[a.dev] || { accounts: {}, last: 0, device: a.device, where: actWhere(a) }; d.accounts[a.login] = Math.max(d.accounts[a.login] || 0, a.at); if (a.at > d.last) d.last = a.at; });
       var shared = Object.keys(byDev).filter(function (k) { return Object.keys(byDev[k].accounts).length > 1; }).sort(function (a, b) { return byDev[b].last - byDev[a].last; });
       /* Same internet connection on different browsers (phone + PC, or people in the same home). */
       var byNet = {};
-      ACT.forEach(function (a) { if (!a.login || !a.net) return; var d = byNet[a.net] = byNet[a.net] || { accounts: {}, last: 0, where: a.where }; d.accounts[a.login] = 1; if (a.at > d.last) d.last = a.at; });
-      Object.keys(ACTX.seen || {}).forEach(function (l) { var s = ACTX.seen[l]; if (!s.net) return; var d = byNet[s.net] = byNet[s.net] || { accounts: {}, last: 0, where: s.where }; d.accounts[l] = 1; if (s.at > d.last) d.last = s.at; });
+      ACT.forEach(function (a) { if (!a.login || !a.net || oldNet(a.net)) return; var d = byNet[a.net] = byNet[a.net] || { accounts: {}, last: 0, where: a.where }; d.accounts[a.login] = 1; if (a.at > d.last) d.last = a.at; });
+      Object.keys(ACTX.seen || {}).forEach(function (l) { var s = ACTX.seen[l]; if (!s.net || oldNet(s.net)) return; var d = byNet[s.net] = byNet[s.net] || { accounts: {}, last: 0, where: s.where }; d.accounts[l] = 1; if (s.at > d.last) d.last = s.at; });
       var sameDevPairs = {}; shared.forEach(function (k) { var a = Object.keys(byDev[k].accounts).sort().join(','); sameDevPairs[a] = 1; });
       var sharedNet = Object.keys(byNet).filter(function (k) { var a = Object.keys(byNet[k].accounts); return a.length > 1 && !sameDevPairs[a.sort().join(',')]; }).sort(function (a, b) { return byNet[b].last - byNet[a].last; });
       document.getElementById('act-alerts').innerHTML = shared.slice(0, 8).map(function (k) {
@@ -1364,7 +1368,7 @@
         var age = (ACTX.ages || {})[a.login], young = age && Date.now() - Date.parse(age) < 90 * 864e5;
         var who = a.login ? '<td class="who act-acc" data-acc="' + esc(a.login) + '">' + av(l) + '<span><b>' + esc(a.name || a.login) + '</b><small>' + esc(a.login) + (a.role && a.role !== 'viewer' ? ' · ' + esc(roleLabel(a.role)) : '') + (young ? ' · <span class="age-new">account ' + esc(ageText(age)) + ' old</span>' : '') + '</small></span></td>' : '<td class="muted">not logged in</td>';
         var det = esc(a.detail || '') + (a.from ? '<span class="sub">on ' + esc(a.from) + '</span>' : '');
-        h += '<tr><td>' + esc(actWhen(a.at)) + '</td>' + who + '<td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + det + '</td><td>' + actDev(a.dev) + (a.net ? '<span class="sub">' + actDev(a.net, 'Internet connection id') + '</span>' : '') + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(a.where || '') + '</td></tr>';
+        h += '<tr><td>' + esc(actWhen(a.at)) + '</td>' + who + '<td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + det + '</td><td>' + actDev(a.dev) + (a.net ? '<span class="sub">' + actDev(a.net, 'Internet connection id') + '</span>' : '') + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(actWhere(a)) + '</td></tr>';
       });
       wrap.innerHTML = h + '</tbody></table>' + (rows.length > ACTN ? '<div class="empty"><button class="btn btn-sm" type="button" id="act-more">Show more</button></div>' : '');
       if (rows.length > ACTN) document.getElementById('act-more').onclick = function () { ACTN += 300; renderActivity(); };
@@ -1389,7 +1393,7 @@
       return '<div class="table-wrap"><table><thead><tr><th>When</th><th>Account</th><th>What</th><th>Details</th><th>Browser · connection</th><th>Device</th><th>Place</th></tr></thead><tbody>' + list.map(function (a) {
         var lab = ACT_LABEL[a.action] || [a.action, ''];
         return '<tr><td>' + esc(actWhen(a.at)) + '</td><td>' + (a.login ? '@' + esc(a.login) : '<span class="muted">not logged in</span>') + '</td><td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + esc(a.detail || '') + (a.from ? '<span class="sub">on ' + esc(a.from) + '</span>' : '') +
-          '</td><td>' + actDev(a.dev) + (a.net ? '<span class="sub">' + actDev(a.net, 'Internet connection id') + '</span>' : '') + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(a.where || '') + '</td></tr>';
+          '</td><td>' + actDev(a.dev) + (a.net ? '<span class="sub">' + actDev(a.net, 'Internet connection id') + '</span>' : '') + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(actWhere(a)) + '</td></tr>';
       }).join('') + '</tbody></table></div>';
     }
     function renderWatch(list) {
@@ -1401,7 +1405,7 @@
           tw.createdAt ? 'Twitch account ' + wtAge(tw.createdAt) + ' old (made ' + esc(new Date(tw.createdAt).toLocaleDateString()) + ')' : (p.twitch ? '' : '<span class="age-new">Not found on Twitch (renamed or deleted?)</span>'),
           'Site role: ' + esc(roleLabel(p.role) || 'viewer'),
           site.lastAt ? 'Logins: ' + (site.count || 1) + ' · first ' + esc(fmt(site.firstAt)) + ' · last ' + esc(actWhen(site.lastAt)) : 'Never logged in on the site',
-          p.seen ? 'Last seen ' + esc(actWhen(p.seen.at)) + ' · ' + esc(p.seen.device || '') + (p.seen.where ? ' · ' + esc(p.seen.where) : '') : ''
+          p.seen ? 'Last seen ' + esc(actWhen(p.seen.at)) + ' · ' + esc(p.seen.device || '') + (actWhere(p.seen) ? ' · ' + esc(actWhere(p.seen)) : '') : ''
         ].filter(Boolean);
         var ballots = ['noms', 'votes'].map(function (k) {
           var b = p.ballots[k]; if (!b) return '<div class="wt-list"><div class="row muted">' + (k === 'noms' ? 'No nominations' : 'No votes') + (p.season ? ' in ' + esc(p.season) : '') + '</div></div>';

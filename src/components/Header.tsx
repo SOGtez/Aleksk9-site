@@ -17,7 +17,7 @@ const SHOW_TOURNAMENT = false;
    so these buttons do a normal page load instead of a client-side route change. */
 const go = (href: string) => () => window.location.assign(href);
 
-type Me = { user: { login: string; name?: string; avatar?: string } | null; role: string };
+type Me = { user: { login: string; name?: string; avatar?: string } | null; role: string; awards?: boolean };
 
 /* Twitch login (right side): "Log in", or the user's picture with Admin / Log out. */
 const Account = () => {
@@ -41,7 +41,7 @@ const Account = () => {
   }
   return (
     <Row gap="4" vertical="center">
-      {(me.role === "admin" || me.role === "awards") && <ToggleButton prefixIcon="admin" label="Admin" onClick={go("/admin")} />}
+      {(me.role === "admin" || me.awards) && <ToggleButton prefixIcon="admin" label="Admin" onClick={go("/admin")} />}
       <ToggleButton onClick={go(`/api/auth/logout?next=${encodeURIComponent(here)}`)} aria-label="Log out">
         <Row gap="8" vertical="center">
           {me.user.avatar && (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "./awards.module.scss";
-import { Award, ResultCard, Theme, Wildcard, WildcardList, WORDS, themeClass } from "./shared";
+import { Award, ResultCard, Theme, Wildcard, WildcardList, WORDS, loginUrl, themeClass } from "./shared";
 
 /* /awards/<season>: one finished season from the Hall of Fame.
    /awards/preview?k=<key>: the current season's results through the unlisted link (share mode). */
@@ -16,8 +16,9 @@ export function HallSeason({ id, share }: { id?: string; share?: boolean }) {
     fetch(share ? "/api/awards?share=" + encodeURIComponent(k) : "/api/awards?season=" + encodeURIComponent(id || ""), { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((d) => setS(d.season))
-      .catch((c) => setErr(c === 404 ? (share ? "This preview link is not valid any more." : "There is no AK9 Awards season with that name.") : "This season could not load right now."));
+      .catch((c) => setErr(c === 401 ? "login" : c === 403 ? "This link only works for AK9 Awards admins." : c === 404 ? (share ? "This preview link is not valid any more." : "There is no AK9 Awards season with that name.") : "This season could not load right now."));
   }, [id, share]);
+  if (err === "login") return <div className={`${styles.panel} ${styles.center}`}><div className={styles.msgH}>Log in to open this link</div><p className={styles.msgP}>This preview only works for AK9 Awards admins.</p><a className={styles.btn} href={loginUrl(location.pathname + location.search)}>Log in with Twitch</a></div>;
   if (err) return <div className={styles.panel}><p className={styles.msgP}>{err} <a href="/awards">Back to the awards</a></p></div>;
   if (!s) return <div className={styles.spin} aria-label="Loading" />;
   return (

@@ -38,6 +38,7 @@ export function RevealStage() {
       try {
         if (key) {
           const r = await fetch("/api/awards?share=" + encodeURIComponent(key), { cache: "no-store" });
+          if (r.status === 401 || r.status === 403) { setGate(r.status === 401 ? "login" : "admin"); return; }
           if (!r.ok) throw new Error();
           const d = await r.json(); setShow(d.season); return;
         }
@@ -153,7 +154,7 @@ export function RevealStage() {
     if (r.ok) { setPublished(true); setCanPublish(false); } else alert((await r.json()).error || "Could not publish");
   }
 
-  if (gate === "login") return <Gate h="Log in to open the reveal" p="Before the winners are published, only admins can open this page."><a className={styles.btn} href={loginUrl("/awards/reveal")}>Log in with Twitch</a></Gate>;
+  if (gate === "login") return <Gate h="Log in to open the reveal" p="Before the winners are published, only admins can open this page."><a className={styles.btn} href={loginUrl(location.pathname + location.search)}>Log in with Twitch</a></Gate>;
   if (gate === "admin") return <Gate h="Admins only" p="The winners aren't published yet, so only admins can open the reveal." />;
   if (gate === "error") return <Gate h="Nothing to reveal yet" p="There is no season with results yet." />;
   if (!show || !cur) return <div className={styles.spin} aria-label="Loading" />;

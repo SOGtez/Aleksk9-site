@@ -23,7 +23,8 @@ export function PrintSheets() {
       try {
         if (season || k) {
           const r = await fetch(season ? "/api/awards?season=" + encodeURIComponent(season) : "/api/awards?share=" + encodeURIComponent(k || ""), { cache: "no-store" });
-          if (!r.ok) throw new Error(r.status === 404 ? "That season or link wasn't found." : "Could not load.");
+          if (r.status === 401) { setErr("login"); return; }
+          if (!r.ok) throw new Error(r.status === 404 ? "That season or link wasn't found." : r.status === 403 ? "This link only works for AK9 Awards admins." : "Could not load.");
           setD((await r.json()).season); return;
         }
         const r = await fetch("/api/awards?view=admin", { cache: "no-store" });
@@ -35,7 +36,7 @@ export function PrintSheets() {
     })();
   }, []);
 
-  if (err === "login") return <div className={`${styles.panel} ${styles.center}`}><div className={styles.msgH}>Admins only</div><p className={styles.msgP}>Log in with an admin or AK9 Awards account to print this season&apos;s sheets.</p><a className={styles.btn} href={loginUrl("/awards/print")}>Log in with Twitch</a></div>;
+  if (err === "login") return <div className={`${styles.panel} ${styles.center}`}><div className={styles.msgH}>Admins only</div><p className={styles.msgP}>Log in with an admin or AK9 Awards account to print this season&apos;s sheets.</p><a className={styles.btn} href={loginUrl(location.pathname + location.search)}>Log in with Twitch</a></div>;
   if (err) return <div className={`${styles.panel} ${styles.center}`}><p className={styles.msgP}>{err}</p></div>;
   if (!d) return <div className={styles.spin} aria-label="Loading" />;
 

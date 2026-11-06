@@ -18,7 +18,8 @@ import {
    POST { action: 'vote', choices: { awardId: nomineeId } }      followers, once, while voting is open
    POST admin: save { season } · newSeason { label, standard | copyAwards } · archive · clear { kind: 'noms'|'votes' }
                resetEntry { kind, login } · shareLink { on } · deleteArchive { id }
-   "Admin" here means a site admin or someone with the AK9 Awards role (Roles tab on the admin page).
+   "Admin" here means a site admin or someone with the AK9 Awards role (Roles tab on the admin page), minus
+   defaults.js awardsBlocked. Share links (?share=) also need one of those logins, so a forwarded link shows nothing.
    Without a database (the test site) it serves a sample season: add ?demo=<stage> to preview a stage. */
 
 const clean = (v, n) => String(v == null ? '' : v).trim().slice(0, n);
@@ -97,7 +98,7 @@ async function fillImages(season) {
 
 export default async function handler(req, res) {
   const me = await whoami(req);
-  const isAdmin = me.role === 'admin' || me.role === 'awards';
+  const isAdmin = me.awards;
 
   /* ---------- test site: sample data ---------- */
   if (!hasDatabase()) {
@@ -132,6 +133,8 @@ export default async function handler(req, res) {
       return json(res, 200, { season: { ...s, wildcards: await wildcardsWithImages(s.wildcards) } });
     }
     if (req.query.share) {
+      if (!me.user) return json(res, 401, { error: 'Log in with Twitch to open this link.' });
+      if (!isAdmin) return json(res, 403, { error: 'This link only works for AK9 Awards admins.' });
       const key = clean(req.query.share, 40);
       if (!season || !season.shareKey || key !== season.shareKey) return json(res, 404, { error: 'This link is not valid any more.' });
       const r = computeResults(season, await getAwEntries('votes', season.id));

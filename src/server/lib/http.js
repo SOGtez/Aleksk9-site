@@ -1,6 +1,7 @@
 import { getSession } from './session.js';
 import { roleFor, withSpace } from './store.js';
 import { CHANNEL_LOGIN } from './twitch.js';
+import { DEFAULT_STATE } from './defaults.js';
 
 export function json(res, status, body) {
   res.setHeader('Cache-Control', 'no-store');
@@ -28,7 +29,10 @@ export async function whoami(req) {
   const role = await roleFor(user?.login);
   /* The channel's own account cannot follow itself, so it always counts as a follower (awards, applications). */
   const follows = !!user?.follows || (user?.login || '').toLowerCase() === CHANNEL_LOGIN;
-  return { user: user ? { id: user.id, login: user.login, name: user.name, avatar: user.avatar, follows, followedAt: user.followedAt || '', followChecked: user.followChecked || 0 } : null, role };
+  /* `awards`: may see the AK9 Awards behind the scenes. Admins and the AK9 Awards role, minus defaults.js awardsBlocked. */
+  const blocked = (DEFAULT_STATE.awardsBlocked || []).some(b => b.toLowerCase() === (user?.login || '').toLowerCase());
+  const awards = !!user && (role === 'admin' || role === 'awards') && !blocked;
+  return { user: user ? { id: user.id, login: user.login, name: user.name, avatar: user.avatar, follows, followedAt: user.followedAt || '', followChecked: user.followChecked || 0 } : null, role, awards };
 }
 export async function requireRole(req, res, allowed) {
   const me = await whoami(req);

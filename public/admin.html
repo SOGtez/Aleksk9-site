@@ -1533,6 +1533,8 @@
         if (m.user) { document.getElementById('gate-msg').textContent = 'You are logged in as ' + m.user.name + ' but not an admin.'; var b = document.getElementById('gate-btn'); b.textContent = 'Log out'; b.href = '/api/auth/logout?next=/admin'; }
         return;
       }
+      /* Admins on the awards block list (defaults.js awardsBlocked) don't get the AK9 Awards tab. */
+      if (!m.awards) { var awTab = document.querySelector('.tabs button[data-tab="awards"]'); if (awTab) awTab.remove(); }
       document.getElementById('panel').hidden = false; paintSpace();
       document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
       var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();

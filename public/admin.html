@@ -176,6 +176,8 @@
     .aw-sub button { flex: 0 0 auto; padding: 10px 12px; font-size: 14px; font-weight: 600; color: var(--fg-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
     .aw-sub button.is-on { color: var(--fg); border-bottom-color: var(--accent); }
     .aw-pane { display: grid; gap: 14px; }
+    /* Grid children default to min-width:auto, so a wide table (voters, picks) stretched the whole tab past the phone screen. */
+    #tab-awards .container > *, .aw-pane > * { min-width: 0; }
     .aw-pane[hidden] { display: none; }
     .aw-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
     .aw-tools .field { flex: 1 1 220px; width: auto; }

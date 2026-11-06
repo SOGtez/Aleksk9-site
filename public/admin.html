@@ -936,7 +936,7 @@
           var top = a.nominees.length ? a.nominees[0].votes : 0;
           var bars = a.nominees.map(function (n) {
             var v = n.votes || 0, pct = a.total ? Math.round(v / a.total * 100) : 0;
-            return '<div class="aw-bar' + (v > 0 && v === top ? ' lead' : '') + '"><span class="nm" title="' + esc(n.name) + '">' + esc(n.name) + '</span><span class="tr"><span style="width:' + Math.round(v / max * 100) + '%"></span></span><span class="ct">' + v + ' · ' + pct + '%</span></div>';
+            return '<div class="aw-bar' + (v > 0 && v === top ? ' lead' : '') + '"><span class="nm" title="' + esc(n.name) + '">' + esc(n.name) + '</span><span class="tr"><span style="width:' + Math.round(v / max * 100) + '%"></span></span><span class="ct">' + v + ' · ' + pct + '%' + (n.actual != null ? ' <span class="small" title="Shown number changed by hand; this is the real count">(real ' + n.actual + ')</span>' : '') + '</span></div>';
           }).join('');
           return '<div class="aw-live-card"><div class="tot">AWARD ' + pad(i + 1) + ' · ' + a.total + ' vote' + (a.total === 1 ? '' : 's') + '</div><h4>' + esc(a.title) + '</h4>' + (bars || '<span class="small">No finalists yet. Set them in Nominations or Manage awards.</span>') + '</div>';
         }).join('');

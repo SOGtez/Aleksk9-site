@@ -282,3 +282,9 @@ export async function deleteAwArchive(id) { await redis().hdel(KEY_AW_ARCHIVE, i
 /* ---------- Site theme (holiday looks, src/resources/seasons.ts) ---------- */
 export async function getSiteThemeRaw() { return redis().get('site:theme'); }
 export async function setSiteThemeRaw(v) { await redis().set('site:theme', v); return v; }
+
+/* ---------- AK9 Awards live reveal (viewers follow the host's /awards/reveal) ---------- */
+export async function getAwLive() { return redis().get('aw:live'); }
+export async function setAwLive(v) { await redis().set('aw:live', v, { ex: 2 * 24 * 3600 }); return v; }
+export async function getAwLiveTaps(sid) { return (await redis().hgetall('aw:live:taps:' + sid)) || {}; }
+export async function addAwLiveTaps(sid, field, n) { const k = 'aw:live:taps:' + sid; await redis().hincrby(k, field, n); await redis().expire(k, 2 * 24 * 3600); }

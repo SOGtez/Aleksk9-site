@@ -12,6 +12,7 @@ const audio = () => (ac = ac || new (window.AudioContext || (window as unknown a
 export function tone(f: number, d = 0.08, type: OscillatorType = "triangle", v = 0.05) {
   try {
     const c = audio(), o = c.createOscillator(), g = c.createGain();
+    if (c.state === "suspended") c.resume().catch(() => {});   /* browsers start it muted until the first tap */
     o.type = type; o.frequency.value = f; g.gain.value = v; g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + d);
     o.connect(g).connect(c.destination); o.start(); o.stop(c.currentTime + d);
   } catch { /* no audio */ }

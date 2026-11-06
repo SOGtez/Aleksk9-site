@@ -8,13 +8,27 @@ import { EvidenceBag, BagStage } from "./EvidenceBag";
 import { CountUp, Gate, Letters, PUMPKIN_COLORS, confetti, rustle, snip, splat, titleTime, tone } from "./stage-bits";
 
 /* /awards/reveal: the page Aleks shows on stream to reveal the winners one award at a time.
-   Before the winners are published only admins can open it; afterwards (or with ?season=<id>) anyone can
-   replay it. Space / → next, ← back, F fullscreen. */
+   Space / → next, ← back, F fullscreen. Admins run it ("host"). With "Go live" on, every step is sent to the
+   server and everyone else opening this page follows along a few seconds behind (the stream delay), tapping
+   the pumpkin to shake it; the crowd's taps show on Aleks's screen. Once the winners are published (or with
+   ?season=<id>) anyone can replay it on their own. */
 type Show = { revealStyle?: string; wildcardsBy?: string; label: string; theme: Theme; totalVoters: number; awards: Award[]; wildcards: Wildcard[] };
 /* Which reveal to play: the season's choice, else the evidence bag for the crime theme and the pumpkin otherwise. */
 type RevealStyle = "pumpkin" | "spotlight" | "evidence";
 const styleOf = (s: Show | null): RevealStyle => (s?.revealStyle === "spotlight" || s?.revealStyle === "evidence" || s?.revealStyle === "pumpkin") ? s.revealStyle : s?.theme === "crime" ? "evidence" : "pumpkin";
 type Step = { kind: "intro" } | { kind: "award"; i: number } | { kind: "win"; i: number } | { kind: "wild" } | { kind: "outro" };
+type Phase = "idle" | "suspense" | "pumpkin" | "burst" | "shown";
+/* One step of Aleks's screen as the server hands it to viewers (src/server/lib/awards-live.js). */
+type Frame = { at: number; step: number; kind: Step["kind"]; i?: number; phase: Phase; hits: number; label: string; theme: Theme; revealStyle: string; wildcardsBy: string; totalVoters: number; nAwards: number; award?: Award; wildcards?: Wildcard[] };
+type Live = { on: boolean; sid?: string; delay: number; host?: string };
+const HOST_KEY = "ak9-live-host";
+const POLL_MS = 2500;
+const frameShow = (f: Frame): Show => ({
+  label: f.label, theme: f.theme, totalVoters: f.totalVoters, revealStyle: f.revealStyle, wildcardsBy: f.wildcardsBy, wildcards: f.wildcards || [],
+  awards: Array.from({ length: f.nAwards }, (_, j) => (j === f.i && f.award ? f.award : { id: "a" + j, title: "", nominees: [] })),
+});
+const frameCur = (f: Frame): Step => (f.kind === "award" || f.kind === "win" ? { kind: f.kind, i: f.i || 0 } : { kind: f.kind } as Step);
+const byVotes = <T extends { votes?: number }>(l: T[]) => [...l].sort((x, y) => (y.votes || 0) - (x.votes || 0));
 
 export function RevealStage() {
   const [show, setShow] = useState<Show | null>(null);
@@ -22,7 +36,7 @@ export function RevealStage() {
   const [canPublish, setCanPublish] = useState(false);
   const [published, setPublished] = useState(false);
   const [step, setStep] = useState(0);
-  const [phase, setPhase] = useState<"idle" | "suspense" | "pumpkin" | "burst" | "shown">("idle");
+  const [phase, setPhase] = useState<Phase>("idle");
   const [hits, setHits] = useState(0);
   const [bagOpen, setBagOpen] = useState(false);
   const [shaking, setShaking] = useState(false);
@@ -31,6 +45,23 @@ export function RevealStage() {
   const [sound, setSound] = useState(true);
   const stageRef = useRef<HTMLDivElement>(null);
   const confettiRef = useRef<HTMLCanvasElement>(null);
+  /* Live show. viewer: following Aleks (frame = what is on screen); host: an admin, broadcasting when `hostSid` is set. */
+  const [viewer, setViewer] = useState(false);
+  const [frame, setFrame] = useState<Frame | null>(null);
+  const [liveOn, setLiveOn] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const [live, setLive] = useState<Live | null>(null);
+  const [hostSid, setHostSid] = useState("");
+  const [delay, setDelay] = useState(5);
+  const [taps, setTaps] = useState<Record<string, number>>({});
+  const [myTaps, setMyTaps] = useState(0);
+  const pendingTaps = useRef(0);
+  const wobbleRef = useRef<HTMLSpanElement>(null);
+  const lastFrame = useRef<Frame | null>(null);
+  const phaseRef = useRef(phase), hitsRef = useRef(hits), soundRef = useRef(sound);
+  phaseRef.current = phase; hitsRef.current = hits; soundRef.current = sound;
+  const liveSidRef = useRef("");
+  const stepRef = useRef(step); stepRef.current = step;
 
   useEffect(() => {
     const q = new URLSearchParams(location.search), past = q.get("season"), key = q.get("k");
@@ -47,16 +78,29 @@ export function RevealStage() {
           if (!r.ok) throw new Error();
           const d = await r.json(); setShow(d.season); return;
         }
-        const a = await fetch("/api/awards?view=admin", { cache: "no-store" });
-        if (a.ok) {
+        /* ?watch: an admin seeing what viewers see. */
+        const a = q.has("watch") ? null : await fetch("/api/awards?view=admin", { cache: "no-store" });
+        if (a && a.ok) {
           const d = await a.json();
           if (!d.season || !d.results) { setGate("error"); return; }
-          setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards: d.results.awards, wildcards: d.season.wildcards || [], wildcardsBy: d.season.wildcardsBy, revealStyle: d.season.revealStyle });
-          setCanPublish(!d.demo && d.stage !== "revealed"); return;
+          /* Results come sorted by votes; show the finalists in the season's order so the line-up doesn't give the winner away. */
+          const order = (i: number) => ((d.season.awards[i] || {}).nominees || []).map((n: { id: string }) => n.id);
+          const awards = d.results.awards.map((x: Award, i: number) => ({ ...x, nominees: [...x.nominees].sort((m, n) => order(i).indexOf(m.id) - order(i).indexOf(n.id)) }));
+          setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards, wildcards: d.season.wildcards || [], wildcardsBy: d.season.wildcardsBy, revealStyle: d.season.revealStyle });
+          setCanPublish(!d.demo && d.stage !== "revealed");
+          const l: Live = d.live || { on: false, delay: 5 };
+          setLive(l); setDelay(l.delay ?? 5);
+          /* Reloading the broadcasting tab keeps the show going where it was. */
+          try {
+            const saved = JSON.parse(sessionStorage.getItem(HOST_KEY) || "null");
+            if (l.on && saved && saved.sid === l.sid) { setHostSid(l.sid || ""); setStep(saved.step || 0); }
+          } catch { /* no storage */ }
+          return;
         }
         const p = await (await fetch("/api/awards", { cache: "no-store" })).json();
-        if (p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [], wildcardsBy: p.season.wildcardsBy, revealStyle: p.season.revealStyle }); return; }
-        setGate(p.me && p.me.loggedIn ? "admin" : "login");
+        const lv = await (await fetch("/api/awards?live=1", { cache: "no-store" })).json();
+        if (!lv.on && !q.has("watch") && p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [], wildcardsBy: p.season.wildcardsBy, revealStyle: p.season.revealStyle }); return; }
+        setViewer(true);
       } catch { setGate("error"); }
     })();
   }, []);
@@ -69,10 +113,11 @@ export function RevealStage() {
     s.push({ kind: "outro" });
     return s;
   }, [show]);
-  const cur = steps[step];
+  const cur = viewer ? (frame ? frameCur(frame) : undefined) : steps[step];
 
   /* The drumroll: a spotlight jumps between the finalists, slowing down, then lands on the winner. */
   useEffect(() => {
+    if (viewer) return;                                     /* viewers get the phase from Aleks */
     if (!show || !cur || cur.kind !== "win") { setPhase("idle"); setSpot(-1); return; }
     const a = show.awards[cur.i];
     if (!a.nominees.length || !(a.winnerIds || []).length) { setPhase("shown"); return; }
@@ -112,29 +157,126 @@ export function RevealStage() {
     if (phase !== "pumpkin") return;
     const h = hits + 1; setHits(h); setShaking(false); requestAnimationFrame(() => setShaking(true)); setTimeout(() => setShaking(false), 450);
     if (sound) { tone(110, 0.18, "sine", 0.25); tone(70, 0.22, "sine", 0.2); }
-    if (h >= 3) {
-      setPhase("burst"); setFlash((x) => x + 1); if (sound) splat(); burst(PUMPKIN_COLORS);
-      setTimeout(() => { setPhase("shown"); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 700);
-      setTimeout(() => { burst(); if (sound) tone(1046, 0.4, "triangle", 0.05); }, 1500);   /* confetti when the stamp lands */
-    }
+    if (h >= 3) breakOpen();
   }, [phase, hits, sound]); // eslint-disable-line react-hooks/exhaustive-deps
+  function breakOpen() {
+    const snd = soundRef.current;
+    setPhase("burst"); setFlash((x) => x + 1); if (snd) splat(); burst(PUMPKIN_COLORS);
+    setTimeout(() => { setPhase("shown"); if (snd) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 700);
+    setTimeout(() => { burst(); if (snd) tone(1046, 0.4, "triangle", 0.05); }, 1500);   /* confetti when the stamp lands */
+  }
 
   /* Scissors along the dotted line, the bag drifts open, the case file slides out, GUILTY settles on last. */
   const cut = useCallback(() => {
     if (phase !== "pumpkin") return;
-    setPhase("burst"); setBagOpen(false); if (sound) snip();
-    setTimeout(() => { setBagOpen(true); if (sound) rustle(); }, 1050);
-    setTimeout(() => { setPhase("shown"); if (sound) { tone(95, 0.3, "sine", 0.35); tone(60, 0.35, "sine", 0.25); } }, 2500);
-    setTimeout(() => { burst(["#b81c14", "#d8342a", "#ffd400", "#eceae3", "#111111"]); if (sound) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 3100);
+    openBag();
   }, [phase, sound]); // eslint-disable-line react-hooks/exhaustive-deps
+  function openBag() {
+    const snd = soundRef.current;
+    setPhase("burst"); setBagOpen(false); if (snd) snip();
+    setTimeout(() => { setBagOpen(true); if (snd) rustle(); }, 1050);
+    setTimeout(() => { setPhase("shown"); if (snd) { tone(95, 0.3, "sine", 0.35); tone(60, 0.35, "sine", 0.25); } }, 2500);
+    setTimeout(() => { burst(["#b81c14", "#d8342a", "#ffd400", "#eceae3", "#111111"]); if (snd) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } }, 3100);
+  }
+
+  /* The pumpkin (or bag) jiggles: a viewer's own tap, or on Aleks's screen when the crowd's taps come in. */
+  function wobble() {
+    const el = wobbleRef.current; if (!el) return;
+    el.classList.remove(styles.pkTap); void el.offsetWidth; el.classList.add(styles.pkTap);
+  }
+  function tap() {
+    if (phaseRef.current !== "pumpkin" && phaseRef.current !== "suspense") return;
+    pendingTaps.current++; setMyTaps((x) => x + 1); wobble();
+    if (soundRef.current) tone(80 + Math.random() * 50, 0.12, "sine", 0.2);
+  }
+
+  /* Viewers: show a new frame from Aleks, playing the same smash / cut / spotlight finish he just played. */
+  function apply(f: Frame) {
+    const prev = lastFrame.current;
+    if (prev && prev.at === f.at) return;
+    lastFrame.current = f;
+    setFrame(f); setShow(frameShow(f));
+    const rs = styleOf(frameShow(f));
+    if (!prev || prev.step !== f.step) {
+      setStep(f.step); setHits(f.hits); setBagOpen(f.phase === "shown"); setMyTaps(0); pendingTaps.current = 0;
+      setPhase(f.kind !== "win" ? "idle" : f.phase === "burst" || f.phase === "shown" ? "shown" : rs === "spotlight" ? "suspense" : "pumpkin");
+      return;
+    }
+    if (f.kind !== "win") return;
+    if (f.hits > hitsRef.current && phaseRef.current === "pumpkin") {
+      setHits(f.hits); setShaking(false); requestAnimationFrame(() => setShaking(true)); setTimeout(() => setShaking(false), 450);
+      if (soundRef.current) { tone(110, 0.18, "sine", 0.25); tone(70, 0.22, "sine", 0.2); }
+    }
+    if ((f.phase === "burst" || f.phase === "shown") && (phaseRef.current === "pumpkin" || phaseRef.current === "suspense")) {
+      if (rs === "evidence") openBag();
+      else if (rs === "pumpkin") breakOpen();
+      else { setPhase("shown"); if (soundRef.current) { tone(523, 0.5); tone(659, 0.5); tone(784, 0.7); } burst(); }
+    }
+  }
+
+  /* Viewers poll for Aleks's screen (sending their taps along); the broadcasting host polls for the crowd's taps. */
+  useEffect(() => {
+    if (!viewer && !hostSid) return;
+    let stop = false, t: ReturnType<typeof setTimeout>;
+    const poll = async () => {
+      try {
+        const n = pendingTaps.current, f = lastFrame.current;
+        const body = viewer && n && f ? JSON.stringify({ sid: liveSidRef.current, step: f.step, n }) : null;
+        if (body) pendingTaps.current = 0;
+        const r = await fetch("/api/awards?live=1", body ? { method: "POST", headers: { "Content-Type": "application/json" }, body, cache: "no-store" } : { cache: "no-store" });
+        const d = await r.json();
+        if (stop) return;
+        liveSidRef.current = d.sid || "";
+        setLiveOn(!!d.on); setEnded(!!d.ended || (!d.on && !!lastFrame.current));
+        setTaps((old) => {
+          const now = d.taps || {};
+          const k = String(viewer ? lastFrame.current?.step : stepRef.current);
+          if (!viewer && (now[k] || 0) > (old[k] || 0)) wobble();
+          return now;
+        });
+        if (viewer && d.on && d.frame) { if (!lastFrame.current || lastFrame.current.step !== d.frame.step) setMyTaps(0); apply(d.frame); }
+      } catch { /* try again next time */ }
+      if (!stop) t = setTimeout(poll, viewer && !liveOn ? POLL_MS * 2 : POLL_MS);
+    };
+    poll();
+    return () => { stop = true; clearTimeout(t); };
+  }, [viewer, hostSid, liveOn]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Host: send every step / phase / hit while broadcasting. A step's first frame never carries a reveal, so a
+     stale "shown" from the step before can't leak the next winner. */
+  const sent = useRef<{ step: number; phase: string; hits: number } | null>(null);
+  useEffect(() => {
+    if (viewer || !hostSid || !cur) return;
+    const ph = sent.current && sent.current.step === step ? phase : cur.kind === "win" ? "idle" : phase;
+    if (sent.current && sent.current.step === step && sent.current.phase === ph && sent.current.hits === hits) return;
+    sent.current = { step, phase: ph, hits };
+    try { sessionStorage.setItem(HOST_KEY, JSON.stringify({ sid: hostSid, step })); } catch { /* no storage */ }
+    fetch("/api/awards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "live", sid: hostSid, step, phase: ph, hits }) }).catch(() => {});
+  }, [viewer, hostSid, step, phase, hits]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function goLive(on: boolean) {
+    if (on && live?.on && live.sid !== hostSid && !confirm("Viewers are following another screen right now. Take over from this one?")) return;
+    const ph = cur && cur.kind === "win" ? "idle" : phase;
+    const r = await fetch("/api/awards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(on ? { action: "live", on: true, delay, step, phase: ph, hits } : { action: "live", on: false }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) { alert(d.error || "Could not change the live show"); return; }
+    setLive(d); sent.current = on ? { step, phase: ph, hits } : null;
+    setHostSid(on ? d.sid : "");
+    try { if (on) sessionStorage.setItem(HOST_KEY, JSON.stringify({ sid: d.sid, step })); else sessionStorage.removeItem(HOST_KEY); } catch { /* no storage */ }
+  }
+  function saveDelay(v: number) {
+    const n = Math.max(0, Math.min(60, Math.round(v) || 0)); setDelay(n);
+    if (hostSid) fetch("/api/awards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "live", sid: hostSid, delay: n }) }).catch(() => {});
+  }
 
   const revealStyle = styleOf(show);
   const next = useCallback(() => {
+    if (viewer) return;
     if (cur && cur.kind === "win" && phase === "pumpkin") { if (revealStyle === "evidence") cut(); else smash(); return; }
     if (cur && cur.kind === "win" && (phase === "suspense" || phase === "burst")) return;   /* let the reveal finish */
     setStep((x) => Math.min(steps.length - 1, x + 1));
-  }, [cur, phase, steps.length, smash, cut, revealStyle]);
-  const back = useCallback(() => setStep((x) => Math.max(0, x - 1)), []);
+  }, [cur, phase, steps.length, smash, cut, revealStyle, viewer]);
+  const back = useCallback(() => { if (!viewer) setStep((x) => Math.max(0, x - 1)); }, [viewer]);
   const full = useCallback(() => { const el = stageRef.current; if (!el) return; if (document.fullscreenElement) document.exitFullscreen(); else el.requestFullscreen?.(); }, []);
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -157,11 +299,19 @@ export function RevealStage() {
   if (gate === "login") return <Gate h="Log in to open the reveal" p="Before the winners are published, only admins can open this page."><a className={styles.btn} href={loginUrl(location.pathname + location.search)}>Log in with Twitch</a></Gate>;
   if (gate === "admin") return <Gate h="Admins only" p="The winners aren't published yet, so only admins can open the reveal." />;
   if (gate === "error") return <Gate h="Nothing to reveal yet" p="There is no season with results yet." />;
+  if (viewer && !cur) return (
+    <Gate h={ended ? "The AK9 Awards show has ended" : "The AK9 Awards haven't started yet"}
+      p={ended ? "Thanks for watching! The winners are on the AK9 Awards page once Aleks publishes them." : "Keep this page open with the stream: when Aleks starts the show it plays here too, and you can tap the pumpkins to shake them before each winner is revealed."}>
+      {ended ? <a className={styles.btn} href="/awards">AK9 Awards</a> : <div className={styles.spin} aria-label="Waiting" />}
+    </Gate>
+  );
   if (!show || !cur) return <div className={styles.spin} aria-label="Loading" />;
   const w = WORDS[show.theme];
+  const crowd = (taps[String(step)] || 0) + (viewer ? pendingTaps.current : 0);
+  const crowdLine = (viewer || hostSid) && crowd > 0 ? <div className={styles.sCrowd}>🎃 {crowd.toLocaleString()} tap{crowd === 1 ? "" : "s"} from viewers{viewer && myTaps ? ` · ${myTaps} yours` : ""}</div> : null;
 
   return (
-    <div className={`${styles.stage} ${themeClass(show.theme)} ${cur.kind === "win" && phase !== "shown" ? styles.stageDim : ""} ${cur.kind === "win" && phase === "shown" ? styles.stageLit : ""}`} ref={stageRef} onClick={(e) => { if ((e.target as HTMLElement).closest("button,a")) return; next(); }}>
+    <div className={`${styles.stage} ${themeClass(show.theme)} ${cur.kind === "win" && phase !== "shown" ? styles.stageDim : ""} ${cur.kind === "win" && phase === "shown" ? styles.stageLit : ""}`} ref={stageRef} onClick={(e) => { if ((e.target as HTMLElement).closest("button,a,input,label")) return; next(); }}>
       <div className={styles.sweep} aria-hidden="true" />
       {flash > 0 && <div key={"f" + flash} className={styles.flashOverlay} aria-hidden="true" />}
       <canvas ref={confettiRef} className={styles.confetti} />
@@ -171,7 +321,7 @@ export function RevealStage() {
             <div className={`${styles.kicker} ${styles.fadeUp}`}>{w.kicker}…</div>
             <Letters text="AK9 Awards" delay={0.4} step={0.09} className={styles.sTitle} />
             <div className={`${styles.sSub} ${styles.fadeUp}`} style={{ animationDelay: "1.5s" }}>{show.label} · The winners</div>
-            <div className={`${styles.sHint} ${styles.fadeUp}`} style={{ animationDelay: "2.2s" }}><CountUp to={show.totalVoters} delay={2200} ms={1200} /> people voted · press space to begin</div>
+            <div className={`${styles.sHint} ${styles.fadeUp}`} style={{ animationDelay: "2.2s" }}><CountUp to={show.totalVoters} delay={2200} ms={1200} /> people voted{viewer ? "" : " · press space to begin"}</div>
           </div>
         )}
         {(cur.kind === "award" || cur.kind === "win") && (() => {
@@ -181,15 +331,16 @@ export function RevealStage() {
           const total = a.total || 0;
           const pct = (v = 0) => (total ? ` · ${Math.round((v / total) * 100)}%` : "");
           const word = w.winner.toLowerCase() === "guilty" ? "verdict" : "winner";
-          if (cur.kind === "win" && revealStyle === "evidence" && winners.length) {
+          if (cur.kind === "win" && revealStyle === "evidence" && (winners.length || (viewer && phase !== "shown"))) {   /* viewers only learn the winner at the reveal */
             const bagStage: BagStage = phase === "shown" ? "revealed" : phase === "burst" ? (bagOpen ? "open" : "cutting") : "sealed";
             return (
               <div key={"st" + step} className={styles.sAward}>
                 <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)} · {a.title}</div>
-                <EvidenceBag a={a} i={cur.i} label={show.label} verdict={w.winner} stage={bagStage} onCut={cut} />
-                {phase === "pumpkin" && <div className={`${styles.sHint} ${styles.pulse}`}>tap the evidence bag to cut it open</div>}
+                <span ref={wobbleRef} className={styles.pkWob}><EvidenceBag a={a} i={cur.i} label={show.label} verdict={w.winner} stage={bagStage} onCut={viewer ? tap : cut} /></span>
+                {phase === "pumpkin" && <div className={`${styles.sHint} ${styles.pulse}`}>{viewer ? "tap the evidence bag to shake it · Aleks cuts it open soon" : "tap the evidence bag to cut it open"}</div>}
+                {phase === "pumpkin" && crowdLine}
                 <div className={`${styles.sNoms} ${styles.sNomsSmall} ${phase !== "shown" ? styles.nervous : ""}`}>
-                  {a.nominees.filter((n) => phase !== "shown" || !winners.includes(n)).map((n, ni) => (
+                  {(phase === "shown" ? byVotes(a.nominees) : a.nominees).filter((n) => phase !== "shown" || !winners.includes(n)).map((n, ni) => (
                     <div key={n.id} className={`${styles.sNom} ${phase === "shown" ? `${styles.sLose} ${styles.fadeUp}` : ""}`} style={phase === "shown" ? { animationDelay: `${0.6 + ni * 0.3}s` } : { animationDelay: `${ni * 0.15}s` }}>
                       <Face n={n} size={56} />
                       <div className={styles.sNomName}>{n.name}</div>
@@ -200,7 +351,7 @@ export function RevealStage() {
               </div>
             );
           }
-          if (cur.kind === "win" && revealStyle === "pumpkin" && winners.length) {
+          if (cur.kind === "win" && revealStyle === "pumpkin" && (winners.length || (viewer && phase !== "shown"))) {   /* viewers only learn the winner at the reveal */
             return (
               <div key={"st" + step} className={styles.sAward}>
                 <div className={styles.anum}>{w.award} {pad2(cur.i + 1)} of {pad2(show.awards.length)}</div>
@@ -218,13 +369,14 @@ export function RevealStage() {
                     ))}
                   </div>
                 ) : (
-                  <button type="button" className={styles.pkBtn} onClick={smash} aria-label="Smash the pumpkin">
-                    <Pumpkin hits={hits} burst={phase === "burst"} />
+                  <button type="button" className={styles.pkBtn} onClick={viewer ? tap : smash} aria-label={viewer ? "Shake the pumpkin" : "Smash the pumpkin"}>
+                    <span ref={wobbleRef} className={styles.pkWob}><Pumpkin hits={hits} burst={phase === "burst"} /></span>
                   </button>
                 )}
-                {phase === "pumpkin" && <div key={"h" + hits} className={`${styles.sHint} ${styles.pulse}`}>{["smash the pumpkin to reveal the " + word, "harder…", "one more!"][hits]} · {3 - hits} hit{3 - hits === 1 ? "" : "s"} left</div>}
+                {phase === "pumpkin" && <div key={"h" + hits} className={`${styles.sHint} ${styles.pulse}`}>{viewer ? (hits ? `${["", "it's cracking…", "one more hit!"][hits]} · keep tapping to shake it` : "tap the pumpkin to shake it · Aleks smashes it open soon") : <>{["smash the pumpkin to reveal the " + word, "harder…", "one more!"][hits]} · {3 - hits} hit{3 - hits === 1 ? "" : "s"} left</>}</div>}
+                {phase === "pumpkin" && crowdLine}
                 <div className={`${styles.sNoms} ${styles.sNomsSmall} ${phase !== "shown" ? styles.nervous : ""}`}>
-                  {a.nominees.filter((n) => phase !== "shown" || !winners.includes(n)).map((n, ni) => (
+                  {(phase === "shown" ? byVotes(a.nominees) : a.nominees).filter((n) => phase !== "shown" || !winners.includes(n)).map((n, ni) => (
                     <div key={n.id} className={`${styles.sNom} ${phase === "shown" ? `${styles.sLose} ${styles.fadeUp}` : ""}`} style={phase === "shown" ? { animationDelay: `${1.6 + ni * 0.3}s` } : { animationDelay: `${ni * 0.15}s` }}>
                       <Face n={n} size={56} />
                       <div className={styles.sNomName}>{n.name}</div>
@@ -256,8 +408,9 @@ export function RevealStage() {
                   );
                 })}
               </div>
-              {intro && <div className={`${styles.sHint} ${styles.fadeUp}`} style={{ animationDelay: `${dT + a.nominees.length * 0.45 + 0.3}s` }}>press space to reveal the {word}</div>}
+              {intro && !viewer && <div className={`${styles.sHint} ${styles.fadeUp}`} style={{ animationDelay: `${dT + a.nominees.length * 0.45 + 0.3}s` }}>press space to reveal the {word}</div>}
               {cur.kind === "win" && phase === "suspense" && <div className={styles.sHint}>and the {w.winner.toLowerCase() === "guilty" ? "verdict" : "winner"} is…</div>}
+              {cur.kind === "win" && phase === "suspense" && crowdLine}
               {shown && !winners.length && <div className={styles.sDesc}>No votes were cast for this one.</div>}
             </div>
           );
@@ -284,13 +437,25 @@ export function RevealStage() {
           </div>
         )}
       </div>
-      <div className={styles.sBar}>
-        <button onClick={back} disabled={step === 0}>← Back</button>
-        <span>{step + 1} / {steps.length}</span>
-        <button onClick={next} disabled={step === steps.length - 1}>Next →</button>
-        <button onClick={() => setSound(!sound)}>{sound ? "Sound on" : "Sound off"}</button>
-        <button onClick={full}>Fullscreen (F)</button>
-      </div>
+      {viewer ? (
+        <div className={styles.sBar}>
+          {liveOn ? <span className={styles.liveTag}><i />Live with Aleks's stream</span> : <span>The show has ended</span>}
+          <button onClick={() => setSound(!sound)}>{sound ? "Sound on" : "Sound off"}</button>
+          <button onClick={full}>Fullscreen (F)</button>
+        </div>
+      ) : (
+        <div className={styles.sBar}>
+          <button onClick={back} disabled={step === 0}>← Back</button>
+          <span>{step + 1} / {steps.length}</span>
+          <button onClick={next} disabled={step === steps.length - 1}>Next →</button>
+          <button onClick={() => setSound(!sound)}>{sound ? "Sound on" : "Sound off"}</button>
+          <button onClick={full}>Fullscreen (F)</button>
+          {hostSid
+            ? <button className={styles.liveOn} onClick={() => goLive(false)} title="Viewers on aleksk9.com/awards/reveal are following this screen"><i />Live · End</button>
+            : <button onClick={() => goLive(true)} title="Everyone on aleksk9.com/awards/reveal follows this screen">{live?.on ? "Live on another screen · Take over" : "Go live for viewers"}</button>}
+          <label className={styles.sDelay} title="Match your stream delay so the site doesn't reveal winners before the stream does">Stream delay <input type="number" min={0} max={60} value={delay} onChange={(e) => saveDelay(Number(e.target.value))} />s</label>
+        </div>
+      )}
     </div>
   );
 }

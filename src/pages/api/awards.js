@@ -8,6 +8,7 @@ import {
   THEMES, PHASES, STANDARD_AWARDS, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason, revealStyleFor,
 } from '../../server/lib/awards.js';
 import { logActivity } from '../../server/lib/activity.js';
+import { liveView, buildFrame, setLive, liveStatus } from '../../server/lib/awards-live.js';
 
 /* AK9 Awards (/awards). One route for everything:
    GET                         the current season as visitors see it, your own nominations/ballot, the Hall of Fame list,
@@ -15,10 +16,12 @@ import { logActivity } from '../../server/lib/activity.js';
    GET ?season=<id>            one finished season with its results (Hall of Fame page)
    GET ?view=admin             admins: everything, incl. the nomination tally, live vote counts and who voted (the reveal page uses this)
    GET ?share=<key>            the current season's results through the unlisted link, before they are published
+   GET|POST ?live=1 { sid, step, n }   anyone: the live reveal frame to show now, plus the crowd's pumpkin taps (POST adds n taps)
    POST { action: 'nominate', choices: { awardId: name } }       followers, once, while nominations are open
    POST { action: 'vote', choices: { awardId: nomineeId } }      followers, once, while voting is open
    POST admin: save { season } · newSeason { label, standard | copyAwards } · archive · clear { kind: 'noms'|'votes' }
                resetEntry { kind, login } · shareLink { on } · deleteArchive { id }
+               live { on?, delay?, sid?, step?, phase?, hits? }   the host's reveal page: start/end the live show, send a frame
    "Admin" here means a site admin or someone with the AK9 Awards role (Roles tab on the admin page), minus
    defaults.js awardsBlocked. Share links (?share=) also need one of those logins, so a forwarded link shows nothing.
    Without a database (the test site) it serves a sample season: add ?demo=<stage> to preview a stage. */
@@ -100,6 +103,12 @@ async function fillImages(season) {
 }
 
 export default async function handler(req, res) {
+  /* Live reveal polls come from every viewer every few seconds, so they skip the session and season reads. */
+  if (req.query.live) {
+    const b = req.method === 'POST' ? readBody(req) : {};
+    res.setHeader('Cache-Control', 'no-store');
+    return json(res, 200, await liveView({ sid: clean(b.sid, 30), step: Number(b.step), n: Number(b.n) || 0 }));
+  }
   const me = await whoami(req);
   const isAdmin = me.awards;
 
@@ -111,13 +120,14 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const b = readBody(req);
       if (b.action === 'nominate' || b.action === 'vote') return json(res, 200, { ok: true, demo: true });
+      if (b.action === 'live') return json(res, 200, await setLive(b, b.step != null ? buildFrame(season, ballots, await wildcardsWithImages(season.wildcards), b) : null, 'demo'));
       return json(res, 400, { error: 'The test site has no database, so admin changes are not saved here.' });
     }
     if (req.query.season) { const s = await findArchived(clean(req.query.season, 60)); if (!s) return json(res, 404, { error: 'Not found' }); return json(res, 200, { season: { ...s, wildcards: await wildcardsWithImages(s.wildcards) }, demo: true }); }
     const results = computeResults(season, ballots);
     const counts = { nominators: 31, voters: results.totalVoters };
     if (req.query.share) return json(res, 200, { preview: true, demo: true, season: { id: season.id, label: season.label, theme: season.theme, revealStyle: revealStyleFor(season), totalVoters: results.totalVoters, awards: results.awards, wildcards: await wildcardsWithImages(season.wildcards) } });
-    if (req.query.view === 'admin') return json(res, 200, { season, stage, counts, results, tally: tallyNominations(season, {}), voters: [], nominators: [], demo: true });
+    if (req.query.view === 'admin') return json(res, 200, { season, stage, counts, results, tally: tallyNominations(season, {}), voters: [], nominators: [], live: await liveStatus(), demo: true });
     return json(res, 200, {
       demo: true, season: publicSeason(season, stage, counts),
       me: { loggedIn: true, login: 'demo_viewer', name: 'demo_viewer', avatar: '', follows: true, isAdmin: true, nominated: null, voted: null },
@@ -151,7 +161,7 @@ export default async function handler(req, res) {
       if (!isAdmin) { await logActivity(req, me, 'awards_refused', me.user ? 'results' : 'results, not logged in', { once: 600 }); return json(res, 403, { error: 'Admins only' }); }
       await logActivity(req, me, 'awards_results', '', { once: 1800 });
       const people = (h) => Object.entries(h).map(([login, e]) => ({ login, name: e.name || login, avatar: e.avatar || '', at: e.at || 0, choices: e.choices || {} })).sort((a, b) => b.at - a.at);
-      return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms) });
+      return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms), live: await liveStatus() });
     }
     const mine = me.user && season ? { nominated: (noms[me.user.login] || {}).choices || null, voted: (votes[me.user.login] || {}).choices || null } : { nominated: null, voted: null };
     return json(res, 200, {
@@ -186,6 +196,13 @@ export default async function handler(req, res) {
 
   /* ---------- admins ---------- */
   if (!isAdmin) { await logActivity(req, me, 'awards_refused', 'change: ' + clean(b.action, 30)); return json(res, 403, { error: 'Admins only' }); }
+  if (b.action === 'live') {
+    /* Frames are sent on every step of the show, so only starting and ending it go in the activity log. */
+    if (typeof b.on === 'boolean') await logActivity(req, me, 'change', `awards: live reveal ${b.on ? 'started' : 'ended'}`);
+    if (!season) return json(res, 400, { error: 'No season' });
+    const frame = b.step != null ? buildFrame(season, await getAwEntries('votes', season.id), await wildcardsWithImages(season.wildcards), b) : null;
+    return json(res, 200, await setLive(b, frame, me.user.login));
+  }
   await logActivity(req, me, 'change', `awards: ${clean(b.action, 30)}${b.action === 'save' && b.season && b.season.phase ? ' (phase ' + clean(b.season.phase, 20) + ')' : ''}${b.action === 'shareLink' ? (b.on ? ' on' : ' off') : ''}${b.login ? ' @' + clean(b.login, 40) : ''}${b.kind ? ' ' + clean(b.kind, 10) : ''}`);
   if (b.action === 'save') {
     const next = await fillImages(sanitizeSeason(b.season, season));

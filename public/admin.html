@@ -255,6 +255,22 @@
     .act-dev i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
     .act-acc { cursor: pointer; }
     #act-table td { white-space: nowrap; }
+    .age-new { color: var(--accent); font-weight: 700; }
+    .wt-add { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .wt-add .field { flex: 1 1 220px; width: auto; }
+    .wt-card { padding: 18px; margin-bottom: 18px; }
+    .wt-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .wt-head .avatar { width: 56px; height: 56px; font-size: 16px; }
+    .wt-head h3 { margin: 0; font-size: 20px; }
+    .wt-head .muted { font-size: 13px; }
+    .wt-head .grow { flex: 1; min-width: 200px; }
+    .wt-bio { font-size: 13px; color: var(--fg-muted); margin: -6px 0 14px; }
+    .wt-h { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--fg-dim); margin: 18px 0 8px; }
+    .wt-list { display: grid; gap: 6px; font-size: 13px; }
+    .wt-list .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .wt-list .avatar { width: 26px; height: 26px; font-size: 10px; }
+    .wt-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 16px; font-size: 12px; color: var(--fg-muted); }
+    .wt-picks b { color: var(--fg); font-weight: 600; }
     #act-table td.det { white-space: normal; min-width: 220px; color: var(--fg-muted); }
     .lk-card { margin-top: 6px; }
     .lk-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 16px; }
@@ -384,6 +400,7 @@
         <button data-tab="tournament">Tournament</button>
         <button data-tab="roles">Roles</button>
         <button data-tab="logins">Twitch logins</button>
+        <button data-tab="watch" hidden>Watch</button>
         <button data-tab="calendar">Calendar</button>
         <button data-tab="awards">AK9 Awards</button>
         <button data-tab="theme">Site theme</button>
@@ -542,6 +559,15 @@
           <div class="head"><h2>Twitch logins</h2><span class="muted" id="logins-note"></span></div>
           <div class="card table-wrap" id="logins-table"></div>
           <p class="small" style="margin-top:10px">Everyone who has logged in with Twitch on the site since this list was added. Use the dropdown to link a login to a player in the pool or a captain: their Twitch picture then shows on the draft board, and a linked captain gets their draft controls automatically.</p>
+        </div>
+      </section>
+
+      <section class="tab" id="tab-watch" hidden>
+        <div class="container">
+          <div class="head"><h2>Watch</h2><span class="muted small">Only tezlv6 and aieksk9 see this tab.</span></div>
+          <div class="wt-add"><input class="field" id="wt-login" placeholder="Twitch username to watch"><button class="btn btn-sm btn-primary" type="button" id="wt-add">Watch</button><button class="btn btn-sm" type="button" id="wt-refresh">Refresh</button></div>
+          <div id="wt-list"></div>
+          <p class="small" style="margin-top:10px">Everything the site knows about each account: their Twitch account, logins, last visit, AK9 Awards ballots and every logged action. <b>Linked accounts</b> used the same browser (strong sign it's the same person or device) or the same internet connection (same home or Wi-Fi, could be family or friends). <b>Logged out from their browser</b> shows what happened on their browser or connection without an account. The activity log only started on Nov 6, 2026.</p>
         </div>
       </section>
 
@@ -1244,13 +1270,13 @@
       document.getElementById('logins-note').textContent = list.length + ' login' + (list.length === 1 ? '' : 's') + ' recorded';
       var wrap = document.getElementById('logins-table');
       if (!list.length) { wrap.innerHTML = '<div class="empty">Nobody has logged in since this list was added. Earlier logins were not recorded.</div>'; return; }
-      var h = '<table><thead><tr><th>Twitch</th><th>Last login</th><th>Logins</th><th>Browsers</th><th>Chat</th><th>Linked to</th></tr></thead><tbody>';
+      var h = '<table><thead><tr><th>Twitch</th><th>Account age</th><th>Last login</th><th>Last seen</th><th>Logins</th><th>Browsers</th><th>Chat</th><th>Linked to</th></tr></thead><tbody>';
       var devs = actDevicesByLogin();
       list.forEach(function (l) {
         var cur = byLogin[l.login];
         var opts = '<option value="">— not linked —</option>' + people.map(function (p) { return '<option value="' + esc(p.id) + '"' + (cur && cur.id === p.id ? ' selected' : '') + (p.twitch && !(cur && cur.id === p.id) ? ' disabled' : '') + '>' + esc(p.label) + (p.twitch && !(cur && cur.id === p.id) ? ' · ' + esc(p.twitch) : '') + '</option>'; }).join('');
         h += '<tr><td class="who">' + av(l) + '<span><b>' + esc(l.name) + '</b><small>' + esc(l.login) + '</small></span></td>' +
-          '<td>' + esc(fmt(l.lastAt)) + '<span class="sub">first ' + esc(fmt(l.firstAt)) + '</span></td><td>' + (l.count || 1) + '</td><td>' + actDevCell(devs[l.login]) + '</td><td>' + (l.chat ? 'enabled' : '') + '</td>' +
+          '<td>' + ageCell((ACTX.ages || {})[l.login] || l.createdAt) + '</td><td>' + esc(fmt(l.lastAt)) + '<span class="sub">first ' + esc(fmt(l.firstAt)) + '</span></td><td>' + seenCell((ACTX.seen || {})[l.login]) + '</td><td>' + (l.count || 1) + '</td><td>' + actDevCell(devs[l.login]) + '</td><td>' + (l.chat ? 'enabled' : '') + '</td>' +
           '<td><select class="field" data-link-login="' + esc(l.login) + '" data-prev="' + esc(cur ? cur.id : '') + '">' + opts + '</select></td></tr>';
       });
       wrap.innerHTML = h + '</tbody></table>';
@@ -1267,7 +1293,19 @@
     }
 
     /* ---------- Activity log (GET /api/admin/activity) ---------- */
-    var ACT = null, ACTF = 'all', ACTQ = '', ACTN = 300;
+    var ACT = null, ACTX = {}, ACTF = 'all', ACTQ = '', ACTN = 300;
+    /* Twitch account age: "3 yrs", "5 mo", "12 days"; under 90 days is highlighted (typical of alt accounts). */
+    function ageText(iso) {
+      var t = Date.parse(iso || ''); if (!t) return '';
+      var d = Math.floor((Date.now() - t) / 864e5);
+      return d < 60 ? d + ' day' + (d === 1 ? '' : 's') : d < 730 ? Math.floor(d / 30.4) + ' mo' : Math.floor(d / 365.25) + ' yrs';
+    }
+    function ageCell(iso) {
+      var t = Date.parse(iso || ''); if (!t) return '<span class="muted">?</span>';
+      var young = Date.now() - t < 90 * 864e5;
+      return '<span class="' + (young ? 'age-new' : '') + '" title="Twitch account made ' + esc(new Date(t).toLocaleDateString()) + '">' + esc(ageText(iso)) + (young ? ' · new' : '') + '</span><span class="sub">' + esc(fmt(t)) + '</span>';
+    }
+    function seenCell(s) { return s ? esc(actWhen(s.at)) + '<span class="sub">' + esc(s.device || '') + (s.where ? ' · ' + esc(s.where) : '') + '</span>' : '<span class="muted">—</span>'; }
     var ACT_LABEL = {
       login: ['Logged in', 'log'], login_failed: ['Login failed', 'bad'], logout: ['Logged out', 'log'],
       opened: ['Opened', ''], change: ['Changed', 'change'], refused: ['Refused', 'bad'],
@@ -1287,7 +1325,7 @@
     function actMatches(a) {
       if (ACTF !== 'all' && actKind(a) !== ACTF && !(ACTF === 'awards' && a.action === 'awards_refused')) return false;
       if (!ACTQ) return true;
-      return [a.login, a.name, a.dev, a.where, a.device, a.detail].join(' ').toLowerCase().indexOf(ACTQ) >= 0;
+      return [a.login, a.name, a.dev, a.net, a.where, a.device, a.detail].join(' ').toLowerCase().indexOf(ACTQ) >= 0;
     }
     function renderActivity() {
       if (!ACT) return;
@@ -1296,21 +1334,31 @@
       var byDev = {};
       ACT.forEach(function (a) { if (!a.login || !a.dev) return; var d = byDev[a.dev] = byDev[a.dev] || { accounts: {}, last: 0, device: a.device, where: a.where }; d.accounts[a.login] = Math.max(d.accounts[a.login] || 0, a.at); if (a.at > d.last) d.last = a.at; });
       var shared = Object.keys(byDev).filter(function (k) { return Object.keys(byDev[k].accounts).length > 1; }).sort(function (a, b) { return byDev[b].last - byDev[a].last; });
+      /* Same internet connection on different browsers (phone + PC, or people in the same home). */
+      var byNet = {};
+      ACT.forEach(function (a) { if (!a.login || !a.net) return; var d = byNet[a.net] = byNet[a.net] || { accounts: {}, last: 0, where: a.where }; d.accounts[a.login] = 1; if (a.at > d.last) d.last = a.at; });
+      Object.keys(ACTX.seen || {}).forEach(function (l) { var s = ACTX.seen[l]; if (!s.net) return; var d = byNet[s.net] = byNet[s.net] || { accounts: {}, last: 0, where: s.where }; d.accounts[l] = 1; if (s.at > d.last) d.last = s.at; });
+      var sameDevPairs = {}; shared.forEach(function (k) { var a = Object.keys(byDev[k].accounts).sort().join(','); sameDevPairs[a] = 1; });
+      var sharedNet = Object.keys(byNet).filter(function (k) { var a = Object.keys(byNet[k].accounts); return a.length > 1 && !sameDevPairs[a.sort().join(',')]; }).sort(function (a, b) { return byNet[b].last - byNet[a].last; });
       document.getElementById('act-alerts').innerHTML = shared.slice(0, 8).map(function (k) {
         var d = byDev[k], accs = Object.keys(d.accounts);
         return '<div class="act-alert">' + (k.charAt(0) === '~' ? 'Same internet connection and browser' : 'Same browser') + ' used by ' + accs.map(function (l) { return '<b>@' + esc(l) + '</b>'; }).join(', ') +
           ' · ' + esc(d.device) + (d.where ? ' · ' + esc(d.where) : '') + ' · last ' + esc(actWhen(d.last)) + ' · ' + actDev(k) + '</div>';
+      }).join('') + sharedNet.slice(0, 8).map(function (k) {
+        var d = byNet[k];
+        return '<div class="act-alert">Same internet connection (different browsers) used by ' + Object.keys(d.accounts).map(function (l) { return '<b>@' + esc(l) + '</b>'; }).join(', ') + (d.where ? ' · ' + esc(d.where) : '') + ' · last ' + esc(actWhen(d.last)) + ' · ' + actDev(k, 'Internet connection id') + '</div>';
       }).join('');
       var rows = ACT.filter(actMatches);
       document.getElementById('act-note').textContent = rows.length + ' of ' + ACT.length + ' entries';
       var wrap = document.getElementById('act-table');
       if (!rows.length) { wrap.innerHTML = '<div class="empty">' + (ACT.length ? 'Nothing matches.' : 'Nothing logged yet. Entries start from when this log was added.') + '</div>'; return; }
-      var h = '<table><thead><tr><th>When</th><th>Account</th><th>What</th><th>Details</th><th>Browser</th><th>Device</th><th>Place</th></tr></thead><tbody>';
+      var h = '<table><thead><tr><th>When</th><th>Account</th><th>What</th><th>Details</th><th>Browser · connection</th><th>Device</th><th>Place</th></tr></thead><tbody>';
       rows.slice(0, ACTN).forEach(function (a) {
         var lab = ACT_LABEL[a.action] || [a.action, ''], l = logins[a.login] || { name: a.name || a.login || '?', avatar: '' };
-        var who = a.login ? '<td class="who act-acc" data-acc="' + esc(a.login) + '">' + av(l) + '<span><b>' + esc(a.name || a.login) + '</b><small>' + esc(a.login) + (a.role && a.role !== 'viewer' ? ' · ' + esc(roleLabel(a.role)) : '') + '</small></span></td>' : '<td class="muted">not logged in</td>';
+        var age = (ACTX.ages || {})[a.login], young = age && Date.now() - Date.parse(age) < 90 * 864e5;
+        var who = a.login ? '<td class="who act-acc" data-acc="' + esc(a.login) + '">' + av(l) + '<span><b>' + esc(a.name || a.login) + '</b><small>' + esc(a.login) + (a.role && a.role !== 'viewer' ? ' · ' + esc(roleLabel(a.role)) : '') + (young ? ' · <span class="age-new">account ' + esc(ageText(age)) + ' old</span>' : '') + '</small></span></td>' : '<td class="muted">not logged in</td>';
         var det = esc(a.detail || '') + (a.from ? '<span class="sub">on ' + esc(a.from) + '</span>' : '');
-        h += '<tr><td>' + esc(actWhen(a.at)) + '</td>' + who + '<td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + det + '</td><td>' + actDev(a.dev) + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(a.where || '') + '</td></tr>';
+        h += '<tr><td>' + esc(actWhen(a.at)) + '</td>' + who + '<td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + det + '</td><td>' + actDev(a.dev) + (a.net ? '<span class="sub">' + actDev(a.net, 'Internet connection id') + '</span>' : '') + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(a.where || '') + '</td></tr>';
       });
       wrap.innerHTML = h + '</tbody></table>' + (rows.length > ACTN ? '<div class="empty"><button class="btn btn-sm" type="button" id="act-more">Show more</button></div>' : '');
       if (rows.length > ACTN) document.getElementById('act-more').onclick = function () { ACTN += 300; renderActivity(); };
@@ -1324,9 +1372,61 @@
     document.querySelectorAll('#act-filters .chip').forEach(function (c) { c.onclick = function () { ACTF = c.dataset.f; ACTN = 300; document.querySelectorAll('#act-filters .chip').forEach(function (x) { x.classList.toggle('is-on', x === c); }); renderActivity(); }; });
     function loadActivity() {
       document.getElementById('act-wrap').hidden = false;
-      return api('/api/admin/activity').then(function (d) { ACT = d.activity || []; renderActivity(); renderLogins(); }).catch(function (e) { document.getElementById('act-table').innerHTML = '<div class="empty">Could not load: ' + esc(e.message) + '</div>'; });
+      return api('/api/admin/activity').then(function (d) { ACT = d.activity || []; ACTX = { ages: d.ages || {}, seen: d.seen || {} }; renderActivity(); renderLogins(); }).catch(function (e) { document.getElementById('act-table').innerHTML = '<div class="empty">Could not load: ' + esc(e.message) + '</div>'; });
     }
     document.getElementById('act-refresh').onclick = loadActivity;
+
+    /* ---------- Watch (site owners only, GET/POST /api/admin/watch) ---------- */
+    function wtAge(iso) { return '<span class="' + (Date.now() - Date.parse(iso) < 90 * 864e5 ? 'age-new' : '') + '">' + esc(ageText(iso)) + '</span>'; }
+    function wtRows(list) {
+      if (!list.length) return '<div class="empty">Nothing yet.</div>';
+      return '<div class="table-wrap"><table><thead><tr><th>When</th><th>Account</th><th>What</th><th>Details</th><th>Browser · connection</th><th>Device</th><th>Place</th></tr></thead><tbody>' + list.map(function (a) {
+        var lab = ACT_LABEL[a.action] || [a.action, ''];
+        return '<tr><td>' + esc(actWhen(a.at)) + '</td><td>' + (a.login ? '@' + esc(a.login) : '<span class="muted">not logged in</span>') + '</td><td><span class="act-what ' + lab[1] + '">' + esc(lab[0]) + '</span></td><td class="det">' + esc(a.detail || '') + (a.from ? '<span class="sub">on ' + esc(a.from) + '</span>' : '') +
+          '</td><td>' + actDev(a.dev) + (a.net ? '<span class="sub">' + actDev(a.net, 'Internet connection id') + '</span>' : '') + '</td><td>' + esc(a.device || '') + '</td><td>' + esc(a.where || '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    }
+    function renderWatch(list) {
+      var box = document.getElementById('wt-list');
+      if (!list.length) { box.innerHTML = '<div class="card empty">Nobody on the watch list. Add a Twitch username above.</div>'; return; }
+      box.innerHTML = list.map(function (p) {
+        var tw = p.twitch || {}, site = p.site || {}, name = tw.name || site.name || p.login;
+        var facts = [
+          tw.createdAt ? 'Twitch account ' + wtAge(tw.createdAt) + ' old (made ' + esc(new Date(tw.createdAt).toLocaleDateString()) + ')' : (p.twitch ? '' : '<span class="age-new">Not found on Twitch (renamed or deleted?)</span>'),
+          'Site role: ' + esc(roleLabel(p.role) || 'viewer'),
+          site.lastAt ? 'Logins: ' + (site.count || 1) + ' · first ' + esc(fmt(site.firstAt)) + ' · last ' + esc(actWhen(site.lastAt)) : 'Never logged in on the site',
+          p.seen ? 'Last seen ' + esc(actWhen(p.seen.at)) + ' · ' + esc(p.seen.device || '') + (p.seen.where ? ' · ' + esc(p.seen.where) : '') : ''
+        ].filter(Boolean);
+        var ballots = ['noms', 'votes'].map(function (k) {
+          var b = p.ballots[k]; if (!b) return '<div class="wt-list"><div class="row muted">' + (k === 'noms' ? 'No nominations' : 'No votes') + (p.season ? ' in ' + esc(p.season) : '') + '</div></div>';
+          return '<div class="wt-list"><div class="row"><b>' + (k === 'noms' ? 'Nominated' : 'Voted') + '</b> ' + esc(actWhen(b.at)) + '</div><div class="wt-picks">' + b.picks.map(function (x) { return '<span>' + esc(x.award) + ': <b>' + esc(x.pick || '—') + '</b></span>'; }).join('') + '</div></div>';
+        }).join('<div style="height:10px"></div>');
+        var linked = p.linked.length ? '<div class="wt-list">' + p.linked.map(function (l) {
+          return '<div class="row">' + av(l) + '<b>' + esc(l.name || l.login) + '</b><span class="muted">@' + esc(l.login) + '</span>' + (l.browser ? '<span class="act-what bad">same browser</span>' : '<span class="act-what change">same connection</span>') +
+            (l.createdAt ? '<span class="muted">account ' + wtAge(l.createdAt) + ' old</span>' : '') + '<span class="muted">last ' + esc(actWhen(l.last)) + '</span></div>';
+        }).join('') + '</div>' : '<div class="small muted">No other accounts on their browsers or connection so far.</div>';
+        return '<div class="card wt-card"><div class="wt-head">' + av({ name: name, avatar: tw.avatar || site.avatar }) + '<div class="grow"><h3>' + esc(name) + '</h3><div class="muted">@' + esc(p.login) + (tw.type ? ' · Twitch ' + esc(tw.type) : '') + ' · <a href="https://twitch.tv/' + esc(p.login) + '" target="_blank" rel="noopener" style="text-decoration:underline">twitch.tv/' + esc(p.login) + '</a></div></div>' +
+          '<button class="link-btn danger" type="button" data-unwatch="' + esc(p.login) + '">Stop watching</button></div>' +
+          (tw.description ? '<div class="wt-bio">“' + esc(tw.description) + '”</div>' : '') +
+          '<div class="wt-list">' + facts.map(function (f) { return '<div class="row">' + f + '</div>'; }).join('') + '</div>' +
+          '<div class="wt-h">Browsers and connections</div><div class="wt-list"><div class="row">' + (p.browsers.map(function (d) { return actDev(d); }).join(' ') || '<span class="muted">None recorded yet</span>') + ' ' + p.networks.map(function (n) { return actDev(n, 'Internet connection id'); }).join(' ') + '</div></div>' +
+          '<div class="wt-h">Linked accounts</div>' + linked +
+          '<div class="wt-h">AK9 Awards' + (p.season ? ' · ' + esc(p.season) : '') + '</div>' + ballots +
+          '<div class="wt-h">Activity (' + p.activity.length + ')</div>' + wtRows(p.activity) +
+          (p.anon.length ? '<div class="wt-h">Logged out from their browser or connection (' + p.anon.length + ')</div>' + wtRows(p.anon) : '') +
+          '</div>';
+      }).join('');
+      box.querySelectorAll('[data-unwatch]').forEach(function (b) { b.onclick = function () { if (confirm('Stop watching @' + b.dataset.unwatch + '?')) api('/api/admin/watch', { login: b.dataset.unwatch, on: false }).then(loadWatch, function (e) { toast(e.message); }); }; });
+    }
+    function loadWatch() {
+      document.getElementById('wt-list').innerHTML = '<div class="card empty">Loading…</div>';
+      return api('/api/admin/watch').then(function (d) { renderWatch(d.watch || []); }).catch(function (e) { document.getElementById('wt-list').innerHTML = '<div class="card empty">Could not load: ' + esc(e.message) + '</div>'; });
+    }
+    document.getElementById('wt-add').onclick = function () {
+      var v = document.getElementById('wt-login').value.trim().replace(/^@/, '').toLowerCase(); if (!v) return;
+      api('/api/admin/watch', { login: v, on: true }).then(function () { document.getElementById('wt-login').value = ''; toast('Watching @' + v); loadWatch(); }, function (e) { toast(e.message); });
+    };
+    document.getElementById('wt-refresh').onclick = loadWatch;
 
     /* ---------- Settings ---------- */
     function renderSettings() {
@@ -1622,10 +1722,11 @@
       }
       /* Admins on the awards block list (defaults.js awardsBlocked) don't get the AK9 Awards tab. */
       if (!m.awards) { var awTab = document.querySelector('.tabs button[data-tab="awards"]'); if (awTab) awTab.remove(); }
+      if (m.owner) document.querySelector('.tabs button[data-tab="watch"]').hidden = false;
       document.getElementById('panel').hidden = false; paintSpace();
       document.getElementById('whoami').textContent = 'Logged in as ' + (m.user.name || m.user.login) + '.';
       var tab = location.hash.slice(1); var tb = document.querySelector('.tabs button[data-tab="' + tab + '"]'); if (tb) tb.click();
-      return Promise.all([loadT(), loadApps(), loadAI(), loadTheme(), m.awards ? loadActivity() : null]);
+      return Promise.all([loadT(), loadApps(), loadAI(), loadTheme(), m.awards ? loadActivity() : null, m.owner ? loadWatch() : null]);
     }).catch(function (e) { document.getElementById('gate').hidden = false; document.getElementById('gate-msg').textContent = 'Could not reach the server: ' + e.message; });
   </script>
   <script src="/theme/season.js" defer></script>

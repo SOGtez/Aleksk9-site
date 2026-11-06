@@ -33,7 +33,8 @@ export async function whoami(req) {
   /* `awards`: may see the AK9 Awards behind the scenes. Admins and the AK9 Awards role, minus defaults.js awardsBlocked. */
   const blocked = (DEFAULT_STATE.awardsBlocked || []).some(b => b.toLowerCase() === (user?.login || '').toLowerCase());
   const awards = !!user && (role === 'admin' || role === 'awards') && !blocked;
-  return { user: user ? { id: user.id, login: user.login, name: user.name, avatar: user.avatar, follows, followedAt: user.followedAt || '', followChecked: user.followChecked || 0 } : null, role, awards };
+  const owner = !!user && (DEFAULT_STATE.owners || []).some(o => o.toLowerCase() === user.login.toLowerCase());
+  return { user: user ? { id: user.id, login: user.login, name: user.name, avatar: user.avatar, follows, followedAt: user.followedAt || '', followChecked: user.followChecked || 0 } : null, role, awards, owner };
 }
 export async function requireRole(req, res, allowed) {
   const me = await whoami(req);

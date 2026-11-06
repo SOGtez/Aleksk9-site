@@ -45,6 +45,31 @@ export async function profiles(logins) {
 }
 
 /* Numeric Twitch id of the channel people must follow. Cached 24h. */
+/* Full Twitch user info by login, incl. when the account was made: { login: { id, login, name, avatar, createdAt, type, description } }.
+   Cached for a day; unknown logins come back missing. */
+export async function twitchUsers(logins) {
+  const want = Array.from(new Set(logins.filter(Boolean).map(l => String(l).toLowerCase())));
+  if (!want.length) return {};
+  const cached = (await cacheGet('twitch:users')) || {};
+  const missing = want.filter(l => !cached[l]);
+  if (missing.length) {
+    try {
+      const token = await appToken();
+      for (let i = 0; i < missing.length; i += 100) {
+        const qs = missing.slice(i, i + 100).map(l => 'login=' + encodeURIComponent(l)).join('&');
+        const r = await fetch('https://api.twitch.tv/helix/users?' + qs, { headers: { 'Client-Id': CID(), Authorization: 'Bearer ' + token } });
+        if (!r.ok) continue;
+        for (const u of (await r.json()).data || []) cached[u.login.toLowerCase()] = { id: u.id, login: u.login.toLowerCase(), name: u.display_name, avatar: u.profile_image_url, createdAt: u.created_at, type: u.broadcaster_type || '', description: (u.description || '').slice(0, 300) };
+      }
+      for (const l of missing) if (!cached[l]) cached[l] = { login: l, gone: true };
+      await cacheSet('twitch:users', cached, 60 * 60 * 24);
+    } catch { /* leave whatever we have */ }
+  }
+  const out = {};
+  for (const l of want) if (cached[l] && !cached[l].gone) out[l] = cached[l];
+  return out;
+}
+
 export async function broadcasterId(token) {
   const cached = await cacheGet('twitch:broadcaster_id');
   if (cached) return cached;

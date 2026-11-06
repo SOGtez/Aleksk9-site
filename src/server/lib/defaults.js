@@ -13,6 +13,8 @@ export const DEFAULT_STATE = {
   admins: ['cuz4n', 'tezlv6'],
   /* Admins who get no behind-the-scenes AK9 Awards access (votes, results, finalists, share links): they see the awards like any viewer. */
   awardsBlocked: ['cuz4n'],
+  /* Site owners: the only ones who see the Watch tab on the admin page. */
+  owners: ['tezlv6', 'aieksk9'],
   format: { teamSize: 5, firstTo: 7, otTo: 8, swapEvery: 3 },
   rules: [
     { h: 'Game', t: 'First to 7 rounds wins. Sides swap every 3 rounds. If it goes 6-6, overtime is first to 8.' },

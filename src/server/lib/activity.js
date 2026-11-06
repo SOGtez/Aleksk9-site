@@ -1,10 +1,11 @@
 import crypto from 'node:crypto';
-import { hasDatabase, pushActivity, onceEvery } from './store.js';
+import { hasDatabase, pushActivity, onceEvery, setSeen } from './store.js';
 
 /* Activity log for the admin page (Twitch logins tab): who did what, from which browser and roughly where.
    `dev` is a random id kept in the ak9_dev cookie (set at login), so two accounts used in the same browser
-   share it. Older sessions without the cookie get "~" + a hash of IP and browser instead. Logging never
-   throws or blocks the request it describes. */
+   share it. Older sessions without the cookie get "~" + a hash of IP and browser instead. `net` is a hash of
+   the internet connection (the IP address itself is never stored), so accounts on the same Wi-Fi share it.
+   Logging never throws or blocks the request it describes. */
 export const DEVICE_COOKIE = 'ak9_dev';
 
 function device(ua) {
@@ -19,8 +20,21 @@ function place(h) {
 export function deviceId(req) {
   const c = req.cookies?.[DEVICE_COOKIE];
   if (c && /^[a-z0-9]{6,16}$/i.test(c)) return c;
-  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const ip = ipOf(req);
   return '~' + crypto.createHash('sha256').update((process.env.SESSION_SECRET || '') + ip + (req.headers['user-agent'] || '')).digest('hex').slice(0, 7);
+}
+const ipOf = (req) => String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+export function netId(req) {
+  const ip = ipOf(req);
+  return ip ? 'n' + crypto.createHash('sha256').update('net' + (process.env.SESSION_SECRET || '') + ip).digest('hex').slice(0, 7) : '';
+}
+/* Last seen: at most one write per account per 5 minutes. */
+export async function touchSeen(req, me) {
+  try {
+    const login = me?.user?.login;
+    if (!login || !hasDatabase() || !(await onceEvery('seen:' + login, 300))) return;
+    await setSeen(login, { at: Date.now(), dev: deviceId(req), net: netId(req), device: device(String(req.headers['user-agent'] || '')), where: place(req.headers) });
+  } catch { /* never block the request */ }
 }
 export function newDeviceId() { return crypto.randomBytes(5).toString('hex'); }
 
@@ -38,7 +52,7 @@ export async function logActivity(req, who, action, detail = '', opts = {}) {
     await pushActivity({
       at: Date.now(), login, name: u.name || login, role: who?.role || u.role || '',
       action, detail: String(detail || '').slice(0, 200), from,
-      dev, device: device(String(req.headers['user-agent'] || '')), where: place(req.headers),
+      dev, net: netId(req), device: device(String(req.headers['user-agent'] || '')), where: place(req.headers),
     });
   } catch { /* never block the request */ }
 }

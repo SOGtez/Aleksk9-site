@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     }).catch(() => {});
   }
 
-  try { await recordLogin({ id: u.id, login: u.login, name: u.display_name, avatar: u.profile_image_url }, wantChat); } catch { /* never block login on bookkeeping */ }
+  try { await recordLogin({ id: u.id, login: u.login, name: u.display_name, avatar: u.profile_image_url, createdAt: u.created_at }, wantChat); } catch { /* never block login on bookkeeping */ }
   /* A long-lived browser id for the activity log: the same id on two accounts means the same browser. */
   const dev = /^[a-z0-9]{6,16}$/i.test(req.cookies?.[DEVICE_COOKIE] || '') ? req.cookies[DEVICE_COOKIE] : newDeviceId();
   const scopes = [wantFollows && 'follow check', wantChat && 'chat'].filter(Boolean).join(', ');

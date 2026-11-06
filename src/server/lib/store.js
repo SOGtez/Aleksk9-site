@@ -201,7 +201,7 @@ export async function recordLogin(u, chat) {
   const key = u.login.toLowerCase();
   const prev = (await redis().hget(KEY_LOGINS, key)) || {};
   const now = Date.now();
-  await redis().hset(KEY_LOGINS, { [key]: { id: u.id, login: key, name: u.name, avatar: u.avatar, firstAt: prev.firstAt || now, lastAt: now, count: (prev.count || 0) + 1, chat: !!(prev.chat || chat) } });
+  await redis().hset(KEY_LOGINS, { [key]: { id: u.id, login: key, name: u.name, avatar: u.avatar, createdAt: u.createdAt || prev.createdAt || '', firstAt: prev.firstAt || now, lastAt: now, count: (prev.count || 0) + 1, chat: !!(prev.chat || chat) } });
 }
 export async function getLogins() { return (await redis().hgetall(KEY_LOGINS)) || {}; }
 
@@ -218,6 +218,12 @@ export async function getActivity(limit = 1000) {
   const rows = (await redis().lrange(KEY_ACTIVITY, 0, Math.min(limit, ACTIVITY_MAX) - 1)) || [];
   return rows.map(r => (typeof r === 'string' ? JSON.parse(r) : r));
 }
+/* Last time each logged-in account used the site: { login: { at, dev, net, device, where } }. */
+export async function setSeen(login, v) { await redis().hset('log:seen', { [login]: v }); }
+export async function getSeen() { return (await redis().hgetall('log:seen')) || {}; }
+/* Accounts on the owners' watch list (admin Watch tab). */
+export async function getWatch() { return ((await redis().smembers('log:watch')) || []).sort(); }
+export async function setWatch(login, on) { return on ? redis().sadd('log:watch', login) : redis().srem('log:watch', login); }
 /* True the first time in `seconds` for this key, so repeated page loads are logged once. */
 export async function onceEvery(key, seconds) { return (await redis().set('log:once:' + key, 1, { nx: true, ex: seconds })) === 'OK'; }
 export async function getPlayerLinks() { return (await redis().hgetall(KEY_PLAYER_TWITCH)) || {}; }

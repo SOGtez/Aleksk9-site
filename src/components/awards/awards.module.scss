@@ -231,7 +231,7 @@ button.ghostBtn { font: inherit; font-size: 14px; font-weight: 600; background: 
 .sWildPeople span { display: flex; flex-direction: column; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; }
 .sBar { position: relative; z-index: 4; display: flex; gap: 8px; align-items: center; justify-content: center; padding: 10px; border-top: 1px solid var(--neutral-alpha-weak); font-size: 13px; color: var(--neutral-on-background-weak); opacity: .5; transition: opacity .2s ease; cursor: default; }
 .stage:hover .sBar { opacity: 1; }
-.sBar button { font: inherit; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--neutral-alpha-medium); background: transparent; color: var(--neutral-on-background-strong); cursor: pointer; }
+.sBar button, .sBar a { font: inherit; text-decoration: none; font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--neutral-alpha-medium); background: transparent; color: var(--neutral-on-background-strong); cursor: pointer; }
 .sBar button:disabled { opacity: .35; cursor: default; }
 
 /* pumpkin smash reveal */
@@ -352,3 +352,6 @@ span.sTitle, span.sAwardTitle, span.sWinName { display: block; }
 @keyframes livePulse { 70% { box-shadow: 0 0 0 8px rgba(229, 50, 45, 0); } 100% { box-shadow: 0 0 0 0 rgba(229, 50, 45, 0); } }
 .sDelay { display: inline-flex; align-items: center; gap: 6px; }
 .sDelay input { width: 52px; font: inherit; font-size: 13px; padding: 5px 8px; border-radius: 999px; border: 1px solid var(--neutral-alpha-medium); background: transparent; color: var(--neutral-on-background-strong); text-align: center; }
+.wnVotes { margin-left: auto; font-size: 13px; color: var(--neutral-on-background-weak); white-space: nowrap; }
+.wnWin { border-color: var(--aw-a); background: var(--aw-soft); }
+.wnWin .fnBadge { background: var(--aw-a); color: #111; }

@@ -22,6 +22,9 @@ type Phase = "idle" | "suspense" | "pumpkin" | "burst" | "shown";
 type Frame = { at: number; step: number; kind: Step["kind"]; i?: number; phase: Phase; hits: number; label: string; theme: Theme; revealStyle: string; wildcardsBy: string; totalVoters: number; nAwards: number; award?: Award; wildcards?: Wildcard[] };
 type Live = { on: boolean; sid?: string; delay: number; host?: string };
 const HOST_KEY = "ak9-live-host";
+/* Where the host is in the show, for the winners list (/awards/reveal/sheet) open in another tab. */
+export const REVEAL_POS_KEY = "ak9.reveal.pos";
+export type RevealPos = { season: string; step: number; phase: string; at: number };
 const POLL_MS = 2500;
 const frameShow = (f: Frame): Show => ({
   label: f.label, theme: f.theme, totalVoters: f.totalVoters, revealStyle: f.revealStyle, wildcardsBy: f.wildcardsBy, wildcards: f.wildcards || [],
@@ -52,6 +55,7 @@ export function RevealStage() {
   const [ended, setEnded] = useState(false);
   const [live, setLive] = useState<Live | null>(null);
   const [hostSid, setHostSid] = useState("");
+  const [seasonId, setSeasonId] = useState("");
   const [delay, setDelay] = useState(5);
   const [taps, setTaps] = useState<Record<string, number>>({});
   const [myTaps, setMyTaps] = useState(0);
@@ -87,7 +91,7 @@ export function RevealStage() {
           const order = (i: number) => ((d.season.awards[i] || {}).nominees || []).map((n: { id: string }) => n.id);
           const awards = d.results.awards.map((x: Award, i: number) => ({ ...x, nominees: [...x.nominees].sort((m, n) => order(i).indexOf(m.id) - order(i).indexOf(n.id)) }));
           setShow({ label: d.season.label, theme: d.season.theme, totalVoters: d.results.totalVoters, awards, wildcards: d.season.wildcards || [], wildcardsBy: d.season.wildcardsBy, revealStyle: d.season.revealStyle });
-          setCanPublish(!d.demo && d.stage !== "revealed");
+          setCanPublish(!d.demo && d.stage !== "revealed"); setSeasonId(d.season.id);
           const l: Live = d.live || { on: false, delay: 5 };
           setLive(l); setDelay(l.delay ?? 5);
           /* Reloading the broadcasting tab keeps the show going where it was. */
@@ -256,6 +260,12 @@ export function RevealStage() {
     try { sessionStorage.setItem(HOST_KEY, JSON.stringify({ sid: hostSid, step })); } catch { /* no storage */ }
     fetch("/api/awards", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "live", sid: hostSid, step, phase: ph, hits }) }).catch(() => {});
   }, [viewer, hostSid, step, phase, hits]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (viewer || !seasonId) return;
+    const pos: RevealPos = { season: seasonId, step, phase, at: Date.now() };
+    try { localStorage.setItem(REVEAL_POS_KEY, JSON.stringify(pos)); } catch { /* private mode */ }
+  }, [viewer, seasonId, step, phase]);
 
   async function goLive(on: boolean) {
     if (on && live?.on && live.sid !== hostSid && !confirm("Viewers are following another screen right now. Take over from this one?")) return;
@@ -457,6 +467,7 @@ export function RevealStage() {
           {hostSid
             ? <button className={styles.liveOn} onClick={() => goLive(false)} title="Viewers on aleksk9.com/awards/reveal are following this screen"><i />Live · End</button>
             : <button onClick={() => goLive(true)} title="Everyone on aleksk9.com/awards/reveal follows this screen">{live?.on ? "Live on another screen · Take over" : "Go live for viewers"}</button>}
+          <a href="/awards/reveal/sheet" target="_blank" rel="noopener">Winners list</a>
           <label className={styles.sDelay} title="Match your stream delay so the site doesn't reveal winners before the stream does">Stream delay <input type="number" min={0} max={60} value={delay} onChange={(e) => saveDelay(Number(e.target.value))} />s</label>
         </div>
       )}

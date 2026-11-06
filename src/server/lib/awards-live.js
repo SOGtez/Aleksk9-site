@@ -86,4 +86,9 @@ export async function setLive(b, frame, host) {
   cache.at = 0;
   return { on: !!live.on, sid: live.sid, delay: live.delay || 0 };
 }
-export async function liveStatus() { const l = await readLive(); return l ? { on: !!l.on, sid: l.sid, delay: l.delay || 0, host: l.host || '' } : { on: false, delay: 5 }; }
+/* For admins (view=admin): includes where Aleks is right now, with no delay, for the private winners list. */
+export async function liveStatus() {
+  const l = await readLive(); if (!l) return { on: false, delay: 5 };
+  const f = (l.frames || [])[(l.frames || []).length - 1];
+  return { on: !!l.on, sid: l.sid, delay: l.delay || 0, host: l.host || '', ...(l.on && f ? { step: f.step, phase: f.phase, at: f.at } : {}) };
+}

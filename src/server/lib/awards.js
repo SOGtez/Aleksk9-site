@@ -29,17 +29,18 @@ export const revealStyleFor = (s) => (s && s.revealStyle) || (s && s.theme === '
 export const normName = (s) => String(s || '').trim().replace(/^@+/, '').replace(/\s+/g, ' ').toLowerCase();
 
 /* Vote counts per finalist. A tie gives several winners unless an admin picked the winner (award.winnerIds). */
-export function computeResults(season, ballots) {
+export function computeResults(season, ballots, { real = false } = {}) {
   const list = Object.values(ballots || {}).map((b) => (typeof b === 'string' ? JSON.parse(b) : b));
   const awards = (season.awards || []).map((a) => {
     const counts = {}; let total = 0;
     for (const b of list) { const pick = b.choices && b.choices[a.id]; if (pick) { counts[pick] = (counts[pick] || 0) + 1; total++; } }
-    /* votesShown { nomineeId: n } replaces the counted votes on the reveal, results and winner sheets; the
-       counted number stays in `actual`. Set by hand in the data, there is no admin control for it. */
+    /* votesShown { nomineeId: n } replaces the counted votes on the reveal, results and winner sheets. The counted
+       number comes back in `actual` only with { real: true } (the admin AK9 Awards tab), so it never reaches the
+       reveal, viewers, share links or the Hall of Fame archive. Set by hand in the data, there is no admin control. */
     const shown = a.votesShown || {};
     const nominees = (a.nominees || []).map((n) => {
-      const real = counts[n.id] || 0;
-      return Number.isInteger(shown[n.id]) ? { ...n, votes: shown[n.id], actual: real } : { ...n, votes: real };
+      const counted = counts[n.id] || 0;
+      return Number.isInteger(shown[n.id]) ? { ...n, votes: shown[n.id], ...(real ? { actual: counted } : {}) } : { ...n, votes: counted };
     }).sort((x, y) => y.votes - x.votes);
     const top = nominees.length ? nominees[0].votes : 0;
     const manual = (a.winnerIds || []).filter((id) => nominees.some((n) => n.id === id));

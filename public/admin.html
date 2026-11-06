@@ -1169,7 +1169,7 @@
       /* `fresh`: replace the season even with unsaved edits (after a save or a new season). Otherwise edits are kept
          and only the numbers and submissions update. */
       function load(fresh) {
-        return api('/api/awards?view=admin').then(function (d) {
+        return api('/api/awards?view=admin&real=1').then(function (d) {
           if (fresh || !dirty || !S || !d.season || d.season.id !== S.id) { S = d.season || null; if (S) { S.awards = S.awards || []; S.wildcards = S.wildcards || []; } }
           R = d.results; TALLY = d.tally || {}; STAGE = d.stage; COUNTS = d.counts || {}; VOTERS = d.voters || []; NOMINATORS = d.nominators || [];
           renderPeople(); renderShare(); render();

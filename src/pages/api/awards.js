@@ -16,6 +16,7 @@ import { liveView, buildFrame, setLive, liveStatus } from '../../server/lib/awar
                                and the results once the season is revealed
    GET ?season=<id>            one finished season with its results (Hall of Fame page)
    GET ?view=admin             admins: everything, incl. the nomination tally, live vote counts and who voted (the reveal page uses this)
+                               &real=1 adds the counted votes behind any changed count (votesShown), for the admin AK9 Awards tab only
    GET ?share=<key>            the current season's results through the unlisted link, before they are published
    GET|POST ?live=1 { sid, step, n }   logged in: the live reveal frame to show now, plus the crowd's pumpkin taps (POST adds n taps)
    POST { action: 'nominate', choices: { awardId: name } }       followers, once, while nominations are open
@@ -163,7 +164,7 @@ export default async function handler(req, res) {
       if (!isAdmin) { await logActivity(req, me, 'awards_refused', me.user ? 'results' : 'results, not logged in', { once: 600 }); return json(res, 403, { error: 'Admins only' }); }
       await logActivity(req, me, 'awards_results', '', { once: 1800 });
       const people = (h) => Object.entries(h).map(([login, e]) => ({ login, name: e.name || login, avatar: e.avatar || '', at: e.at || 0, choices: e.choices || {} })).sort((a, b) => b.at - a.at);
-      return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms), live: await liveStatus() });
+      return json(res, 200, { season, stage, counts, results: season ? computeResults(season, votes, { real: req.query.real === '1' }) : null, tally: season ? tallyNominations(season, noms) : {}, voters: people(votes), nominators: people(noms), live: await liveStatus() });
     }
     const mine = me.user && season ? { nominated: (noms[me.user.login] || {}).choices || null, voted: (votes[me.user.login] || {}).choices || null } : { nominated: null, voted: null };
     return json(res, 200, {

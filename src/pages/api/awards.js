@@ -8,6 +8,7 @@ import {
   THEMES, PHASES, STANDARD_AWARDS, stageOf, showsFinalists, computeResults, tallyNominations, hallSummary, pastSeasons, demoSeason, revealStyleFor,
 } from '../../server/lib/awards.js';
 import { logActivity } from '../../server/lib/activity.js';
+import { getSession } from '../../server/lib/session.js';
 import { liveView, buildFrame, setLive, liveStatus } from '../../server/lib/awards-live.js';
 
 /* AK9 Awards (/awards). One route for everything:
@@ -16,7 +17,7 @@ import { liveView, buildFrame, setLive, liveStatus } from '../../server/lib/awar
    GET ?season=<id>            one finished season with its results (Hall of Fame page)
    GET ?view=admin             admins: everything, incl. the nomination tally, live vote counts and who voted (the reveal page uses this)
    GET ?share=<key>            the current season's results through the unlisted link, before they are published
-   GET|POST ?live=1 { sid, step, n }   anyone: the live reveal frame to show now, plus the crowd's pumpkin taps (POST adds n taps)
+   GET|POST ?live=1 { sid, step, n }   logged in: the live reveal frame to show now, plus the crowd's pumpkin taps (POST adds n taps)
    POST { action: 'nominate', choices: { awardId: name } }       followers, once, while nominations are open
    POST { action: 'vote', choices: { awardId: nomineeId } }      followers, once, while voting is open
    POST admin: save { season } · newSeason { label, standard | copyAwards } · archive · clear { kind: 'noms'|'votes' }
@@ -107,6 +108,7 @@ export default async function handler(req, res) {
   if (req.query.live) {
     const b = req.method === 'POST' ? readBody(req) : {};
     res.setHeader('Cache-Control', 'no-store');
+    if (!getSession(req) && hasDatabase()) return json(res, 401, { error: 'Log in with Twitch to watch the AK9 Awards live.' });
     return json(res, 200, await liveView({ sid: clean(b.sid, 30), step: Number(b.step), n: Number(b.n) || 0 }));
   }
   const me = await whoami(req);

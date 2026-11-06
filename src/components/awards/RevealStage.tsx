@@ -32,7 +32,7 @@ const byVotes = <T extends { votes?: number }>(l: T[]) => [...l].sort((x, y) => 
 
 export function RevealStage() {
   const [show, setShow] = useState<Show | null>(null);
-  const [gate, setGate] = useState<"" | "login" | "admin" | "error">("");
+  const [gate, setGate] = useState<"" | "login" | "watch" | "admin" | "error">("");
   const [canPublish, setCanPublish] = useState(false);
   const [published, setPublished] = useState(false);
   const [step, setStep] = useState(0);
@@ -98,6 +98,8 @@ export function RevealStage() {
           return;
         }
         const p = await (await fetch("/api/awards", { cache: "no-store" })).json();
+        /* Like the rest of the site, watching live needs a Twitch login. */
+        if (!(p.me && p.me.loggedIn) && !p.demo) { setGate("watch"); return; }
         const lv = await (await fetch("/api/awards?live=1", { cache: "no-store" })).json();
         if (!lv.on && !q.has("watch") && p.results && p.season) { setShow({ label: p.season.label, theme: p.season.theme, totalVoters: p.results.totalVoters, awards: p.results.awards, wildcards: p.results.wildcards || [], wildcardsBy: p.season.wildcardsBy, revealStyle: p.season.revealStyle }); return; }
         setViewer(true);
@@ -224,6 +226,7 @@ export function RevealStage() {
         const body = viewer && n && f ? JSON.stringify({ sid: liveSidRef.current, step: f.step, n }) : null;
         if (body) pendingTaps.current = 0;
         const r = await fetch("/api/awards?live=1", body ? { method: "POST", headers: { "Content-Type": "application/json" }, body, cache: "no-store" } : { cache: "no-store" });
+        if (r.status === 401) { setGate("watch"); return; }   /* logged out mid-show */
         const d = await r.json();
         if (stop) return;
         liveSidRef.current = d.sid || "";
@@ -297,6 +300,7 @@ export function RevealStage() {
   }
 
   if (gate === "login") return <Gate h="Log in to open the reveal" p="Before the winners are published, only admins can open this page."><a className={styles.btn} href={loginUrl(location.pathname + location.search)}>Log in with Twitch</a></Gate>;
+  if (gate === "watch") return <Gate h="Log in to watch the AK9 Awards" p="Log in with Twitch to follow the show live with Aleks's stream and shake the pumpkins before each winner is revealed."><a className={styles.btn} href={loginUrl(location.pathname + location.search)}>Log in with Twitch</a></Gate>;
   if (gate === "admin") return <Gate h="Admins only" p="The winners aren't published yet, so only admins can open the reveal." />;
   if (gate === "error") return <Gate h="Nothing to reveal yet" p="There is no season with results yet." />;
   if (viewer && !cur) return (
